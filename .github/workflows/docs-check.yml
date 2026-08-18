@@ -1,0 +1,32 @@
+name: docs-check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  basic-check:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f SECURITY.md
+          test -f CONTRIBUTING.md
+          test -f CODE_OF_CONDUCT.md
+          test -f ROADMAP.md
+          test -f docs/architecture.md
+          test -f docs/threat-model.md
+          test -f docs/pam-safety.md
+          test -f docs/development.md
+
+      - name: Check no obvious biometric sample folders are committed
+        run: |
+          if find . -type d \( -name captures -o -name enrollment_samples -o -name templates \) | grep .; then
+            echo "Potential biometric data folder committed."
+            exit 1
+          fi

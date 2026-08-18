@@ -1,0 +1,55 @@
+# Build outputs
+build/
+cmake-build-*/
+out/
+dist/
+*.o
+*.so
+*.a
+*.deb
+*.rpm
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# IDEs/editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local models and biometric data
+models/*.pt
+models/*.onnx
+models/*.engine
+*.trt
+enrollment_samples/
+captures/
+templates/
+*.enc
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+tmp/
+temp/
