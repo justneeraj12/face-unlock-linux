@@ -92,3 +92,24 @@ The workflow uploads the package artifact as:
 The .deb artifact is for development testing and inspection.
 
 It does not automatically modify PAM files.
+
+## Minimal OpenCV dependencies
+
+The daemon currently uses only OpenCV core and videoio APIs.
+
+To keep CI faster and avoid installing the full OpenCV development dependency tree, the workflow installs:
+
+    libopencv-core-dev
+    libopencv-videoio-dev
+
+instead of:
+
+    libopencv-dev
+
+The daemon CMake configuration manually locates:
+
+- opencv2/core.hpp
+- libopencv_core
+- libopencv_videoio
+
+This avoids requiring opencv4 pkg-config metadata in CI.

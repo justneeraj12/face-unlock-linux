@@ -119,3 +119,13 @@ sudo integration is not installed yet.
 See:
 
     docs/sudo-integration-plan.md
+
+## Minimal OpenCV development packages
+
+For a minimal daemon build, these packages are sufficient:
+
+    sudo apt install libopencv-core-dev libopencv-videoio-dev
+
+The full development setup script may install libopencv-dev for convenience on developer machines.
+
+CI uses the minimal packages to reduce install time.
