@@ -14,9 +14,14 @@ include(GNUInstallDirs)
 include(CTest)
 
 option(WITH_TORCH "Build daemon with optional LibTorch/TorchScript support" OFF)
+option(BUILD_GUI "Build optional Qt enrollment GUI" OFF)
 
 add_subdirectory(daemon)
 add_subdirectory(pam)
+
+if(BUILD_GUI)
+  add_subdirectory(gui)
+endif()
 
 install(FILES
   README.md

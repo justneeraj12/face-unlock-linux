@@ -723,3 +723,17 @@ Validate the example manifest:
 Documentation:
 
     docs/manifest-validation.md
+
+## Qt enrollment GUI scaffold
+
+Optional Qt6 GUI scaffold:
+
+    cmake -S . -B build-gui -DBUILD_GUI=ON
+    cmake --build build-gui
+    ./build-gui/gui/face-unlock-enroll
+
+Documentation:
+
+    docs/gui.md
+
+The GUI currently shows consent/status only. It does not access the camera or save biometric data.
