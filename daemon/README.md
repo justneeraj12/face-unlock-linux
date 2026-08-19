@@ -11,8 +11,11 @@ This directory contains the user-level face unlock daemon.
 - reads one frame by default
 - can run continuously with --loop
 - can run a local UNIX socket server with --serve
+- can run camera worker plus socket server with --daemon
 - socket path is /run/user/$UID/face-unlock.sock
 - socket permissions are set to 0600
+- logs UNIX socket peer credentials with SO_PEERCRED
+- currently allows same-UID socket clients only
 - stops cleanly with Ctrl+C
 - does not authenticate yet
 - does not save images
@@ -55,17 +58,21 @@ Run continuous camera loop:
 
     ./build/daemon/face-unlockd --camera 0 --loop
 
-Run socket server:
+Run socket server only:
 
     ./build/daemon/face-unlockd --serve
+
+Run daemon mode with camera worker and socket server:
+
+    ./build/daemon/face-unlockd --camera 0 --daemon
 
 In another terminal, test the socket:
 
     ./scripts/test-socket-client.sh
 
-Stop loop or server mode with Ctrl+C.
+Stop loop, server, or daemon mode with Ctrl+C.
 
-## Current expected socket output
+## Current expected daemon socket output
 
 Daemon terminal:
 
@@ -74,20 +81,38 @@ Daemon terminal:
     uid: 1000
     runtime_dir: /run/user/1000
     planned_socket: /run/user/1000/face-unlock.sock
-    mode: serve
+    mode: daemon
+    daemon_status: starting
     socket_path: /run/user/1000/face-unlock.sock
     socket_status: listening
     socket_mode: 0600
     server_status: started
+    camera_index: 0
+    camera_status: opened
+    camera_worker_status: started
+    peer_credentials: pid=12345 uid=1000 gid=1000
+    peer_status: allowed
+    client_request: {"op":"ping","client":"test-socket-client"}
 
 Client terminal:
 
-    {"status":"ok","reason":"daemon_alive"}
+    {"status":"ok","reason":"daemon_alive","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+
+## Security notes
+
+The socket server currently uses SO_PEERCRED to inspect the connected peer process.
+
+Current prototype policy:
+
+- same UID is allowed
+- other users are rejected
+
+Future PAM integration may require carefully reviewed handling for privileged PAM clients.
 
 ## Privacy
 
-The current daemon reads frames into memory only in camera modes.
+The current daemon reads frames into memory only.
 
-Socket mode currently only replies to a local test request.
+Socket mode currently only replies to a local test request and frame readiness status.
 
 It does not save images, face crops, embeddings, templates, or logs containing biometric data.

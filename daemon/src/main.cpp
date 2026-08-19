@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -12,6 +14,7 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/un.h>
 
 #include <opencv2/core.hpp>
@@ -30,6 +33,34 @@ struct Options {
   int camera_index = 0;
   bool loop = false;
   bool serve = false;
+  bool daemon = false;
+};
+
+struct FrameStore {
+  std::mutex mutex;
+  cv::Mat latest_frame;
+  unsigned long long frames_total = 0;
+  bool has_frame = false;
+
+  void update(const cv::Mat& frame) {
+    std::lock_guard<std::mutex> lock(mutex);
+    frame.copyTo(latest_frame);
+    ++frames_total;
+    has_frame = true;
+  }
+
+  bool snapshot(cv::Mat& out_frame, unsigned long long& out_frames_total) {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    out_frames_total = frames_total;
+
+    if (!has_frame || latest_frame.empty()) {
+      return false;
+    }
+
+    latest_frame.copyTo(out_frame);
+    return true;
+  }
 };
 
 std::string get_runtime_dir() {
@@ -47,11 +78,13 @@ std::string get_socket_path() {
 }
 
 void print_usage(const char* program_name) {
-  std::cout << "Usage: " << program_name << " [--camera INDEX] [--loop] [--serve]\n";
+  std::cout << "Usage: " << program_name
+            << " [--camera INDEX] [--loop] [--serve] [--daemon]\n";
   std::cout << "Options:\n";
   std::cout << "  --camera, -c INDEX   Camera index to open. Default: 0\n";
   std::cout << "  --loop               Keep reading frames until Ctrl+C\n";
   std::cout << "  --serve              Run local UNIX socket server until Ctrl+C\n";
+  std::cout << "  --daemon             Run camera worker and socket server together\n";
   std::cout << "  --help, -h           Show this help text\n";
 }
 
@@ -68,6 +101,8 @@ Options parse_options(int argc, char** argv) {
       options.loop = true;
     } else if (arg == "--serve") {
       options.serve = true;
+    } else if (arg == "--daemon") {
+      options.daemon = true;
     } else if (arg == "--help" || arg == "-h") {
       print_usage(argv[0]);
       std::exit(0);
@@ -78,8 +113,13 @@ Options parse_options(int argc, char** argv) {
     }
   }
 
-  if (options.loop && options.serve) {
-    std::cerr << "error: --loop and --serve are currently separate modes\n";
+  const int mode_count =
+    static_cast<int>(options.loop) +
+    static_cast<int>(options.serve) +
+    static_cast<int>(options.daemon);
+
+  if (mode_count > 1) {
+    std::cerr << "error: choose only one of --loop, --serve, or --daemon\n";
     std::exit(1);
   }
 
@@ -224,7 +264,89 @@ int create_server_socket(const std::string& socket_path) {
   return server_fd;
 }
 
-void handle_client(int client_fd) {
+bool get_peer_credentials(int client_fd, ucred& credentials) {
+  std::memset(&credentials, 0, sizeof(credentials));
+
+  socklen_t length = sizeof(credentials);
+
+  if (::getsockopt(client_fd, SOL_SOCKET, SO_PEERCRED, &credentials, &length) < 0) {
+    std::cerr << "peer_credentials_error: " << std::strerror(errno) << '\n';
+    return false;
+  }
+
+  return true;
+}
+
+void write_json_response(int client_fd, const std::string& response) {
+  const ssize_t bytes_written = ::write(client_fd, response.data(), response.size());
+
+  if (bytes_written < 0) {
+    std::cerr << "write_warning: " << std::strerror(errno) << '\n';
+  }
+}
+
+bool peer_is_allowed(const ucred& credentials) {
+  const uid_t daemon_uid = getuid();
+
+  // Current prototype policy:
+  // - allow same user only
+  //
+  // Later PAM testing may need a carefully reviewed policy for root-owned PAM clients.
+  return credentials.uid == daemon_uid;
+}
+
+std::string build_daemon_alive_response(FrameStore* frame_store) {
+  if (frame_store == nullptr) {
+    return "{\"status\":\"ok\",\"reason\":\"daemon_alive\",\"camera\":\"not_attached\"}\n";
+  }
+
+  cv::Mat snapshot;
+  unsigned long long frames_total = 0;
+  const bool has_frame = frame_store->snapshot(snapshot, frames_total);
+
+  if (!has_frame) {
+    return "{\"status\":\"ok\",\"reason\":\"daemon_alive\",\"camera\":\"not_ready\",\"frames_total\":"
+      + std::to_string(frames_total) + "}\n";
+  }
+
+  return "{\"status\":\"ok\",\"reason\":\"daemon_alive\",\"camera\":\"ready\",\"frames_total\":"
+    + std::to_string(frames_total)
+    + ",\"frame_width\":" + std::to_string(snapshot.cols)
+    + ",\"frame_height\":" + std::to_string(snapshot.rows)
+    + ",\"frame_channels\":" + std::to_string(snapshot.channels())
+    + "}\n";
+}
+
+void handle_client(int client_fd, FrameStore* frame_store) {
+  ucred credentials {};
+
+  if (!get_peer_credentials(client_fd, credentials)) {
+    write_json_response(
+      client_fd,
+      "{\"status\":\"fail\",\"reason\":\"peer_credentials_unavailable\"}\n"
+    );
+    ::close(client_fd);
+    return;
+  }
+
+  std::cout << "peer_credentials:"
+            << " pid=" << credentials.pid
+            << " uid=" << credentials.uid
+            << " gid=" << credentials.gid
+            << '\n';
+
+  if (!peer_is_allowed(credentials)) {
+    std::cout << "peer_status: rejected" << '\n';
+    write_json_response(
+      client_fd,
+      "{\"status\":\"fail\",\"reason\":\"peer_not_allowed\"}\n"
+    );
+    ::close(client_fd);
+    return;
+  }
+
+  std::cout << "peer_status: allowed" << '\n';
+
   char buffer[1024] {};
   const ssize_t bytes_read = ::read(client_fd, buffer, sizeof(buffer) - 1);
 
@@ -235,17 +357,12 @@ void handle_client(int client_fd) {
     std::cout << "client_request: " << buffer << '\n';
   }
 
-  const std::string response = "{\"status\":\"ok\",\"reason\":\"daemon_alive\"}\n";
-  const ssize_t bytes_written = ::write(client_fd, response.data(), response.size());
-
-  if (bytes_written < 0) {
-    std::cerr << "write_warning: " << std::strerror(errno) << '\n';
-  }
+  write_json_response(client_fd, build_daemon_alive_response(frame_store));
 
   ::close(client_fd);
 }
 
-bool run_socket_server() {
+bool run_socket_server(FrameStore* frame_store) {
   const std::string socket_path = get_socket_path();
 
   std::cout << "socket_path: " << socket_path << '\n';
@@ -297,7 +414,7 @@ bool run_socket_server() {
       continue;
     }
 
-    handle_client(client_fd);
+    handle_client(client_fd, frame_store);
   }
 
   std::cout << "server_status: stopping\n";
@@ -306,6 +423,84 @@ bool run_socket_server() {
   ::unlink(socket_path.c_str());
 
   return true;
+}
+
+void camera_worker(FrameStore& frame_store, int camera_index) {
+  cv::VideoCapture camera;
+
+  if (!open_camera(camera, camera_index)) {
+    g_running = false;
+    return;
+  }
+
+  std::cout << "camera_worker_status: started" << '\n';
+
+  using clock = std::chrono::steady_clock;
+  auto last_report = clock::now();
+  unsigned long long frames_since_report = 0;
+
+  while (g_running) {
+    cv::Mat frame;
+
+    if (!camera.read(frame) || frame.empty()) {
+      std::cout << "camera_worker_warning: empty_frame" << '\n';
+      std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      continue;
+    }
+
+    frame_store.update(frame);
+    ++frames_since_report;
+
+    const auto now = clock::now();
+    const auto elapsed_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(now - last_report)
+        .count();
+
+    if (elapsed_ms >= 1000) {
+      unsigned long long frames_total = 0;
+      cv::Mat snapshot;
+      frame_store.snapshot(snapshot, frames_total);
+
+      const double fps = 1000.0 * static_cast<double>(frames_since_report) /
+                         static_cast<double>(elapsed_ms);
+
+      std::cout << "camera_worker_report:"
+                << " frames_total=" << frames_total
+                << " fps=" << fps
+                << " width=" << frame.cols
+                << " height=" << frame.rows
+                << " channels=" << frame.channels()
+                << '\n';
+
+      frames_since_report = 0;
+      last_report = now;
+    }
+  }
+
+  camera.release();
+  std::cout << "camera_worker_status: stopped" << '\n';
+}
+
+bool run_daemon_mode(int camera_index) {
+  std::cout << "daemon_status: starting" << '\n';
+
+  FrameStore frame_store;
+
+  std::thread camera_thread([&frame_store, camera_index]() {
+    camera_worker(frame_store, camera_index);
+  });
+
+  const bool server_ok = run_socket_server(&frame_store);
+
+  g_running = false;
+
+  if (camera_thread.joinable()) {
+    camera_thread.join();
+  }
+
+  std::cout << "daemon_status: stopped" << '\n';
+
+  return server_ok;
 }
 
 }  // namespace
@@ -329,11 +524,25 @@ int main(int argc, char** argv) {
   if (options.serve) {
     std::cout << "mode: serve" << '\n';
 
-    const bool ok = run_socket_server();
+    const bool ok = run_socket_server(nullptr);
 
     if (!ok) {
       std::cout << "status: socket_error" << '\n';
       return 3;
+    }
+
+    std::cout << "status: ok" << '\n';
+    return 0;
+  }
+
+  if (options.daemon) {
+    std::cout << "mode: daemon" << '\n';
+
+    const bool ok = run_daemon_mode(options.camera_index);
+
+    if (!ok) {
+      std::cout << "status: daemon_error" << '\n';
+      return 4;
     }
 
     std::cout << "status: ok" << '\n';
