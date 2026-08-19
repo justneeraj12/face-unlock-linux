@@ -626,3 +626,15 @@ Documentation:
     docs/sudo-root-peer-policy.md
 
 This does not enable sudo integration by itself. It only prepares the daemon peer policy for sudo PAM behavior.
+
+## sudo manual test results
+
+Manual guarded sudo integration testing is documented in:
+
+    docs/sudo-test-results.md
+
+The successful passwordless sudo path used development-only auth:
+
+    FACE_UNLOCK_DEV_ALLOW=1
+
+This is not real biometric authentication and must not be used as production auth.
