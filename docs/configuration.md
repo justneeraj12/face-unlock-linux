@@ -76,3 +76,20 @@ Development auth is still controlled separately by:
     FACE_UNLOCK_DEV_ALLOW=1
 
 Development auth must never be used as real authentication.
+
+## Auth attempt enforcement
+
+max_auth_attempts is now enforced by the daemon auth operation.
+
+Default:
+
+    3
+
+Behavior:
+
+- failed auth requests increment an in-memory counter
+- when the counter reaches max_auth_attempts, later auth requests return too_many_attempts
+- successful development-only auth resets the counter
+- restarting the daemon resets the counter
+
+This is a scaffold for future retry and fallback behavior.

@@ -73,6 +73,50 @@ struct FrameStore {
   }
 };
 
+struct AuthState {
+  explicit AuthState(int max_attempts_in)
+      : max_attempts(max_attempts_in) {}
+
+  std::mutex mutex;
+  int max_attempts = 3;
+  int failed_attempts = 0;
+
+  int remaining_locked() const {
+    const int remaining = max_attempts - failed_attempts;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  void reset() {
+    std::lock_guard<std::mutex> lock(mutex);
+    failed_attempts = 0;
+  }
+
+  int record_failure_and_remaining() {
+    std::lock_guard<std::mutex> lock(mutex);
+
+    if (failed_attempts < max_attempts) {
+      ++failed_attempts;
+    }
+
+    return remaining_locked();
+  }
+
+  bool too_many_attempts() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return failed_attempts >= max_attempts;
+  }
+
+  int failed_count() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return failed_attempts;
+  }
+
+  int remaining() {
+    std::lock_guard<std::mutex> lock(mutex);
+    return remaining_locked();
+  }
+};
+
 std::string get_runtime_dir() {
   const char* xdg_runtime_dir = std::getenv("XDG_RUNTIME_DIR");
 
@@ -489,7 +533,7 @@ bool dev_auth_enabled() {
   return value != nullptr && std::string(value) == "1";
 }
 
-std::string build_response_for_request(const std::string& request, FrameStore* frame_store) {
+std::string build_response_for_request(const std::string& request, FrameStore* frame_store, AuthState* auth_state) {
   const std::string op = extract_operation(request);
   const CameraStatus camera_status = get_camera_status(frame_store);
   const std::string camera_fields = camera_status_json_fields(camera_status);
@@ -505,25 +549,51 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
   }
 
   if (op == "auth") {
-    if (dev_auth_enabled() && camera_status.state == "ready") {
-      return "{\"status\":\"ok\",\"op\":\"auth\",\"reason\":\"dev_allow_camera_ready\""
+    if (auth_state == nullptr) {
+      return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_state_unavailable\""
         + camera_fields + "}\n";
     }
+
+    if (dev_auth_enabled() && camera_status.state == "ready") {
+      auth_state->reset();
+
+      return "{\"status\":\"ok\",\"op\":\"auth\",\"reason\":\"dev_allow_camera_ready\""
+        + camera_fields
+        + ",\"auth_attempts_failed\":0"
+        + ",\"auth_attempts_remaining\":" + std::to_string(auth_state->remaining())
+        + "}\n";
+    }
+
+    if (auth_state->too_many_attempts()) {
+      return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"too_many_attempts\""
+        + camera_fields
+        + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
+        + ",\"auth_attempts_remaining\":0"
+        + "}\n";
+    }
+
+    const int attempts_remaining = auth_state->record_failure_and_remaining();
 
     if (dev_auth_enabled() && camera_status.state != "ready") {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"camera_not_ready\""
-        + camera_fields + "}\n";
+        + camera_fields
+        + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
+        + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
+        + "}\n";
     }
 
     return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_not_implemented\""
-      + camera_fields + "}\n";
+      + camera_fields
+      + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
+      + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
+      + "}\n";
   }
 
   return "{\"status\":\"fail\",\"op\":\"unknown\",\"reason\":\"unknown_operation\""
     + camera_fields + "}\n";
 }
 
-void handle_client(int client_fd, FrameStore* frame_store) {
+void handle_client(int client_fd, FrameStore* frame_store, AuthState* auth_state) {
   ucred credentials {};
 
   if (!get_peer_credentials(client_fd, credentials)) {
@@ -565,12 +635,12 @@ void handle_client(int client_fd, FrameStore* frame_store) {
     std::cout << "client_request: " << request << '\n';
   }
 
-  write_json_response(client_fd, build_response_for_request(request, frame_store));
+  write_json_response(client_fd, build_response_for_request(request, frame_store, auth_state));
 
   ::close(client_fd);
 }
 
-bool run_socket_server(FrameStore* frame_store) {
+bool run_socket_server(FrameStore* frame_store, AuthState* auth_state) {
   const std::string socket_path = get_socket_path();
 
   std::cout << "socket_path: " << socket_path << '\n';
@@ -622,7 +692,7 @@ bool run_socket_server(FrameStore* frame_store) {
       continue;
     }
 
-    handle_client(client_fd, frame_store);
+    handle_client(client_fd, frame_store, auth_state);
   }
 
   std::cout << "server_status: stopping\n";
@@ -689,16 +759,17 @@ void camera_worker(FrameStore& frame_store, int camera_index) {
   std::cout << "camera_worker_status: stopped" << '\n';
 }
 
-bool run_daemon_mode(int camera_index) {
+bool run_daemon_mode(int camera_index, int max_auth_attempts) {
   std::cout << "daemon_status: starting" << '\n';
 
   FrameStore frame_store;
+  AuthState auth_state(max_auth_attempts);
 
   std::thread camera_thread([&frame_store, camera_index]() {
     camera_worker(frame_store, camera_index);
   });
 
-  const bool server_ok = run_socket_server(&frame_store);
+  const bool server_ok = run_socket_server(&frame_store, &auth_state);
 
   g_running = false;
 
@@ -740,7 +811,8 @@ int main(int argc, char** argv) {
   if (options.serve) {
     std::cout << "mode: serve" << '\n';
 
-    const bool ok = run_socket_server(nullptr);
+    AuthState auth_state(config.max_auth_attempts);
+    const bool ok = run_socket_server(nullptr, &auth_state);
 
     if (!ok) {
       std::cout << "status: socket_error" << '\n';
@@ -754,7 +826,7 @@ int main(int argc, char** argv) {
   if (options.daemon) {
     std::cout << "mode: daemon" << '\n';
 
-    const bool ok = run_daemon_mode(camera_index);
+    const bool ok = run_daemon_mode(camera_index, config.max_auth_attempts);
 
     if (!ok) {
       std::cout << "status: daemon_error" << '\n';

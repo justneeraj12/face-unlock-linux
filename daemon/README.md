@@ -18,6 +18,7 @@ This directory contains the user-level face unlock daemon.
 - currently allows same-UID socket clients only
 - supports simple socket operations: ping, camera_status, auth
 - auth operation fails closed by default
+- repeated failed auth attempts are limited by max_auth_attempts
 - development-only auth can be enabled with FACE_UNLOCK_DEV_ALLOW=1
 - stops cleanly with Ctrl+C
 - does not save images
@@ -47,6 +48,7 @@ The daemon must fail closed if:
 - authentication times out
 - auth is not implemented
 - development auth is not explicitly enabled
+- max_auth_attempts is exceeded
 
 ## Build
 
@@ -64,7 +66,13 @@ Test auth fail-closed behavior in another terminal:
 
 Expected default auth response:
 
-    {"status":"fail","op":"auth","reason":"auth_not_implemented","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+    status fail
+    reason auth_not_implemented
+
+After max_auth_attempts failures, expected response:
+
+    status fail
+    reason too_many_attempts
 
 Run daemon mode with development-only auth enabled:
 
@@ -76,7 +84,8 @@ Then test auth:
 
 Expected development-only auth response:
 
-    {"status":"ok","op":"auth","reason":"dev_allow_camera_ready","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+    status ok
+    reason dev_allow_camera_ready
 
 Stop daemon mode with Ctrl+C.
 
@@ -106,6 +115,9 @@ Current prototype policy:
 Auth behavior:
 
 - default auth fails closed
+- failed auth attempts are counted in memory
+- too many failures return too_many_attempts
+- restarting the daemon resets the in-memory attempt counter
 - FACE_UNLOCK_DEV_ALLOW=1 is for development testing only
 - FACE_UNLOCK_DEV_ALLOW=1 must never be used as real authentication
 
