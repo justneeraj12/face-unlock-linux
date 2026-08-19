@@ -178,3 +178,13 @@ Before production use, evaluate:
 - fallback requirements
 
 This project must not claim strong biometric security without liveness evaluation.
+
+## Candidate shortlist
+
+Candidate detectors and embedding models are tracked in:
+
+    docs/model-candidates.md
+
+No model is selected yet.
+
+Model artifacts must not be committed until license and redistribution rights are reviewed.

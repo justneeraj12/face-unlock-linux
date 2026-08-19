@@ -466,3 +466,11 @@ Model evaluation docs:
     docs/threshold-calibration.md
 
 The project will not claim real biometric authentication until model behavior and thresholds are documented.
+
+## Candidate model shortlist
+
+Candidate detector, alignment, and embedding models are tracked in:
+
+    docs/model-candidates.md
+
+No real model is selected yet.

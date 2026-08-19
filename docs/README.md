@@ -103,3 +103,9 @@ and must never be used as production authentication.
 |---|---|
 | model-evaluation-plan.md | Plan for selecting and evaluating real models |
 | threshold-calibration.md | Matching threshold calibration plan |
+
+## Candidate models
+
+| Document | Purpose |
+|---|---|
+| model-candidates.md | Candidate detector, alignment, and embedding models |
