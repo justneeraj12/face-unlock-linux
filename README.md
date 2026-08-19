@@ -235,3 +235,17 @@ Remove:
     ./scripts/remove-user-service.sh
 
 The user service does not modify PAM files and runs with FACE_UNLOCK_DEV_ALLOW=0 by default.
+
+## sudo integration plan
+
+sudo integration is not installed yet.
+
+Planning documentation:
+
+    docs/sudo-integration-plan.md
+
+Read-only sudo PAM inspection:
+
+    ./scripts/inspect-sudo-pam.sh
+
+The inspection script does not modify /etc/pam.d/sudo.
