@@ -86,3 +86,17 @@ Template files must:
 The current scaffold uses placeholder bytes only.
 
 It does not store real face templates, embeddings, face crops, or raw images.
+
+## Template CLI scaffold
+
+The encrypted placeholder template CLI is documented in:
+
+    docs/template-cli.md
+
+Tool:
+
+    ./build/daemon/face-unlock-template-tool
+
+This currently creates encrypted placeholder data only.
+
+It does not create real biometric templates.

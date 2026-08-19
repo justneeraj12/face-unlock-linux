@@ -3,6 +3,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -147,6 +148,33 @@ std::string get_default_config_path() {
 
   return std::string(home) + "/.config/face-unlock/config.json";
 }
+
+std::string get_default_template_path() {
+  const char* home = std::getenv("HOME");
+
+  if (home == nullptr || std::string(home).empty()) {
+    return "";
+  }
+
+  return std::string(home) + "/.local/share/face-unlock/template.enc";
+}
+
+bool template_file_exists() {
+  const std::string path = get_default_template_path();
+
+  if (path.empty()) {
+    return false;
+  }
+
+  return std::filesystem::is_regular_file(path);
+}
+
+std::string template_json_fields() {
+  return std::string(",\"template\":\"") +
+    (template_file_exists() ? "present" : "missing") +
+    "\"";
+}
+
 
 std::string read_text_file(const std::string& path) {
   std::ifstream input(path);
@@ -571,21 +599,22 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
   const std::string op = extract_operation(request);
   const CameraStatus camera_status = get_camera_status(frame_store);
   const std::string camera_fields = camera_status_json_fields(camera_status);
+  const std::string template_fields = template_json_fields();
 
   if (op == "ping") {
     return "{\"status\":\"ok\",\"op\":\"ping\",\"reason\":\"daemon_alive\""
-      + camera_fields + "}\n";
+      + camera_fields + template_fields + "}\n";
   }
 
   if (op == "camera_status") {
     return "{\"status\":\"ok\",\"op\":\"camera_status\""
-      + camera_fields + "}\n";
+      + camera_fields + template_fields + "}\n";
   }
 
   if (op == "auth") {
     if (auth_state == nullptr) {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_state_unavailable\""
-        + camera_fields + "}\n";
+        + camera_fields + template_fields + "}\n";
     }
 
     if (dev_auth_enabled() && camera_status.state == "ready") {
@@ -593,6 +622,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
 
       return "{\"status\":\"ok\",\"op\":\"auth\",\"reason\":\"dev_allow_camera_ready\""
         + camera_fields
+        + template_fields
         + ",\"auth_attempts_failed\":0"
         + ",\"auth_attempts_remaining\":" + std::to_string(auth_state->remaining())
         + "}\n";
@@ -601,6 +631,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     if (auth_state->too_many_attempts()) {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"too_many_attempts\""
         + camera_fields
+        + template_fields
         + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
         + ",\"auth_attempts_remaining\":0"
         + "}\n";
@@ -611,6 +642,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     if (dev_auth_enabled() && camera_status.state != "ready") {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"camera_not_ready\""
         + camera_fields
+        + template_fields
         + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
         + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
         + "}\n";
@@ -618,13 +650,14 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
 
     return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_not_implemented\""
       + camera_fields
+      + template_fields
       + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
       + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
       + "}\n";
   }
 
   return "{\"status\":\"fail\",\"op\":\"unknown\",\"reason\":\"unknown_operation\""
-    + camera_fields + "}\n";
+    + camera_fields + template_fields + "}\n";
 }
 
 void handle_client(int client_fd, FrameStore* frame_store, AuthState* auth_state) {

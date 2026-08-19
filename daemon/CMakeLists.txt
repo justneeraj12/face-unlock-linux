@@ -88,6 +88,21 @@ target_link_libraries(face-unlock-crypto-selftest PRIVATE
   face_unlock_crypto
 )
 
+add_executable(face-unlock-template-tool
+  src/template_tool.cpp
+)
+
+target_compile_options(face-unlock-template-tool PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+)
+
+target_link_libraries(face-unlock-template-tool PRIVATE
+  face_unlock_crypto
+)
+
+
 if(BUILD_TESTING)
   add_test(
     NAME crypto_selftest
@@ -95,6 +110,6 @@ if(BUILD_TESTING)
   )
 endif()
 
-install(TARGETS face-unlockd face-unlock-crypto-selftest
+install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-tool
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

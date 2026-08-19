@@ -638,3 +638,27 @@ The successful passwordless sudo path used development-only auth:
     FACE_UNLOCK_DEV_ALLOW=1
 
 This is not real biometric authentication and must not be used as production auth.
+
+## Template CLI scaffold
+
+Encrypted placeholder template tool:
+
+    ./build/daemon/face-unlock-template-tool
+
+Documentation:
+
+    docs/template-cli.md
+
+Create placeholder:
+
+    ./build/daemon/face-unlock-template-tool create-placeholder --i-understand-placeholder
+
+Check status:
+
+    ./build/daemon/face-unlock-template-tool status
+
+Delete:
+
+    ./build/daemon/face-unlock-template-tool delete --yes
+
+This is not real enrollment yet.
