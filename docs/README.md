@@ -127,3 +127,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | model-evaluation-metrics.md | Metrics format and validator details |
+
+## Contribution review
+
+| Document | Purpose |
+|---|---|
+| pull-request-review.md | Review expectations for security-sensitive PRs |

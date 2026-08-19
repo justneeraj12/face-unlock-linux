@@ -110,3 +110,18 @@ Model proposals must document:
 - privacy/security concerns
 
 Do not attach private biometric data to issues.
+
+## Pull request security checklist
+
+The pull request template includes security-sensitive sections for:
+
+- PAM behavior
+- biometric data handling
+- model licensing
+- template encryption
+- installer behavior
+- rollback instructions
+
+Contributors must complete the relevant checklist items before requesting review.
+
+GitHub automatically places the pull request template text into new pull request descriptions, so these prompts should appear when opening a PR.
