@@ -208,3 +208,9 @@ Dry-run behavior can be tested with:
     ./scripts/test-sudo-dry-run.sh
 
 The test verifies that /etc/pam.d/sudo is unchanged after running dry-run planners.
+
+## Troubleshooting
+
+If sudo integration behaves unexpectedly, see:
+
+    docs/sudo-troubleshooting.md

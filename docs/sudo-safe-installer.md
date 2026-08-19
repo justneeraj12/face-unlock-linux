@@ -94,3 +94,9 @@ At this stage:
 - dry-run planning is allowed
 - automatic sudo modification is not implemented
 - manual editing of /etc/pam.d/sudo is discouraged
+
+## Troubleshooting
+
+sudo dry-run and future installer troubleshooting is documented in:
+
+    docs/sudo-troubleshooting.md

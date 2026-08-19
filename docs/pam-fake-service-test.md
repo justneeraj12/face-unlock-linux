@@ -189,3 +189,9 @@ The remove script deletes only:
 
     /etc/pam.d/face-unlock-test
     /usr/lib/x86_64-linux-gnu/security/pam_face_unlock.so
+
+## Troubleshooting
+
+If PAM testing behaves unexpectedly, see:
+
+    docs/sudo-troubleshooting.md

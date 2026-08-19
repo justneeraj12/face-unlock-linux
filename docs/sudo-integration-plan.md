@@ -100,3 +100,9 @@ Rollback command must be printed before applying changes:
 ## Current policy
 
 At this stage, scripts may inspect sudo PAM configuration but must not modify it automatically.
+
+## Troubleshooting
+
+sudo integration troubleshooting is documented in:
+
+    docs/sudo-troubleshooting.md

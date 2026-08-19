@@ -127,3 +127,9 @@ The guarded sudo apply script performs a root-owned auth peer preflight check.
 If root auth peers are disabled, the script warns before applying sudo PAM changes.
 
 This helps avoid confusion where sudo integration is installed but face auth always falls back to password.
+
+## Troubleshooting
+
+If root-owned sudo auth requests are rejected or confusing, see:
+
+    docs/sudo-troubleshooting.md

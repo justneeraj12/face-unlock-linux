@@ -72,3 +72,9 @@ The safe fake PAM service test is documented in:
     docs/pam-fake-service-test.md
 
 Run this test successfully before considering any sudo, lock-screen, or greeter integration.
+
+## Troubleshooting
+
+sudo/PAM development troubleshooting is documented in:
+
+    docs/sudo-troubleshooting.md
