@@ -373,6 +373,12 @@ std::string extract_operation(const std::string& request) {
   return "unknown";
 }
 
+bool dev_auth_enabled() {
+  const char* value = std::getenv("FACE_UNLOCK_DEV_ALLOW");
+
+  return value != nullptr && std::string(value) == "1";
+}
+
 std::string build_response_for_request(const std::string& request, FrameStore* frame_store) {
   const std::string op = extract_operation(request);
   const CameraStatus camera_status = get_camera_status(frame_store);
@@ -389,6 +395,16 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
   }
 
   if (op == "auth") {
+    if (dev_auth_enabled() && camera_status.state == "ready") {
+      return "{\"status\":\"ok\",\"op\":\"auth\",\"reason\":\"dev_allow_camera_ready\""
+        + camera_fields + "}\n";
+    }
+
+    if (dev_auth_enabled() && camera_status.state != "ready") {
+      return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"camera_not_ready\""
+        + camera_fields + "}\n";
+    }
+
     return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_not_implemented\""
       + camera_fields + "}\n";
   }
@@ -602,6 +618,7 @@ int main(int argc, char** argv) {
   std::cout << "uid: " << uid << '\n';
   std::cout << "runtime_dir: " << runtime_dir << '\n';
   std::cout << "planned_socket: " << socket_path << '\n';
+  std::cout << "dev_auth_enabled: " << (dev_auth_enabled() ? "true" : "false") << '\n';
 
   if (options.serve) {
     std::cout << "mode: serve" << '\n';

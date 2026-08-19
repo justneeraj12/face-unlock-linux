@@ -17,7 +17,8 @@ This directory contains the user-level face unlock daemon.
 - logs UNIX socket peer credentials with SO_PEERCRED
 - currently allows same-UID socket clients only
 - supports simple socket operations: ping, camera_status, auth
-- auth operation currently fails closed
+- auth operation fails closed by default
+- development-only auth can be enabled with FACE_UNLOCK_DEV_ALLOW=1
 - stops cleanly with Ctrl+C
 - does not save images
 
@@ -45,6 +46,7 @@ The daemon must fail closed if:
 - the IPC peer is not trusted
 - authentication times out
 - auth is not implemented
+- development auth is not explicitly enabled
 
 ## Build
 
@@ -56,7 +58,31 @@ Run daemon mode with camera worker and socket server:
 
     ./build/daemon/face-unlockd --camera 0 --daemon
 
-In another terminal, test ping:
+Test auth fail-closed behavior in another terminal:
+
+    ./scripts/test-socket-client.sh auth
+
+Expected default auth response:
+
+    {"status":"fail","op":"auth","reason":"auth_not_implemented","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+
+Run daemon mode with development-only auth enabled:
+
+    FACE_UNLOCK_DEV_ALLOW=1 ./build/daemon/face-unlockd --camera 0 --daemon
+
+Then test auth:
+
+    ./scripts/test-socket-client.sh auth
+
+Expected development-only auth response:
+
+    {"status":"ok","op":"auth","reason":"dev_allow_camera_ready","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+
+Stop daemon mode with Ctrl+C.
+
+## Socket operations
+
+Test ping:
 
     ./scripts/test-socket-client.sh ping
 
@@ -64,25 +90,9 @@ Test camera status:
 
     ./scripts/test-socket-client.sh camera_status
 
-Test auth fail-closed behavior:
+Test auth:
 
     ./scripts/test-socket-client.sh auth
-
-Stop daemon mode with Ctrl+C.
-
-## Current expected socket responses
-
-Ping:
-
-    {"status":"ok","op":"ping","reason":"daemon_alive","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
-
-Camera status:
-
-    {"status":"ok","op":"camera_status","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
-
-Auth currently fails closed:
-
-    {"status":"fail","op":"auth","reason":"auth_not_implemented","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
 
 ## Security notes
 
@@ -92,6 +102,12 @@ Current prototype policy:
 
 - same UID is allowed
 - other users are rejected
+
+Auth behavior:
+
+- default auth fails closed
+- FACE_UNLOCK_DEV_ALLOW=1 is for development testing only
+- FACE_UNLOCK_DEV_ALLOW=1 must never be used as real authentication
 
 Future PAM integration may require carefully reviewed handling for privileged PAM clients.
 
