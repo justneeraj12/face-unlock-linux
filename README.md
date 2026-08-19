@@ -249,3 +249,15 @@ Read-only sudo PAM inspection:
     ./scripts/inspect-sudo-pam.sh
 
 The inspection script does not modify /etc/pam.d/sudo.
+
+## Development setup
+
+For Ubuntu 24.04 development setup:
+
+    ./setup-dev.sh
+
+Documentation:
+
+    docs/development-setup.md
+
+The setup script installs development packages only. It does not modify PAM files or enable authentication integration.
