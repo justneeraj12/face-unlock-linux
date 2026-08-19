@@ -85,60 +85,126 @@ See:
     docs/releases/v0.1.0-alpha.md
     ROADMAP.md
 
+## Project snapshot
+
+| Area | Status |
+|---|---|
+| Repository | Public, documented, CI-enabled |
+| Target OS | Ubuntu 24.04 LTS |
+| Daemon | Working C++17 prototype |
+| Camera | OpenCV one-shot, loop, and worker thread |
+| IPC | UNIX socket with 0600 permissions |
+| Peer checks | SO_PEERCRED logging and same-UID policy |
+| PAM | Minimal C IPC module |
+| PAM testing | Fake PAM service only |
+| Auth default | Fail-closed |
+| Dev auth | Explicit FACE_UNLOCK_DEV_ALLOW=1 only |
+| Templates | libsodium encrypted storage scaffold |
+| Models | TorchScript export/load scaffolds |
+| Packaging | CPack Debian package skeleton |
+| Real face recognition | Not implemented yet |
+| Production sudo/lock screen | Not implemented yet |
+
 ## Architecture
 
-High-level design:
+The project separates privileged authentication glue from camera/model code.
 
-<pre>
-┌──────────────────────────────────────────────────────────────┐
-│                        Desktop User                          │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    user["Desktop user session"]
 
-        Camera frames                    Local IPC
-            │                               │
-            ▼                               ▼
-┌──────────────────────┐        ┌──────────────────────────────┐
-│ OpenCV Camera Worker │        │ UNIX Socket Server           │
-│                      │        │                              │
-│ - opens webcam       │        │ - /run/user/$UID/...sock     │
-│ - stores latest frame│◄──────►│ - mode 0600                  │
-│ - no image saving    │        │ - SO_PEERCRED peer logging   │
-└──────────────────────┘        └───────────────┬──────────────┘
-                                                 │
-                                                 │ auth request
-                                                 ▼
-                                      ┌─────────────────────┐
-                                      │ PAM Module          │
-                                      │ pam_face_unlock.so  │
-                                      │                     │
-                                      │ - tiny C IPC client │
-                                      │ - no OpenCV         │
-                                      │ - no Torch          │
-                                      │ - no Qt             │
-                                      │ - bounded timeout   │
-                                      └─────────────────────┘
+    subgraph daemon["face-unlockd user daemon"]
+        camera["OpenCV camera worker"]
+        frame["Latest frame store<br/>in memory only"]
+        socket["UNIX socket server<br/>/run/user/$UID/face-unlock.sock<br/>mode 0600"]
+        auth["Fail-closed auth state<br/>max_auth_attempts"]
+        crypto["libsodium template crypto<br/>scaffold"]
+        torch["Optional TorchScript loader<br/>scaffold"]
+    end
 
-Future planned path:
+    subgraph pam["PAM boundary"]
+        pammod["pam_face_unlock.so<br/>tiny C IPC client"]
+        pamunix["pam_unix.so<br/>password fallback"]
+    end
 
-┌──────────────────────┐
-│ Qt Enrollment GUI    │
-│                      │
-│ - consent            │
-│ - multi-angle poses  │
-│ - quality checks     │
-│ - brightness assist  │
-│ - encrypted template │
-└──────────────────────┘
+    subgraph future["Future components"]
+        gui["Qt enrollment GUI"]
+        template["Encrypted face template"]
+        model["Detector / aligner / embedding model"]
+    end
 
-┌──────────────────────┐
-│ TorchScript Models   │
-│                      │
-│ - detector           │
-│ - alignment          │
-│ - embeddings         │
-│ - matching           │
-└──────────────────────┘
-</pre>
+    user --> pammod
+    pammod --> socket
+    socket --> auth
+    camera --> frame
+    frame --> auth
+    auth --> socket
+    socket --> pammod
+    pammod --> pamunix
+
+    gui -. future .-> template
+    template -. future .-> crypto
+    model -. future .-> torch
+    torch -. future .-> auth
+    crypto -. future .-> auth
+```
+
+## Authentication flow
+
+Current auth is intentionally fail-closed unless development auth is explicitly enabled.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant PAM as PAM service / fake PAM test
+    participant Module as pam_face_unlock.so
+    participant Daemon as face-unlockd
+    participant Camera as Camera worker
+    participant Password as Password fallback
+
+    User->>PAM: authenticate
+    PAM->>Module: pam_sm_authenticate
+    Module->>Daemon: UNIX socket auth request
+    Daemon->>Daemon: SO_PEERCRED peer check
+    Daemon->>Camera: check latest frame status
+    Daemon->>Daemon: check auth attempts
+    alt FACE_UNLOCK_DEV_ALLOW=1 and camera ready
+        Daemon-->>Module: status ok
+        Module-->>PAM: PAM_SUCCESS
+        PAM-->>User: authenticated
+    else default behavior
+        Daemon-->>Module: status fail
+        Module-->>PAM: PAM_AUTH_ERR
+        PAM->>Password: fallback to password
+        Password-->>PAM: success or failure
+        PAM-->>User: final result
+    end
+```
+
+## What works vs what is planned
+
+| Capability | Current state |
+|---|---|
+| Camera open/read | Working |
+| Camera worker thread | Working |
+| UNIX socket server | Working |
+| Socket permissions | Working, 0600 |
+| Peer credential logging | Working, SO_PEERCRED |
+| PAM IPC module | Working |
+| Fake PAM test | Working |
+| systemd user service | Working helper scripts |
+| Debian package | Working skeleton |
+| Crypto self-test | Working |
+| Python capture prototype | Working, saves nothing by default |
+| TorchScript export stub | Working |
+| Optional LibTorch loader | Scaffolded |
+| Real face detection in daemon | Planned |
+| Real embedding matching | Planned |
+| Encrypted enrollment templates | Planned |
+| Qt enrollment GUI | Planned |
+| sudo integration | Planning only |
+| Lock-screen integration | Planned |
+| Greeter integration | Planned |
 
 ## Security model
 
