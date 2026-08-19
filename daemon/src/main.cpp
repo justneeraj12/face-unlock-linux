@@ -648,7 +648,16 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
         + "}\n";
     }
 
-    return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_not_implemented\""
+    if (!template_file_exists()) {
+      return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"template_missing\""
+        + camera_fields
+        + template_fields
+        + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
+        + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
+        + "}\n";
+    }
+
+    return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"matcher_not_implemented\""
       + camera_fields
       + template_fields
       + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())

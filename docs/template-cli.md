@@ -86,3 +86,15 @@ The tool does not store raw images.
 The placeholder contains no biometric data.
 
 Real enrollment and matching are not implemented yet.
+
+## Auth reason behavior
+
+When no template exists, auth responses should include:
+
+    reason template_missing
+
+When a placeholder template exists, auth responses should include:
+
+    reason matcher_not_implemented
+
+This still does not mean real matching is implemented.

@@ -147,3 +147,13 @@ Policy:
 See:
 
     docs/sudo-root-peer-policy.md
+
+## Template-aware auth reasons
+
+Default auth now distinguishes:
+
+- template_missing when no encrypted template file exists
+- matcher_not_implemented when a placeholder template exists but no real matcher is implemented
+- too_many_attempts when max_auth_attempts is exceeded
+
+Auth still fails closed unless development auth is explicitly enabled.

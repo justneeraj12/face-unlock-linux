@@ -108,3 +108,12 @@ The first alpha release has been tagged as:
 This release is an infrastructure prototype.
 
 It is not real biometric authentication yet.
+
+## Template-aware auth status
+
+The daemon now reports template-aware auth failure reasons:
+
+- template_missing
+- matcher_not_implemented
+
+Real biometric matching is still not implemented.
