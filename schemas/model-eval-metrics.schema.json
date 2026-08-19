@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/justneeraj12/face-unlock-linux/schemas/model-eval-metrics.schema.json",
+  "title": "face-unlock-linux model evaluation metrics",
+  "type": "object",
+  "required": [
+    "format",
+    "format_version",
+    "created_at",
+    "model",
+    "dataset",
+    "performance",
+    "similarity",
+    "privacy"
+  ],
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "face-unlock-model-eval-metrics"
+    },
+    "format_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "model_id",
+        "model_type",
+        "real_face_recognition",
+        "embedding_dim"
+      ],
+      "properties": {
+        "model_id": {
+          "type": "string"
+        },
+        "model_type": {
+          "type": "string"
+        },
+        "real_face_recognition": {
+          "type": "boolean"
+        },
+        "embedding_dim": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "required": [
+        "source",
+        "images_count",
+        "contains_biometric_data",
+        "committed_to_git"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "images_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contains_biometric_data": {
+          "type": "boolean"
+        },
+        "committed_to_git": {
+          "type": "boolean"
+        }
+      }
+    },
+    "performance": {
+      "type": "object"
+    },
+    "similarity": {
+      "type": "object"
+    },
+    "threshold": {
+      "type": "object"
+    },
+    "privacy": {
+      "type": "object",
+      "required": [
+        "raw_images_included",
+        "embeddings_included",
+        "safe_to_commit"
+      ],
+      "properties": {
+        "raw_images_included": {
+          "type": "boolean"
+        },
+        "embeddings_included": {
+          "type": "boolean"
+        },
+        "safe_to_commit": {
+          "type": "boolean"
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

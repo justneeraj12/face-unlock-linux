@@ -115,3 +115,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | model-evaluation-harness.md | Python scaffold for model evaluation metrics |
+
+## Evaluation metrics
+
+| Document | Purpose |
+|---|---|
+| model-evaluation-metrics.md | JSON format for model evaluation metrics |

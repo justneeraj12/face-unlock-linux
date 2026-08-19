@@ -486,3 +486,17 @@ Documentation:
     docs/model-evaluation-harness.md
 
 It currently uses a random stub model and is not real face recognition.
+
+## Model evaluation metrics format
+
+Model evaluation metrics format:
+
+    docs/model-evaluation-metrics.md
+
+Example:
+
+    schemas/model-eval-metrics.example.json
+
+Schema scaffold:
+
+    schemas/model-eval-metrics.schema.json

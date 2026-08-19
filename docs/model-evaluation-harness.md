@@ -74,3 +74,17 @@ Future work:
 - compare genuine and negative samples
 - compute threshold curves
 - export calibration reports
+
+## Metrics format
+
+The planned metrics JSON format is documented in:
+
+    docs/model-evaluation-metrics.md
+
+Schema scaffold:
+
+    schemas/model-eval-metrics.schema.json
+
+Example:
+
+    schemas/model-eval-metrics.example.json

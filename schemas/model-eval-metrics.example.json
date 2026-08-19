@@ -1,0 +1,50 @@
+{
+  "format": "face-unlock-model-eval-metrics",
+  "format_version": 1,
+  "created_at": "2026-08-19T00:00:00Z",
+  "model": {
+    "model_id": "random-embedding-stub",
+    "model_type": "embedding",
+    "real_face_recognition": false,
+    "embedding_dim": 128
+  },
+  "dataset": {
+    "source": "local-only",
+    "images_count": 10,
+    "contains_biometric_data": true,
+    "committed_to_git": false
+  },
+  "performance": {
+    "total_ms": 50.0,
+    "inference_ms": {
+      "count": 10,
+      "min": 2.0,
+      "max": 8.0,
+      "mean": 5.0,
+      "median": 5.0
+    }
+  },
+  "similarity": {
+    "metric": "cosine_similarity",
+    "pairwise": {
+      "count": 45,
+      "min": 0.1,
+      "max": 0.9,
+      "mean": 0.5,
+      "median": 0.5
+    }
+  },
+  "threshold": {
+    "selected": null,
+    "method": "not_calibrated"
+  },
+  "privacy": {
+    "raw_images_included": false,
+    "embeddings_included": false,
+    "safe_to_commit": false
+  },
+  "warnings": [
+    "example metrics only",
+    "not real face recognition"
+  ]
+}
