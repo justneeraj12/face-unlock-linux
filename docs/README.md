@@ -151,3 +151,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | milestones.md | Planned project milestone definitions |
+
+## GitHub issues
+
+| Document | Purpose |
+|---|---|
+| github-issues.md | Starter issue bootstrap script |

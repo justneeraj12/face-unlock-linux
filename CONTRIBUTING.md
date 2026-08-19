@@ -143,3 +143,11 @@ Project labels can be bootstrapped with:
     ./scripts/bootstrap-labels.sh
 
 Labels cover areas such as daemon, PAM, GUI, models, packaging, security, privacy, and testing.
+
+## Starter issues
+
+Maintainers can bootstrap starter issues with:
+
+    ./scripts/bootstrap-issues.sh
+
+The script creates issues for upcoming milestones such as sudo hardening, enrollment CLI, model evaluation, Qt enrollment, lock-screen testing, and security review.
