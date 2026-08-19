@@ -153,3 +153,13 @@ The current UI can mark/reset demo quality state.
 No camera analysis is performed yet.
 
 Future versions should compute these from camera frames and enrollment metadata.
+
+## Camera preview placeholder
+
+The GUI includes a camera preview placeholder panel.
+
+It does not access the camera yet.
+
+Design document:
+
+    docs/gui-camera-preview.md

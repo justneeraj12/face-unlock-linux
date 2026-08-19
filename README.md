@@ -791,3 +791,13 @@ The main CI workflow keeps GUI disabled by default.
 The optional Qt GUI includes a placeholder enrollment quality checklist.
 
 This is UI-only. No camera analysis is performed yet.
+
+## GUI camera preview placeholder
+
+The optional Qt GUI includes a camera preview placeholder panel.
+
+It does not access the camera yet.
+
+Documentation:
+
+    docs/gui-camera-preview.md

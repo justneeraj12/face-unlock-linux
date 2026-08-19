@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFont>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMessageBox>
@@ -193,6 +194,33 @@ int main(int argc, char* argv[]) {
   status->setPlainText(statusText());
   status->setMinimumHeight(210);
 
+  auto* previewFrame = new QFrame();
+  previewFrame->setFrameShape(QFrame::StyledPanel);
+  previewFrame->setMinimumHeight(180);
+  previewFrame->setStyleSheet(QStringLiteral(
+    "QFrame { background-color: #202124; border: 1px solid #555; border-radius: 6px; }"
+    "QLabel { color: #eeeeee; }"
+  ));
+
+  auto* previewLayout = new QVBoxLayout(previewFrame);
+  auto* previewTitle = new QLabel(QStringLiteral("Camera preview placeholder"));
+  QFont previewTitleFont = previewTitle->font();
+  previewTitleFont.setBold(true);
+  previewTitleFont.setPointSize(14);
+  previewTitle->setFont(previewTitleFont);
+
+  auto* previewText = new QLabel(QStringLiteral(
+    "Live camera preview is not connected yet.\n"
+    "No camera frames are read by the GUI.\n"
+    "No images are saved."
+  ));
+  previewText->setAlignment(Qt::AlignCenter);
+
+  previewLayout->addWidget(previewTitle);
+  previewLayout->addStretch();
+  previewLayout->addWidget(previewText);
+  previewLayout->addStretch();
+
   auto* consent = new QTextEdit();
   consent->setReadOnly(true);
   consent->setPlainText(consentText());
@@ -283,6 +311,7 @@ int main(int argc, char* argv[]) {
   root->addWidget(subtitle);
   root->addWidget(warning);
   root->addWidget(status);
+  root->addWidget(previewFrame);
   root->addWidget(consent);
   root->addWidget(poseLabel);
   root->addLayout(poseRow);

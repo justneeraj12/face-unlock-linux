@@ -107,3 +107,9 @@ The GUI includes placeholder quality checklist items:
 Current buttons only mark/reset demo state.
 
 No camera analysis is performed yet.
+
+## Camera preview placeholder
+
+The GUI includes a placeholder panel for future camera preview.
+
+It currently does not access the camera or save frames.
