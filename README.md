@@ -587,3 +587,9 @@ Verify required helper scripts exist and are executable:
 Documentation:
 
     docs/script-inventory.md
+
+## Changelog
+
+Project changelog:
+
+    CHANGELOG.md

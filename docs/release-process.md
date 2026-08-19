@@ -105,3 +105,27 @@ It builds the Debian package and uploads the .deb to the GitHub Release.
 See:
 
     docs/release-artifacts.md
+
+## Changelog
+
+Before each release, update:
+
+    CHANGELOG.md
+
+Move relevant items from Unreleased into the release section.
+
+## Changelog
+
+Before each release, update:
+
+    CHANGELOG.md
+
+Move relevant items from Unreleased into the release section.
+
+## Changelog
+
+Before each release, update:
+
+    CHANGELOG.md
+
+Move relevant items from Unreleased into the release section.

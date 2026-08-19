@@ -181,3 +181,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | script-inventory.md | Required scripts and executable checks |
+
+## Changelog
+
+| Document | Purpose |
+|---|---|
+| ../CHANGELOG.md | Project changelog |
