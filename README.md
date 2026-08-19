@@ -1,5 +1,7 @@
 # face-unlock-linux
 
+[![build](https://github.com/justneeraj12/face-unlock-linux/actions/workflows/build.yml/badge.svg)](https://github.com/justneeraj12/face-unlock-linux/actions/workflows/build.yml)
+
 Experimental open-source face recognition unlock utility for Ubuntu Linux.
 
 face-unlock-linux aims to provide a secure, low-latency, user-controlled face unlock system for Ubuntu 24.04 and compatible Linux desktops.
