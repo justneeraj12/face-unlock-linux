@@ -704,3 +704,12 @@ alongside:
     ~/.local/share/face-unlock/template.enc
 
 This is placeholder-only and not real biometric enrollment.
+
+## Daemon enrollment status
+
+Daemon socket responses now include enrollment manifest status:
+
+    "enrollment":"missing"
+    "enrollment":"placeholder"
+
+Real biometric enrollment is still not implemented.

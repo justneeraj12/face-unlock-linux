@@ -133,3 +133,15 @@ It records:
 Both files are written with mode 0600.
 
 delete --yes removes both the encrypted placeholder template and the placeholder enrollment manifest.
+
+## Daemon status integration
+
+After create-placeholder, daemon socket responses should include:
+
+    "template":"present"
+    "enrollment":"placeholder"
+
+After delete --yes, daemon socket responses should include:
+
+    "template":"missing"
+    "enrollment":"missing"

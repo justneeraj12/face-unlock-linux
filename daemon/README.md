@@ -157,3 +157,21 @@ Default auth now distinguishes:
 - too_many_attempts when max_auth_attempts is exceeded
 
 Auth still fails closed unless development auth is explicitly enabled.
+
+## Enrollment manifest status
+
+Daemon socket responses include enrollment manifest status.
+
+Possible values:
+
+- missing
+- placeholder
+- real
+- present_unknown
+- unreadable
+
+Current placeholder enrollment reports:
+
+    enrollment placeholder
+
+Real biometric enrollment is still not implemented.

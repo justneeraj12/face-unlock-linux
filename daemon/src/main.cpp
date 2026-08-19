@@ -30,6 +30,8 @@
 
 namespace {
 
+std::string read_text_file(const std::string& path);
+
 std::atomic<bool> g_running{true};
 
 void handle_signal(int signal_number) {
@@ -173,6 +175,64 @@ std::string template_json_fields() {
   return std::string(",\"template\":\"") +
     (template_file_exists() ? "present" : "missing") +
     "\"";
+}
+
+std::string get_default_enrollment_manifest_path() {
+  const char* home = std::getenv("HOME");
+
+  if (home == nullptr || std::string(home).empty()) {
+    return "";
+  }
+
+  return std::string(home) + "/.local/share/face-unlock/enrollment.json";
+}
+
+std::string compact_metadata_text(const std::string& input) {
+  std::string compact;
+  compact.reserve(input.size());
+
+  for (char ch : input) {
+    if (ch != ' ' && ch != '\n' && ch != '\r' && ch != '\t') {
+      compact.push_back(ch);
+    }
+  }
+
+  return compact;
+}
+
+std::string enrollment_status_value() {
+  const std::string path = get_default_enrollment_manifest_path();
+
+  if (path.empty()) {
+    return "missing";
+  }
+
+  if (!std::filesystem::is_regular_file(path)) {
+    return "missing";
+  }
+
+  const std::string content = read_text_file(path);
+
+  if (content.empty()) {
+    return "unreadable";
+  }
+
+  const std::string compact = compact_metadata_text(content);
+
+  if (compact.find("\"placeholder_only\":true") != std::string::npos) {
+    return "placeholder";
+  }
+
+  if (compact.find("\"real_biometric_template\":true") != std::string::npos &&
+      compact.find("\"enrollment_complete\":true") != std::string::npos) {
+    return "real";
+  }
+
+  return "present_unknown";
+}
+
+std::string enrollment_json_fields() {
+  return std::string(",\"enrollment\":\"") + enrollment_status_value() + "\"";
 }
 
 
@@ -600,21 +660,22 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
   const CameraStatus camera_status = get_camera_status(frame_store);
   const std::string camera_fields = camera_status_json_fields(camera_status);
   const std::string template_fields = template_json_fields();
+  const std::string enrollment_fields = enrollment_json_fields();
 
   if (op == "ping") {
     return "{\"status\":\"ok\",\"op\":\"ping\",\"reason\":\"daemon_alive\""
-      + camera_fields + template_fields + "}\n";
+      + camera_fields + template_fields + enrollment_fields + "}\n";
   }
 
   if (op == "camera_status") {
     return "{\"status\":\"ok\",\"op\":\"camera_status\""
-      + camera_fields + template_fields + "}\n";
+      + camera_fields + template_fields + enrollment_fields + "}\n";
   }
 
   if (op == "auth") {
     if (auth_state == nullptr) {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_state_unavailable\""
-        + camera_fields + template_fields + "}\n";
+        + camera_fields + template_fields + enrollment_fields + "}\n";
     }
 
     if (dev_auth_enabled() && camera_status.state == "ready") {
@@ -622,7 +683,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
 
       return "{\"status\":\"ok\",\"op\":\"auth\",\"reason\":\"dev_allow_camera_ready\""
         + camera_fields
-        + template_fields
+        + template_fields + enrollment_fields
         + ",\"auth_attempts_failed\":0"
         + ",\"auth_attempts_remaining\":" + std::to_string(auth_state->remaining())
         + "}\n";
@@ -631,7 +692,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     if (auth_state->too_many_attempts()) {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"too_many_attempts\""
         + camera_fields
-        + template_fields
+        + template_fields + enrollment_fields
         + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
         + ",\"auth_attempts_remaining\":0"
         + "}\n";
@@ -642,7 +703,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     if (dev_auth_enabled() && camera_status.state != "ready") {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"camera_not_ready\""
         + camera_fields
-        + template_fields
+        + template_fields + enrollment_fields
         + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
         + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
         + "}\n";
@@ -651,7 +712,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     if (!template_file_exists()) {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"template_missing\""
         + camera_fields
-        + template_fields
+        + template_fields + enrollment_fields
         + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
         + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
         + "}\n";
@@ -659,14 +720,14 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
 
     return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"matcher_not_implemented\""
       + camera_fields
-      + template_fields
+      + template_fields + enrollment_fields
       + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
       + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
       + "}\n";
   }
 
   return "{\"status\":\"fail\",\"op\":\"unknown\",\"reason\":\"unknown_operation\""
-    + camera_fields + template_fields + "}\n";
+    + camera_fields + template_fields + enrollment_fields + "}\n";
 }
 
 void handle_client(int client_fd, FrameStore* frame_store, AuthState* auth_state) {
@@ -843,6 +904,7 @@ void camera_worker(FrameStore& frame_store, int camera_index) {
 
 bool run_model_test(const std::string& model_path) {
 #ifndef FACE_UNLOCK_WITH_TORCH
+  (void)model_path;
   std::cout << "torch_status: disabled\n";
   std::cout << "status: torch_not_enabled\n";
   return false;

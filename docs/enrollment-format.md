@@ -165,3 +165,23 @@ Files written:
 Both files should have mode 0600.
 
 This is still not real enrollment.
+
+## Daemon enrollment status
+
+The daemon now reads the enrollment manifest status from:
+
+    ~/.local/share/face-unlock/enrollment.json
+
+Socket responses include an enrollment field:
+
+    "enrollment":"missing"
+    "enrollment":"placeholder"
+    "enrollment":"real"
+    "enrollment":"present_unknown"
+    "enrollment":"unreadable"
+
+Current placeholder enrollment should report:
+
+    "enrollment":"placeholder"
+
+Real enrollment is still not implemented.
