@@ -148,3 +148,20 @@ Planned next steps:
 - connect Qt enrollment GUI to manifest format
 - encrypt real embedding templates
 - validate manifest against schema in tests
+
+## Placeholder manifest writer
+
+The template CLI now writes a placeholder enrollment manifest when creating a placeholder template.
+
+Command:
+
+    ./build/daemon/face-unlock-template-tool create-placeholder --i-understand-placeholder
+
+Files written:
+
+    ~/.local/share/face-unlock/template.enc
+    ~/.local/share/face-unlock/enrollment.json
+
+Both files should have mode 0600.
+
+This is still not real enrollment.

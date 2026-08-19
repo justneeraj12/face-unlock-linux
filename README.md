@@ -692,3 +692,15 @@ Schema scaffold:
     schemas/enrollment-manifest.schema.json
 
 The manifest is metadata only and must not contain raw face images, unencrypted embeddings, or encryption keys.
+
+## Placeholder enrollment manifest
+
+The template tool now writes placeholder enrollment metadata:
+
+    ~/.local/share/face-unlock/enrollment.json
+
+alongside:
+
+    ~/.local/share/face-unlock/template.enc
+
+This is placeholder-only and not real biometric enrollment.

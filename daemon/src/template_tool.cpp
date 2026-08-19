@@ -1,6 +1,7 @@
 #include "template_crypto.h"
 
 #include <filesystem>
+#include <ctime>
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
@@ -38,6 +39,106 @@ std::string mode_string(const std::string& path) {
   return buffer;
 }
 
+std::string default_enrollment_manifest_path() {
+  const char* home = std::getenv("HOME");
+
+  if (home == nullptr || std::string(home).empty()) {
+    return "";
+  }
+
+  return std::string(home) + "/.local/share/face-unlock/enrollment.json";
+}
+
+std::string current_utc_timestamp() {
+  std::time_t now = std::time(nullptr);
+  std::tm tm_utc {};
+
+  gmtime_r(&now, &tm_utc);
+
+  char buffer[32] {};
+  std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%SZ", &tm_utc);
+
+  return buffer;
+}
+
+std::string current_username() {
+  const char* user = std::getenv("USER");
+
+  if (user != nullptr && std::string(user).size() > 0) {
+    return user;
+  }
+
+  return "unknown";
+}
+
+std::string placeholder_manifest_json(const std::string& template_path) {
+  const std::string now = current_utc_timestamp();
+
+  return std::string()
+    + "{\n"
+    + "  \"format\": \"face-unlock-enrollment-manifest\",\n"
+    + "  \"format_version\": 1,\n"
+    + "  \"created_at\": \"" + now + "\",\n"
+    + "  \"updated_at\": \"" + now + "\",\n"
+    + "  \"user\": {\n"
+    + "    \"uid\": " + std::to_string(getuid()) + ",\n"
+    + "    \"username\": \"" + current_username() + "\"\n"
+    + "  },\n"
+    + "  \"model\": {\n"
+    + "    \"embedding_model_id\": \"placeholder-none\",\n"
+    + "    \"detector_model_id\": \"none\",\n"
+    + "    \"embedding_dim\": 0,\n"
+    + "    \"input_size\": [112, 112],\n"
+    + "    \"preprocessing\": {\n"
+    + "      \"color_order\": \"not_applicable\",\n"
+    + "      \"normalization\": \"not_applicable\",\n"
+    + "      \"alignment\": \"not_implemented\"\n"
+    + "    }\n"
+    + "  },\n"
+    + "  \"template\": {\n"
+    + "    \"encrypted_template_path\": \"" + template_path + "\",\n"
+    + "    \"encryption\": \"libsodium_crypto_secretbox\",\n"
+    + "    \"contains_raw_images\": false,\n"
+    + "    \"contains_embeddings\": false,\n"
+    + "    \"key_storage\": \"not_implemented\"\n"
+    + "  },\n"
+    + "  \"quality\": {\n"
+    + "    \"samples_total\": 0,\n"
+    + "    \"pose_slots\": {\n"
+    + "      \"center\": false,\n"
+    + "      \"left\": false,\n"
+    + "      \"right\": false,\n"
+    + "      \"up\": false,\n"
+    + "      \"down\": false\n"
+    + "    },\n"
+    + "    \"min_luma\": null,\n"
+    + "    \"max_luma\": null,\n"
+    + "    \"mean_luma\": null,\n"
+    + "    \"sharpness_score\": null\n"
+    + "  },\n"
+    + "  \"privacy\": {\n"
+    + "    \"raw_images_saved\": false,\n"
+    + "    \"face_crops_saved\": false,\n"
+    + "    \"telemetry_enabled\": false,\n"
+    + "    \"consent_version\": \"placeholder\"\n"
+    + "  },\n"
+    + "  \"status\": {\n"
+    + "    \"enrollment_complete\": false,\n"
+    + "    \"real_biometric_template\": false,\n"
+    + "    \"placeholder_only\": true\n"
+    + "  }\n"
+    + "}\n";
+}
+
+bool write_text_file_0600(
+  const std::string& path,
+  const std::string& text,
+  std::string& error
+) {
+  const std::vector<unsigned char> bytes(text.begin(), text.end());
+  return face_unlock::write_file_0600(path, bytes, error);
+}
+
 int command_status() {
   const std::string path = face_unlock::default_template_path();
 
@@ -47,16 +148,24 @@ int command_status() {
     return 1;
   }
 
+  const std::string manifest_path = default_enrollment_manifest_path();
+
   std::cout << "template_path: " << path << "\n";
+  std::cout << "manifest_path: " << manifest_path << "\n";
 
   if (!file_exists(path)) {
     std::cout << "template_status: missing\n";
+    std::cout << "manifest_status: " << (file_exists(manifest_path) ? "present" : "missing") << "\n";
     std::cout << "status: ok\n";
     return 0;
   }
 
   std::cout << "template_status: present\n";
   std::cout << "template_mode: " << mode_string(path) << "\n";
+  std::cout << "manifest_status: " << (file_exists(manifest_path) ? "present" : "missing") << "\n";
+  if (file_exists(manifest_path)) {
+    std::cout << "manifest_mode: " << mode_string(manifest_path) << "\n";
+  }
 
   std::vector<unsigned char> bytes;
   std::string error;
@@ -144,10 +253,22 @@ int command_create_placeholder(bool consent, bool overwrite) {
     return 1;
   }
 
+  const std::string manifest_path = default_enrollment_manifest_path();
+  const std::string manifest = placeholder_manifest_json(path);
+
+  if (!write_text_file_0600(manifest_path, manifest, error)) {
+    std::cerr << "manifest_write_status: failed\n";
+    std::cerr << "manifest_write_error: " << error << "\n";
+    return 1;
+  }
+
   std::cout << "template_create_status: ok\n";
   std::cout << "template_path: " << path << "\n";
   std::cout << "template_mode: " << mode_string(path) << "\n";
   std::cout << "template_size: " << encrypted.bytes.size() << "\n";
+  std::cout << "manifest_create_status: ok\n";
+  std::cout << "manifest_path: " << manifest_path << "\n";
+  std::cout << "manifest_mode: " << mode_string(manifest_path) << "\n";
   std::cout << "key_status: discarded\n";
   std::cout << "warning: placeholder is encrypted but not decryptable later because the random test key is discarded\n";
   std::cout << "status: ok\n";
@@ -176,6 +297,8 @@ int command_delete(bool yes) {
     return 0;
   }
 
+  const std::string manifest_path = default_enrollment_manifest_path();
+
   std::error_code ec;
   fs::remove(path, ec);
 
@@ -185,8 +308,19 @@ int command_delete(bool yes) {
     return 1;
   }
 
+  std::error_code manifest_ec;
+  const bool manifest_removed = fs::remove(manifest_path, manifest_ec);
+
+  if (manifest_ec) {
+    std::cerr << "manifest_delete_status: failed\n";
+    std::cerr << "manifest_delete_error: " << manifest_ec.message() << "\n";
+    return 1;
+  }
+
   std::cout << "template_delete_status: ok\n";
   std::cout << "template_path: " << path << "\n";
+  std::cout << "manifest_delete_status: " << (manifest_removed ? "ok" : "already_missing") << "\n";
+  std::cout << "manifest_path: " << manifest_path << "\n";
   std::cout << "status: ok\n";
   return 0;
 }

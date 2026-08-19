@@ -111,3 +111,25 @@ The planned manifest format is documented in:
     docs/enrollment-format.md
 
 Current placeholder template creation does not yet write an enrollment manifest.
+
+## Placeholder enrollment manifest creation
+
+create-placeholder now writes both:
+
+    ~/.local/share/face-unlock/template.enc
+    ~/.local/share/face-unlock/enrollment.json
+
+The manifest is placeholder-only metadata.
+
+It records:
+
+- format version
+- user UID and username
+- placeholder model metadata
+- encrypted template path
+- privacy flags
+- placeholder status
+
+Both files are written with mode 0600.
+
+delete --yes removes both the encrypted placeholder template and the placeholder enrollment manifest.
