@@ -98,3 +98,13 @@ It must never be used as real authentication.
 The Debian package skeleton installs project files but does not automatically enable authentication integration.
 
 Installing the package does not modify real PAM service files.
+
+## First alpha release
+
+The first alpha release has been tagged as:
+
+    v0.1.0-alpha
+
+This release is an infrastructure prototype.
+
+It is not real biometric authentication yet.
