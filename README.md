@@ -785,3 +785,9 @@ It builds with:
     -DBUILD_GUI=ON
 
 The main CI workflow keeps GUI disabled by default.
+
+## GUI quality checklist scaffold
+
+The optional Qt GUI includes a placeholder enrollment quality checklist.
+
+This is UI-only. No camera analysis is performed yet.

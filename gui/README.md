@@ -93,3 +93,17 @@ The GUI includes placeholder pose slots:
 Current buttons only mark/reset demo state.
 
 No images are captured or saved.
+
+## Quality checklist scaffold
+
+The GUI includes placeholder quality checklist items:
+
+- Lighting OK
+- Sharpness OK
+- Face centered
+- Pose coverage OK
+- Template ready
+
+Current buttons only mark/reset demo state.
+
+No camera analysis is performed yet.

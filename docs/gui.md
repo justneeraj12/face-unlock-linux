@@ -135,3 +135,21 @@ The optional GUI has a separate GitHub Actions workflow:
 It can be run manually from the GitHub Actions tab.
 
 The main CI workflow does not build the GUI by default.
+
+## Quality checklist scaffold
+
+The GUI includes a quality checklist scaffold.
+
+Current checklist items:
+
+- Lighting OK
+- Sharpness OK
+- Face centered
+- Pose coverage OK
+- Template ready
+
+The current UI can mark/reset demo quality state.
+
+No camera analysis is performed yet.
+
+Future versions should compute these from camera frames and enrollment metadata.

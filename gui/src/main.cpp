@@ -231,6 +231,39 @@ int main(int argc, char* argv[]) {
   poseButtonRow->addWidget(resetPoseButton);
   poseButtonRow->addStretch();
 
+  auto* qualityLabel = new QLabel(QStringLiteral("Enrollment quality checklist scaffold"));
+  QFont qualityFont = qualityLabel->font();
+  qualityFont.setBold(true);
+  qualityLabel->setFont(qualityFont);
+
+  auto* qualityRow = new QHBoxLayout();
+
+  auto* lightingQuality = new QCheckBox(QStringLiteral("Lighting OK"));
+  auto* sharpnessQuality = new QCheckBox(QStringLiteral("Sharpness OK"));
+  auto* centeredQuality = new QCheckBox(QStringLiteral("Face centered"));
+  auto* poseQuality = new QCheckBox(QStringLiteral("Pose coverage OK"));
+  auto* templateQuality = new QCheckBox(QStringLiteral("Template ready"));
+
+  lightingQuality->setEnabled(false);
+  sharpnessQuality->setEnabled(false);
+  centeredQuality->setEnabled(false);
+  poseQuality->setEnabled(false);
+  templateQuality->setEnabled(false);
+
+  qualityRow->addWidget(lightingQuality);
+  qualityRow->addWidget(sharpnessQuality);
+  qualityRow->addWidget(centeredQuality);
+  qualityRow->addWidget(poseQuality);
+  qualityRow->addWidget(templateQuality);
+  qualityRow->addStretch();
+
+  auto* qualityButtonRow = new QHBoxLayout();
+  auto* markQualityButton = new QPushButton(QStringLiteral("Mark demo quality OK"));
+  auto* resetQualityButton = new QPushButton(QStringLiteral("Reset quality"));
+  qualityButtonRow->addWidget(markQualityButton);
+  qualityButtonRow->addWidget(resetQualityButton);
+  qualityButtonRow->addStretch();
+
   auto* buttonRow = new QHBoxLayout();
 
   auto* understandButton = new QPushButton(QStringLiteral("I understand"));
@@ -254,6 +287,9 @@ int main(int argc, char* argv[]) {
   root->addWidget(poseLabel);
   root->addLayout(poseRow);
   root->addLayout(poseButtonRow);
+  root->addWidget(qualityLabel);
+  root->addLayout(qualityRow);
+  root->addLayout(qualityButtonRow);
   root->addLayout(buttonRow);
 
   QObject::connect(understandButton, &QPushButton::clicked, [&window]() {
@@ -304,6 +340,22 @@ int main(int argc, char* argv[]) {
     rightPose->setChecked(false);
     upPose->setChecked(false);
     downPose->setChecked(false);
+  });
+
+  QObject::connect(markQualityButton, &QPushButton::clicked, [lightingQuality, sharpnessQuality, centeredQuality, poseQuality, templateQuality]() {
+    lightingQuality->setChecked(true);
+    sharpnessQuality->setChecked(true);
+    centeredQuality->setChecked(true);
+    poseQuality->setChecked(true);
+    templateQuality->setChecked(true);
+  });
+
+  QObject::connect(resetQualityButton, &QPushButton::clicked, [lightingQuality, sharpnessQuality, centeredQuality, poseQuality, templateQuality]() {
+    lightingQuality->setChecked(false);
+    sharpnessQuality->setChecked(false);
+    centeredQuality->setChecked(false);
+    poseQuality->setChecked(false);
+    templateQuality->setChecked(false);
   });
 
   QObject::connect(brightnessButton, &QPushButton::clicked, [&window]() {
