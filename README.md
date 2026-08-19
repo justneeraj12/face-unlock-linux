@@ -335,3 +335,21 @@ Safe default capture test:
 By default, the script saves nothing.
 
 Saving face crops requires explicit privacy consent flags.
+
+## TorchScript model export stub
+
+A tiny dummy TorchScript embedding model can be exported for future loader tests.
+
+Documentation:
+
+    docs/model-export.md
+
+Install Torch dependencies:
+
+    pip install -r python/requirements-torch.txt
+
+Export stub:
+
+    python3 python/export_torchscript_stub.py
+
+Generated model files are ignored by Git.
