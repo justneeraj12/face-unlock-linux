@@ -61,3 +61,6 @@ embeddings.json
 
 # Local GUI build directory
 build-gui/
+
+# Model evaluation outputs
+model_eval_metrics.json

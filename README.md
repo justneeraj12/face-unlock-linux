@@ -474,3 +474,15 @@ Candidate detector, alignment, and embedding models are tracked in:
     docs/model-candidates.md
 
 No real model is selected yet.
+
+## Model evaluation harness
+
+Python model evaluation scaffold:
+
+    python/evaluate_model_stub.py
+
+Documentation:
+
+    docs/model-evaluation-harness.md
+
+It currently uses a random stub model and is not real face recognition.

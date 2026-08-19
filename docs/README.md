@@ -109,3 +109,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | model-candidates.md | Candidate detector, alignment, and embedding models |
+
+## Model evaluation harness
+
+| Document | Purpose |
+|---|---|
+| model-evaluation-harness.md | Python scaffold for model evaluation metrics |

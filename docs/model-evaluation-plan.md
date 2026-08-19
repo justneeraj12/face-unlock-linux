@@ -188,3 +188,15 @@ Candidate detectors and embedding models are tracked in:
 No model is selected yet.
 
 Model artifacts must not be committed until license and redistribution rights are reviewed.
+
+## Evaluation harness scaffold
+
+The initial Python evaluation harness is:
+
+    python/evaluate_model_stub.py
+
+It currently uses a random stub model and defines the metrics/reporting flow.
+
+Documentation:
+
+    docs/model-evaluation-harness.md
