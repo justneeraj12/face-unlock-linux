@@ -145,3 +145,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | github-labels.md | GitHub issue label setup |
+
+## Milestones
+
+| Document | Purpose |
+|---|---|
+| milestones.md | Planned project milestone definitions |

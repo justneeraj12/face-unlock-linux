@@ -506,3 +506,13 @@ Schema scaffold:
 Validate model evaluation metrics:
 
     scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
+
+## Milestones
+
+Project milestone plan:
+
+    docs/milestones.md
+
+Optional GitHub milestone bootstrap:
+
+    ./scripts/bootstrap-milestones.sh

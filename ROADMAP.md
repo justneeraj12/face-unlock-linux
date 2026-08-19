@@ -89,3 +89,18 @@ Deliverables:
 - [ ] Python model evaluation script
 - [ ] sample local-only evaluation workflow
 - [ ] documented candidate model shortlist
+
+## Milestone plan
+
+Detailed milestone definitions are maintained in:
+
+    docs/milestones.md
+
+Planned milestones:
+
+- v0.2.0-dev-auth-sudo
+- v0.3.0-enrollment-cli
+- v0.4.0-real-model-prototype
+- v0.5.0-qt-enrollment
+- v0.6.0-lock-screen-prototype
+- v1.0.0-security-review
