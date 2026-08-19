@@ -1,0 +1,25 @@
+[Unit]
+Description=Face Unlock User Daemon
+Documentation=https://github.com/justneeraj12/face-unlock-linux
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/face-unlockd --camera 0 --daemon
+Restart=on-failure
+RestartSec=2
+
+# Default is fail-closed. Do not enable dev auth in installed service.
+Environment=FACE_UNLOCK_DEV_ALLOW=0
+
+# Basic hardening for a user service.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+
+# The daemon binary is installed under ~/.local/bin.
+# The runtime socket is under XDG_RUNTIME_DIR, represented by %t.
+ReadWritePaths=%h/.local/share/face-unlock %t
+
+[Install]
+WantedBy=default.target

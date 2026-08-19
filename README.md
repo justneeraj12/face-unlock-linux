@@ -208,3 +208,30 @@ These scripts only manage:
     /usr/lib/x86_64-linux-gnu/security/pam_face_unlock.so
 
 They do not modify sudo, login, lock-screen, GDM, SDDM, LightDM, or common-auth PAM files.
+
+## systemd user service
+
+The daemon can be installed as a normal user service.
+
+Documentation:
+
+    docs/systemd-user-service.md
+
+Install and start:
+
+    ./scripts/install-user-service.sh
+
+Check status:
+
+    systemctl --user status face-unlockd.service
+
+Test IPC:
+
+    ./scripts/test-socket-client.sh ping
+    ./scripts/test-socket-client.sh auth
+
+Remove:
+
+    ./scripts/remove-user-service.sh
+
+The user service does not modify PAM files and runs with FACE_UNLOCK_DEV_ALLOW=0 by default.
