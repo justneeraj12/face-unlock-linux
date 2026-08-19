@@ -139,3 +139,11 @@ It installs Qt6 development packages and builds with:
     -DBUILD_GUI=ON
 
 The main build workflow keeps GUI disabled by default to stay faster.
+
+## Model metrics validation in CI
+
+CI validates model evaluation metrics scaffolding with:
+
+    scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
+
+This ensures the model evaluation metrics example remains privacy-safe and structurally valid.

@@ -37,6 +37,10 @@ jobs:
         run: |
           scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
 
+      - name: Validate model evaluation metrics example
+        run: |
+          scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
+
       - name: Install build dependencies
         timeout-minutes: 45
         run: |
