@@ -133,3 +133,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | pull-request-review.md | Review expectations for security-sensitive PRs |
+
+## Ownership and review routing
+
+| Document | Purpose |
+|---|---|
+| codeowners.md | CODEOWNERS and review routing |

@@ -125,3 +125,13 @@ The pull request template includes security-sensitive sections for:
 Contributors must complete the relevant checklist items before requesting review.
 
 GitHub automatically places the pull request template text into new pull request descriptions, so these prompts should appear when opening a PR.
+
+## CODEOWNERS
+
+The repository uses:
+
+    .github/CODEOWNERS
+
+Security-sensitive paths are routed to maintainers for review.
+
+CODEOWNERS does not replace careful review. Use the PR checklist and security docs.

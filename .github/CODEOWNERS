@@ -1,0 +1,43 @@
+# CODEOWNERS for face-unlock-linux
+#
+# Security-sensitive paths should always be reviewed carefully.
+# Currently the primary maintainer is:
+#   @justneeraj12
+
+# Default ownership
+* @justneeraj12
+
+# PAM module and auth bridge
+/pam/ @justneeraj12
+
+# Daemon core, IPC, peer policy, template crypto
+/daemon/ @justneeraj12
+
+# System, PAM, sudo, service, packaging helper scripts
+/scripts/ @justneeraj12
+
+# Packaging and systemd service templates
+/packaging/ @justneeraj12
+
+# Security-sensitive docs
+/SECURITY.md @justneeraj12
+/docs/pam-safety.md @justneeraj12
+/docs/threat-model.md @justneeraj12
+/docs/sudo-*.md @justneeraj12
+/docs/sudo-*/ @justneeraj12
+
+# Model and biometric pipeline docs/prototypes
+/python/ @justneeraj12
+/models/ @justneeraj12
+/schemas/ @justneeraj12
+/docs/model-*.md @justneeraj12
+/docs/enrollment-*.md @justneeraj12
+/docs/template-*.md @justneeraj12
+
+# GUI enrollment and privacy-sensitive UX
+/gui/ @justneeraj12
+/docs/gui*.md @justneeraj12
+/docs/brightness-assist.md @justneeraj12
+
+# CI and GitHub metadata
+/.github/ @justneeraj12
