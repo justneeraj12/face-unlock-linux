@@ -402,3 +402,15 @@ v0.1.0-alpha checklist:
     docs/releases/v0.1.0-alpha.md
 
 The first alpha release is intended to be an infrastructure prototype, not real biometric authentication.
+
+## Local verification
+
+Run the full local verification flow:
+
+    ./scripts/verify-local.sh
+
+Documentation:
+
+    docs/local-verification.md
+
+This verifies docs, build, tests, PAM dependency audit, and Debian package generation. It does not modify PAM files or authentication settings.
