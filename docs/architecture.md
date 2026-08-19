@@ -1,10 +1,10 @@
 # Architecture
 
-`face-unlock-linux` is designed as a set of separated components.
+face-unlock-linux is designed as a set of separated components.
 
 The core rule is:
 
-> Privileged or security-sensitive components must stay small.
+    Privileged or security-sensitive components must stay small.
 
 ## Components
 
@@ -77,5 +77,62 @@ Prototype scripts are not part of the trusted authentication path.
 
 The PAM module and daemon communicate over a UNIX domain socket:
 
-```text
-/run/user/$UID/face-unlock.sock
+    /run/user/$UID/face-unlock.sock
+
+Planned socket properties:
+
+- owned by user
+- mode 0600
+- uses SO_PEERCRED checks
+- accepts same user and controlled privileged clients
+- bounded request/response size
+- short timeout
+
+## Authentication flow
+
+Typical sudo flow:
+
+    user runs sudo
+        |
+        v
+    PAM loads pam_face_unlock.so
+        |
+        v
+    PAM module connects to user daemon
+        |
+        v
+    daemon checks camera/model/template
+        |
+        v
+    daemon returns ok/fail
+        |
+        v
+    PAM either succeeds or falls back to password
+
+## Fail-closed behavior
+
+Authentication should fail if:
+
+- daemon is not running
+- socket is missing
+- camera unavailable
+- model unavailable
+- template missing
+- timeout occurs
+- peer credentials are invalid
+- retry limit exceeded
+
+Failure should not block password fallback when configured as auth sufficient.
+
+## Greeter/login caveat
+
+Login greeters are harder than lock-screen or sudo authentication because the user session may not exist yet.
+
+For greeter login, the project may need:
+
+- a system helper
+- greeter-specific plugin
+- strict separation between users
+- careful template access control
+
+Greeter integration is not part of the first implementation phase.

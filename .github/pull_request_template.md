@@ -26,5 +26,16 @@ Details:
 
 What did you test?
 
-```bash
-# commands here
+Example:
+
+    ./scripts/build.sh
+    ./scripts/check-docs.sh
+
+## Checklist
+
+- [ ] No raw biometric data is committed.
+- [ ] No secrets or keys are committed.
+- [ ] PAM behavior remains fail-closed.
+- [ ] Password fallback remains available.
+- [ ] Rollback instructions are included for system changes.
+- [ ] Documentation was updated if behavior changed.

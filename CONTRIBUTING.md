@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to `face-unlock-linux`.
+Thank you for your interest in contributing to face-unlock-linux.
 
 This project deals with authentication and biometrics, so contributions must prioritize safety, clarity, and reviewability.
 
@@ -80,5 +80,15 @@ Before submitting a PR:
 
 Early repo stage:
 
-```bash
-git status
+    git status
+    ./scripts/check-docs.sh
+    ./scripts/build.sh
+
+Later stages will add:
+
+    cmake --build build
+    ctest --test-dir build
+
+## License
+
+By contributing, you agree that your contributions are licensed under the Apache License 2.0.
