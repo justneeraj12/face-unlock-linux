@@ -10,9 +10,10 @@ This directory contains the user-level face unlock daemon.
 - opens webcam
 - reads one frame by default
 - can run continuously with --loop
-- prints loop status once per second
+- can run a local UNIX socket server with --serve
+- socket path is /run/user/$UID/face-unlock.sock
+- socket permissions are set to 0600
 - stops cleanly with Ctrl+C
-- does not expose socket yet
 - does not authenticate yet
 - does not save images
 
@@ -50,52 +51,43 @@ Run one-shot camera probe with default camera index 0:
 
     ./build/daemon/face-unlockd
 
-Run one-shot probe with an explicit camera index:
-
-    ./build/daemon/face-unlockd --camera 0
-
 Run continuous camera loop:
 
     ./build/daemon/face-unlockd --camera 0 --loop
 
-Stop loop mode with Ctrl+C.
+Run socket server:
 
-## Current expected one-shot output
+    ./build/daemon/face-unlockd --serve
 
-Example output:
+In another terminal, test the socket:
 
-    face-unlockd prototype
-    version: 0.1.0
-    uid: 1000
-    runtime_dir: /run/user/1000
-    planned_socket: /run/user/1000/face-unlock.sock
-    mode: one_shot
-    camera_index: 0
-    camera_status: opened
-    frame_status: ok
-    frame_width: 640
-    frame_height: 480
-    frame_channels: 3
-    status: ok
+    ./scripts/test-socket-client.sh
 
-## Current expected loop output
+Stop loop or server mode with Ctrl+C.
 
-Example output:
+## Current expected socket output
+
+Daemon terminal:
 
     face-unlockd prototype
     version: 0.1.0
     uid: 1000
     runtime_dir: /run/user/1000
     planned_socket: /run/user/1000/face-unlock.sock
-    mode: loop
-    camera_index: 0
-    camera_status: opened
-    loop_status: started
-    stop_hint: press Ctrl+C to stop
-    loop_report: frames_total=30 fps=29.9 width=640 height=480 channels=3
+    mode: serve
+    socket_path: /run/user/1000/face-unlock.sock
+    socket_status: listening
+    socket_mode: 0600
+    server_status: started
+
+Client terminal:
+
+    {"status":"ok","reason":"daemon_alive"}
 
 ## Privacy
 
-The current daemon reads frames into memory only.
+The current daemon reads frames into memory only in camera modes.
+
+Socket mode currently only replies to a local test request.
 
 It does not save images, face crops, embeddings, templates, or logs containing biometric data.

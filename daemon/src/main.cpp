@@ -2,10 +2,17 @@
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <thread>
 #include <unistd.h>
+
+#include <cerrno>
+#include <poll.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
@@ -22,6 +29,7 @@ void handle_signal(int signal_number) {
 struct Options {
   int camera_index = 0;
   bool loop = false;
+  bool serve = false;
 };
 
 std::string get_runtime_dir() {
@@ -34,12 +42,16 @@ std::string get_runtime_dir() {
   return "/run/user/" + std::to_string(getuid());
 }
 
+std::string get_socket_path() {
+  return get_runtime_dir() + "/face-unlock.sock";
+}
+
 void print_usage(const char* program_name) {
-  std::cout << "Usage: " << program_name << " [--camera INDEX] [--loop]\n";
-  std::cout << "\n";
+  std::cout << "Usage: " << program_name << " [--camera INDEX] [--loop] [--serve]\n";
   std::cout << "Options:\n";
   std::cout << "  --camera, -c INDEX   Camera index to open. Default: 0\n";
   std::cout << "  --loop               Keep reading frames until Ctrl+C\n";
+  std::cout << "  --serve              Run local UNIX socket server until Ctrl+C\n";
   std::cout << "  --help, -h           Show this help text\n";
 }
 
@@ -54,6 +66,8 @@ Options parse_options(int argc, char** argv) {
       ++i;
     } else if (arg == "--loop") {
       options.loop = true;
+    } else if (arg == "--serve") {
+      options.serve = true;
     } else if (arg == "--help" || arg == "-h") {
       print_usage(argv[0]);
       std::exit(0);
@@ -62,6 +76,11 @@ Options parse_options(int argc, char** argv) {
       print_usage(argv[0]);
       std::exit(1);
     }
+  }
+
+  if (options.loop && options.serve) {
+    std::cerr << "error: --loop and --serve are currently separate modes\n";
+    std::exit(1);
   }
 
   return options;
@@ -159,6 +178,136 @@ bool run_loop(cv::VideoCapture& camera) {
   return frames_total > 0;
 }
 
+int create_server_socket(const std::string& socket_path) {
+  const int server_fd = ::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+
+  if (server_fd < 0) {
+    std::cerr << "socket_error: " << std::strerror(errno) << '\n';
+    return -1;
+  }
+
+  ::unlink(socket_path.c_str());
+
+  sockaddr_un address {};
+  address.sun_family = AF_UNIX;
+
+  if (socket_path.size() >= sizeof(address.sun_path)) {
+    std::cerr << "socket_path_error: path_too_long\n";
+    ::close(server_fd);
+    return -1;
+  }
+
+  std::strncpy(address.sun_path, socket_path.c_str(), sizeof(address.sun_path) - 1);
+
+  const mode_t old_umask = ::umask(0077);
+
+  if (::bind(server_fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) < 0) {
+    std::cerr << "bind_error: " << std::strerror(errno) << '\n';
+    ::umask(old_umask);
+    ::close(server_fd);
+    return -1;
+  }
+
+  ::umask(old_umask);
+
+  if (::chmod(socket_path.c_str(), 0600) < 0) {
+    std::cerr << "chmod_warning: " << std::strerror(errno) << '\n';
+  }
+
+  if (::listen(server_fd, 8) < 0) {
+    std::cerr << "listen_error: " << std::strerror(errno) << '\n';
+    ::close(server_fd);
+    ::unlink(socket_path.c_str());
+    return -1;
+  }
+
+  return server_fd;
+}
+
+void handle_client(int client_fd) {
+  char buffer[1024] {};
+  const ssize_t bytes_read = ::read(client_fd, buffer, sizeof(buffer) - 1);
+
+  if (bytes_read < 0) {
+    std::cerr << "read_warning: " << std::strerror(errno) << '\n';
+  } else {
+    buffer[bytes_read] = '\0';
+    std::cout << "client_request: " << buffer << '\n';
+  }
+
+  const std::string response = "{\"status\":\"ok\",\"reason\":\"daemon_alive\"}\n";
+  const ssize_t bytes_written = ::write(client_fd, response.data(), response.size());
+
+  if (bytes_written < 0) {
+    std::cerr << "write_warning: " << std::strerror(errno) << '\n';
+  }
+
+  ::close(client_fd);
+}
+
+bool run_socket_server() {
+  const std::string socket_path = get_socket_path();
+
+  std::cout << "socket_path: " << socket_path << '\n';
+
+  const int server_fd = create_server_socket(socket_path);
+
+  if (server_fd < 0) {
+    std::cout << "socket_status: error\n";
+    return false;
+  }
+
+  std::cout << "socket_status: listening\n";
+  std::cout << "socket_mode: 0600\n";
+  std::cout << "server_status: started\n";
+  std::cout << "stop_hint: press Ctrl+C to stop\n";
+
+  while (g_running) {
+    pollfd pfd {};
+    pfd.fd = server_fd;
+    pfd.events = POLLIN;
+
+    const int poll_result = ::poll(&pfd, 1, 250);
+
+    if (poll_result < 0) {
+      if (errno == EINTR) {
+        continue;
+      }
+
+      std::cerr << "poll_warning: " << std::strerror(errno) << '\n';
+      continue;
+    }
+
+    if (poll_result == 0) {
+      continue;
+    }
+
+    if ((pfd.revents & POLLIN) == 0) {
+      continue;
+    }
+
+    const int client_fd = ::accept4(server_fd, nullptr, nullptr, SOCK_CLOEXEC);
+
+    if (client_fd < 0) {
+      if (errno == EINTR) {
+        continue;
+      }
+
+      std::cerr << "accept_warning: " << std::strerror(errno) << '\n';
+      continue;
+    }
+
+    handle_client(client_fd);
+  }
+
+  std::cout << "server_status: stopping\n";
+
+  ::close(server_fd);
+  ::unlink(socket_path.c_str());
+
+  return true;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -169,13 +318,28 @@ int main(int argc, char** argv) {
 
   const uid_t uid = getuid();
   const std::string runtime_dir = get_runtime_dir();
-  const std::string socket_path = runtime_dir + "/face-unlock.sock";
+  const std::string socket_path = get_socket_path();
 
   std::cout << "face-unlockd prototype" << '\n';
   std::cout << "version: 0.1.0" << '\n';
   std::cout << "uid: " << uid << '\n';
   std::cout << "runtime_dir: " << runtime_dir << '\n';
   std::cout << "planned_socket: " << socket_path << '\n';
+
+  if (options.serve) {
+    std::cout << "mode: serve" << '\n';
+
+    const bool ok = run_socket_server();
+
+    if (!ok) {
+      std::cout << "status: socket_error" << '\n';
+      return 3;
+    }
+
+    std::cout << "status: ok" << '\n';
+    return 0;
+  }
+
   std::cout << "mode: " << (options.loop ? "loop" : "one_shot") << '\n';
 
   cv::VideoCapture camera;
