@@ -4,6 +4,53 @@
 
 Experimental open-source face recognition unlock utility for Ubuntu Linux.
 
+## Current status
+
+This project is an early infrastructure prototype.
+
+It is not real biometric authentication yet.
+
+What works today:
+
+- C++ user daemon
+- OpenCV camera prototype
+- UNIX domain socket IPC
+- SO_PEERCRED peer logging
+- fail-closed auth operation
+- max auth attempt enforcement
+- minimal PAM IPC module
+- fake PAM service testing
+- systemd user service helper scripts
+- encrypted template storage scaffold
+- Python capture prototype
+- TorchScript export/load scaffolds
+- Debian package generation
+- GitHub Actions CI
+
+What does not work yet:
+
+- real face recognition authentication
+- real enrollment
+- real template matching
+- Qt enrollment GUI
+- production sudo integration
+- lock-screen integration
+- greeter/login integration
+- liveness detection
+
+Safety note:
+
+- default auth fails closed
+- development auth requires FACE_UNLOCK_DEV_ALLOW=1
+- no real PAM service files are modified automatically
+- do not use this as your only authentication method
+
+See:
+
+    docs/project-status.md
+    docs/releases/v0.1.0-alpha.md
+
+
 face-unlock-linux aims to provide a secure, low-latency, user-controlled face unlock system for Ubuntu 24.04 and compatible Linux desktops.
 
 The long-term goal is to support:
