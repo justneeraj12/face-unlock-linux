@@ -55,6 +55,10 @@ section "JSON check"
 
 ./scripts/check-json.sh
 
+section "Enrollment manifest validation"
+
+./scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
+
 section "Build"
 
 ./scripts/build.sh

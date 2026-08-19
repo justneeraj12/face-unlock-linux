@@ -713,3 +713,13 @@ Daemon socket responses now include enrollment manifest status:
     "enrollment":"placeholder"
 
 Real biometric enrollment is still not implemented.
+
+## Enrollment manifest validation
+
+Validate the example manifest:
+
+    scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
+
+Documentation:
+
+    docs/manifest-validation.md
