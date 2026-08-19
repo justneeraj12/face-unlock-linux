@@ -64,3 +64,11 @@ This means:
 - password auth remains available
 
 During early development, do not install this into real PAM services.
+
+## Fake service test documentation
+
+The safe fake PAM service test is documented in:
+
+    docs/pam-fake-service-test.md
+
+Run this test successfully before considering any sudo, lock-screen, or greeter integration.

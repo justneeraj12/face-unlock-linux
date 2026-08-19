@@ -182,3 +182,15 @@ During development:
 Apache License 2.0.
 
 See LICENSE.
+
+## PAM fake service test
+
+The PAM module has a safe fake-service test flow documented in:
+
+    docs/pam-fake-service-test.md
+
+This test uses:
+
+    /etc/pam.d/face-unlock-test
+
+It does not modify sudo, login, lock-screen, GDM, SDDM, or LightDM PAM files.
