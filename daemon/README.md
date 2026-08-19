@@ -8,8 +8,10 @@ This directory contains the user-level face unlock daemon.
 - links OpenCV
 - prints startup/runtime information
 - opens webcam
-- reads one frame
-- prints frame dimensions
+- reads one frame by default
+- can run continuously with --loop
+- prints loop status once per second
+- stops cleanly with Ctrl+C
 - does not expose socket yet
 - does not authenticate yet
 - does not save images
@@ -44,15 +46,21 @@ From the repository root, build with:
 
     ./scripts/build.sh
 
-Run with default camera index 0:
+Run one-shot camera probe with default camera index 0:
 
     ./build/daemon/face-unlockd
 
-Run with a different camera index:
+Run one-shot probe with an explicit camera index:
 
-    ./build/daemon/face-unlockd --camera 1
+    ./build/daemon/face-unlockd --camera 0
 
-## Current expected output
+Run continuous camera loop:
+
+    ./build/daemon/face-unlockd --camera 0 --loop
+
+Stop loop mode with Ctrl+C.
+
+## Current expected one-shot output
 
 Example output:
 
@@ -61,6 +69,7 @@ Example output:
     uid: 1000
     runtime_dir: /run/user/1000
     planned_socket: /run/user/1000/face-unlock.sock
+    mode: one_shot
     camera_index: 0
     camera_status: opened
     frame_status: ok
@@ -69,8 +78,24 @@ Example output:
     frame_channels: 3
     status: ok
 
+## Current expected loop output
+
+Example output:
+
+    face-unlockd prototype
+    version: 0.1.0
+    uid: 1000
+    runtime_dir: /run/user/1000
+    planned_socket: /run/user/1000/face-unlock.sock
+    mode: loop
+    camera_index: 0
+    camera_status: opened
+    loop_status: started
+    stop_hint: press Ctrl+C to stop
+    loop_report: frames_total=30 fps=29.9 width=640 height=480 channels=3
+
 ## Privacy
 
-The current daemon reads one frame into memory and exits.
+The current daemon reads frames into memory only.
 
 It does not save images, face crops, embeddings, templates, or logs containing biometric data.
