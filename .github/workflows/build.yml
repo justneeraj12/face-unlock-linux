@@ -45,6 +45,10 @@ jobs:
         run: |
           ./scripts/build.sh
 
+      - name: Run tests
+        run: |
+          ctest --test-dir build --output-on-failure
+
       - name: Smoke test daemon CLI
         run: |
           ./build/daemon/face-unlockd --help

@@ -305,3 +305,15 @@ Run:
     ./build/daemon/face-unlock-crypto-selftest
 
 This currently encrypts placeholder bytes only. It does not store real face templates or images.
+
+## Testing
+
+Run automated tests:
+
+    ./scripts/test.sh
+
+Testing documentation:
+
+    docs/testing.md
+
+Current automated test coverage includes the encrypted template storage self-test.

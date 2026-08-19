@@ -63,3 +63,10 @@ target_link_libraries(face-unlock-crypto-selftest PRIVATE
 install(TARGETS face-unlockd face-unlock-crypto-selftest
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+if(BUILD_TESTING)
+  add_test(
+    NAME crypto_selftest
+    COMMAND face-unlock-crypto-selftest
+  )
+endif()
