@@ -122,3 +122,20 @@ CI validates enrollment manifest scaffolding with:
     scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
 
 This ensures the example manifest remains valid and privacy-safe.
+
+## GUI build workflow
+
+The optional Qt GUI is built by a separate workflow:
+
+    .github/workflows/gui-build.yml
+
+The GUI workflow runs:
+
+- manually with workflow_dispatch
+- on pull requests that modify gui files
+
+It installs Qt6 development packages and builds with:
+
+    -DBUILD_GUI=ON
+
+The main build workflow keeps GUI disabled by default to stay faster.

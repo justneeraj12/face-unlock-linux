@@ -125,3 +125,13 @@ The current UI can mark demo slots complete and reset them.
 This does not capture images or save enrollment data.
 
 Future versions should connect pose slots to camera preview, face quality checks, and encrypted template creation.
+
+## GUI CI
+
+The optional GUI has a separate GitHub Actions workflow:
+
+    .github/workflows/gui-build.yml
+
+It can be run manually from the GitHub Actions tab.
+
+The main CI workflow does not build the GUI by default.

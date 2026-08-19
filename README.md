@@ -773,3 +773,15 @@ The optional Qt GUI includes placeholder enrollment pose slots:
 - Down
 
 This is UI-only. No camera capture or enrollment data is saved.
+
+## GUI CI
+
+The optional Qt GUI has a separate manual GitHub Actions workflow:
+
+    .github/workflows/gui-build.yml
+
+It builds with:
+
+    -DBUILD_GUI=ON
+
+The main CI workflow keeps GUI disabled by default.
