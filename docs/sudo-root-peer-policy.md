@@ -95,3 +95,27 @@ sudo integration still requires guarded PAM configuration changes.
 See:
 
     docs/sudo-apply-and-rollback.md
+
+## Explicit root auth enable flag
+
+Root-owned auth peers are now opt-in.
+
+Enable only for testing sudo PAM behavior:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1 ./build/daemon/face-unlockd --camera 0 --daemon
+
+Default:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=0
+
+or unset.
+
+When disabled, root auth requests are rejected with policy:
+
+    reject_root_auth_disabled
+
+The systemd user service sets:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=0
+
+by default.

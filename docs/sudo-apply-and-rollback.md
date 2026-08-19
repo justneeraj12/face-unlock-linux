@@ -162,3 +162,19 @@ Current policy:
 - root is allowed only for auth requests
 - root non-auth requests are rejected
 - other users are rejected
+
+## Root auth peer opt-in
+
+For sudo PAM face-auth success, the daemon must allow root-owned auth peers.
+
+This is controlled by:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1
+
+Default is disabled.
+
+The packaged/user service default is:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=0
+
+If disabled, sudo should fall back to password.

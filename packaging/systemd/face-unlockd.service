@@ -11,6 +11,7 @@ RestartSec=2
 
 # Default is fail-closed. Do not enable dev auth in installed service.
 Environment=FACE_UNLOCK_DEV_ALLOW=0
+Environment=FACE_UNLOCK_ALLOW_ROOT_AUTH=0
 
 # Basic hardening for a user service.
 NoNewPrivileges=true

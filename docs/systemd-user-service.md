@@ -119,3 +119,17 @@ Development auth should only be used manually during fake PAM tests:
     FACE_UNLOCK_DEV_ALLOW=1 ./build/daemon/face-unlockd --camera 0 --daemon
 
 Never use development auth as real authentication.
+
+## Root auth peer default
+
+The user service sets:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=0
+
+This means root-owned sudo PAM auth requests are rejected by default.
+
+For manual sudo development testing, run the daemon manually with:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1
+
+Do not enable root auth peers casually.

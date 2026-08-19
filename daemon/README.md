@@ -175,3 +175,13 @@ Current placeholder enrollment reports:
     enrollment placeholder
 
 Real biometric enrollment is still not implemented.
+
+## Root auth peer opt-in
+
+Root-owned auth peers are allowed only when:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1
+
+Default is disabled.
+
+This keeps sudo PAM behavior opt-in.

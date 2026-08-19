@@ -542,6 +542,12 @@ void write_json_response(int client_fd, const std::string& response) {
   }
 }
 
+bool root_auth_peer_enabled() {
+  const char* value = std::getenv("FACE_UNLOCK_ALLOW_ROOT_AUTH");
+
+  return value != nullptr && std::string(value) == "1";
+}
+
 std::string peer_policy_decision(
   const ucred& credentials,
   const std::string& operation
@@ -554,11 +560,14 @@ std::string peer_policy_decision(
 
   // sudo/PAM may connect as root.
   //
-  // Root is allowed only for auth requests.
-  // This is needed for future sudo integration while keeping non-auth
-  // socket operations restricted to the desktop user.
-  if (credentials.uid == 0 && operation == "auth") {
+  // Root auth peers are allowed only when explicitly enabled.
+  // This keeps sudo integration opt-in.
+  if (credentials.uid == 0 && operation == "auth" && root_auth_peer_enabled()) {
     return "allow_root_auth";
+  }
+
+  if (credentials.uid == 0 && operation == "auth") {
+    return "reject_root_auth_disabled";
   }
 
   return "reject";
@@ -994,6 +1003,7 @@ int main(int argc, char** argv) {
   std::cout << "effective_camera_index: " << camera_index << '\n';
   std::cout << "max_auth_attempts: " << config.max_auth_attempts << '\n';
   std::cout << "dev_auth_enabled: " << (dev_auth_enabled() ? "true" : "false") << '\n';
+  std::cout << "root_auth_peer_enabled: " << (root_auth_peer_enabled() ? "true" : "false") << '\n';
 
   if (options.model_test) {
     std::cout << "mode: model_test" << '\n';

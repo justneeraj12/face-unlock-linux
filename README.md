@@ -516,3 +516,15 @@ Project milestone plan:
 Optional GitHub milestone bootstrap:
 
     ./scripts/bootstrap-milestones.sh
+
+## Root auth peer opt-in
+
+Root-owned sudo PAM auth peers are disabled by default.
+
+Enable only for manual sudo development testing:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1 ./build/daemon/face-unlockd --camera 0 --daemon
+
+Documentation:
+
+    docs/sudo-root-peer-policy.md
