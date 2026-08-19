@@ -22,6 +22,11 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 
+#ifdef FACE_UNLOCK_WITH_TORCH
+#include <torch/script.h>
+#include <torch/torch.h>
+#endif
+
 namespace {
 
 std::atomic<bool> g_running{true};
@@ -37,6 +42,8 @@ struct Options {
   bool loop = false;
   bool serve = false;
   bool daemon = false;
+  bool model_test = false;
+  std::string model_path = "models/embedding_stub.pt";
 };
 
 struct AppConfig {
@@ -238,6 +245,8 @@ void print_usage(const char* program_name) {
   std::cout << "  --loop               Keep reading frames until Ctrl+C\n";
   std::cout << "  --serve              Run local UNIX socket server until Ctrl+C\n";
   std::cout << "  --daemon             Run camera worker and socket server together\n";
+  std::cout << "  --model-test         Load TorchScript model and run dummy forward pass\n";
+  std::cout << "  --model PATH         TorchScript model path. Default: models/embedding_stub.pt\n";
   std::cout << "  --help, -h           Show this help text\n";
 }
 
@@ -257,6 +266,11 @@ Options parse_options(int argc, char** argv) {
       options.serve = true;
     } else if (arg == "--daemon") {
       options.daemon = true;
+    } else if (arg == "--model-test") {
+      options.model_test = true;
+    } else if (arg == "--model" && i + 1 < argc) {
+      options.model_path = argv[i + 1];
+      ++i;
     } else if (arg == "--help" || arg == "-h") {
       print_usage(argv[0]);
       std::exit(0);
@@ -270,10 +284,11 @@ Options parse_options(int argc, char** argv) {
   const int mode_count =
     static_cast<int>(options.loop) +
     static_cast<int>(options.serve) +
-    static_cast<int>(options.daemon);
+    static_cast<int>(options.daemon) +
+    static_cast<int>(options.model_test);
 
   if (mode_count > 1) {
-    std::cerr << "error: choose only one of --loop, --serve, or --daemon\n";
+    std::cerr << "error: choose only one of --loop, --serve, --daemon, or --model-test\n";
     std::exit(1);
   }
 
@@ -759,6 +774,49 @@ void camera_worker(FrameStore& frame_store, int camera_index) {
   std::cout << "camera_worker_status: stopped" << '\n';
 }
 
+bool run_model_test(const std::string& model_path) {
+#ifndef FACE_UNLOCK_WITH_TORCH
+  std::cout << "torch_status: disabled\n";
+  std::cout << "status: torch_not_enabled\n";
+  return false;
+#else
+  try {
+    std::cout << "torch_status: enabled\n";
+    std::cout << "model_path: " << model_path << "\n";
+
+    torch::jit::script::Module module = torch::jit::load(model_path);
+    module.eval();
+
+    torch::NoGradGuard no_grad;
+
+    torch::Tensor input = torch::zeros({1, 3, 112, 112});
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(input);
+
+    torch::jit::IValue output_value = module.forward(inputs);
+
+    if (!output_value.isTensor()) {
+      std::cout << "model_output_status: not_tensor\n";
+      return false;
+    }
+
+    torch::Tensor output = output_value.toTensor();
+
+    std::cout << "model_load_status: ok\n";
+    std::cout << "model_forward_status: ok\n";
+    std::cout << "model_output_sizes: " << output.sizes() << "\n";
+    std::cout << "status: ok\n";
+
+    return true;
+  } catch (const std::exception& e) {
+    std::cout << "model_load_status: failed\n";
+    std::cout << "error: " << e.what() << "\n";
+    std::cout << "status: model_error\n";
+    return false;
+  }
+#endif
+}
+
 bool run_daemon_mode(int camera_index, int max_auth_attempts) {
   std::cout << "daemon_status: starting" << '\n';
 
@@ -807,6 +865,14 @@ int main(int argc, char** argv) {
   std::cout << "effective_camera_index: " << camera_index << '\n';
   std::cout << "max_auth_attempts: " << config.max_auth_attempts << '\n';
   std::cout << "dev_auth_enabled: " << (dev_auth_enabled() ? "true" : "false") << '\n';
+
+  if (options.model_test) {
+    std::cout << "mode: model_test" << '\n';
+
+    const bool ok = run_model_test(options.model_path);
+
+    return ok ? 0 : 5;
+  }
 
   if (options.serve) {
     std::cout << "mode: serve" << '\n';

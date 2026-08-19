@@ -46,6 +46,18 @@ target_link_libraries(face-unlockd PRIVATE
   ${OpenCV_LIBS}
 )
 
+if(WITH_TORCH)
+  find_package(Torch REQUIRED)
+
+  target_compile_definitions(face-unlockd PRIVATE FACE_UNLOCK_WITH_TORCH=1)
+
+  target_link_libraries(face-unlockd PRIVATE
+    ${TORCH_LIBRARIES}
+  )
+
+  set_property(TARGET face-unlockd PROPERTY CXX_STANDARD 17)
+endif()
+
 add_executable(face-unlock-crypto-selftest
   src/crypto_selftest.cpp
 )
@@ -60,13 +72,13 @@ target_link_libraries(face-unlock-crypto-selftest PRIVATE
   face_unlock_crypto
 )
 
-install(TARGETS face-unlockd face-unlock-crypto-selftest
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
 if(BUILD_TESTING)
   add_test(
     NAME crypto_selftest
     COMMAND face-unlock-crypto-selftest
   )
 endif()
+
+install(TARGETS face-unlockd face-unlock-crypto-selftest
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

@@ -13,6 +13,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(GNUInstallDirs)
 include(CTest)
 
+option(WITH_TORCH "Build daemon with optional LibTorch/TorchScript support" OFF)
+
 add_subdirectory(daemon)
 
 add_subdirectory(pam)

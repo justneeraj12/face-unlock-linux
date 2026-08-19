@@ -353,3 +353,22 @@ Export stub:
     python3 python/export_torchscript_stub.py
 
 Generated model files are ignored by Git.
+
+## Optional LibTorch loader scaffold
+
+The daemon can optionally be built with LibTorch/TorchScript support.
+
+Documentation:
+
+    docs/libtorch-loader.md
+
+Default builds do not require LibTorch.
+
+Model test on default build:
+
+    ./build/daemon/face-unlockd --model-test
+
+Expected default result:
+
+    torch_status: disabled
+    status: torch_not_enabled
