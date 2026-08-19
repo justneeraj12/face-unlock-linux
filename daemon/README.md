@@ -16,8 +16,9 @@ This directory contains the user-level face unlock daemon.
 - socket permissions are set to 0600
 - logs UNIX socket peer credentials with SO_PEERCRED
 - currently allows same-UID socket clients only
+- supports simple socket operations: ping, camera_status, auth
+- auth operation currently fails closed
 - stops cleanly with Ctrl+C
-- does not authenticate yet
 - does not save images
 
 ## Planned responsibilities
@@ -43,6 +44,7 @@ The daemon must fail closed if:
 - the model is unavailable
 - the IPC peer is not trusted
 - authentication times out
+- auth is not implemented
 
 ## Build
 
@@ -50,53 +52,37 @@ From the repository root, build with:
 
     ./scripts/build.sh
 
-Run one-shot camera probe with default camera index 0:
-
-    ./build/daemon/face-unlockd
-
-Run continuous camera loop:
-
-    ./build/daemon/face-unlockd --camera 0 --loop
-
-Run socket server only:
-
-    ./build/daemon/face-unlockd --serve
-
 Run daemon mode with camera worker and socket server:
 
     ./build/daemon/face-unlockd --camera 0 --daemon
 
-In another terminal, test the socket:
+In another terminal, test ping:
 
-    ./scripts/test-socket-client.sh
+    ./scripts/test-socket-client.sh ping
 
-Stop loop, server, or daemon mode with Ctrl+C.
+Test camera status:
 
-## Current expected daemon socket output
+    ./scripts/test-socket-client.sh camera_status
 
-Daemon terminal:
+Test auth fail-closed behavior:
 
-    face-unlockd prototype
-    version: 0.1.0
-    uid: 1000
-    runtime_dir: /run/user/1000
-    planned_socket: /run/user/1000/face-unlock.sock
-    mode: daemon
-    daemon_status: starting
-    socket_path: /run/user/1000/face-unlock.sock
-    socket_status: listening
-    socket_mode: 0600
-    server_status: started
-    camera_index: 0
-    camera_status: opened
-    camera_worker_status: started
-    peer_credentials: pid=12345 uid=1000 gid=1000
-    peer_status: allowed
-    client_request: {"op":"ping","client":"test-socket-client"}
+    ./scripts/test-socket-client.sh auth
 
-Client terminal:
+Stop daemon mode with Ctrl+C.
 
-    {"status":"ok","reason":"daemon_alive","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+## Current expected socket responses
+
+Ping:
+
+    {"status":"ok","op":"ping","reason":"daemon_alive","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+
+Camera status:
+
+    {"status":"ok","op":"camera_status","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+
+Auth currently fails closed:
+
+    {"status":"fail","op":"auth","reason":"auth_not_implemented","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
 
 ## Security notes
 
@@ -113,6 +99,6 @@ Future PAM integration may require carefully reviewed handling for privileged PA
 
 The current daemon reads frames into memory only.
 
-Socket mode currently only replies to a local test request and frame readiness status.
+Socket mode currently replies with operation status and frame readiness metadata.
 
 It does not save images, face crops, embeddings, templates, or logs containing biometric data.

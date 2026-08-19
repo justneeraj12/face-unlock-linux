@@ -295,26 +295,106 @@ bool peer_is_allowed(const ucred& credentials) {
   return credentials.uid == daemon_uid;
 }
 
-std::string build_daemon_alive_response(FrameStore* frame_store) {
+struct CameraStatus {
+  std::string state = "not_attached";
+  unsigned long long frames_total = 0;
+  int frame_width = 0;
+  int frame_height = 0;
+  int frame_channels = 0;
+};
+
+CameraStatus get_camera_status(FrameStore* frame_store) {
+  CameraStatus status;
+
   if (frame_store == nullptr) {
-    return "{\"status\":\"ok\",\"reason\":\"daemon_alive\",\"camera\":\"not_attached\"}\n";
+    status.state = "not_attached";
+    return status;
   }
 
   cv::Mat snapshot;
-  unsigned long long frames_total = 0;
-  const bool has_frame = frame_store->snapshot(snapshot, frames_total);
+  const bool has_frame = frame_store->snapshot(snapshot, status.frames_total);
 
   if (!has_frame) {
-    return "{\"status\":\"ok\",\"reason\":\"daemon_alive\",\"camera\":\"not_ready\",\"frames_total\":"
-      + std::to_string(frames_total) + "}\n";
+    status.state = "not_ready";
+    return status;
   }
 
-  return "{\"status\":\"ok\",\"reason\":\"daemon_alive\",\"camera\":\"ready\",\"frames_total\":"
-    + std::to_string(frames_total)
-    + ",\"frame_width\":" + std::to_string(snapshot.cols)
-    + ",\"frame_height\":" + std::to_string(snapshot.rows)
-    + ",\"frame_channels\":" + std::to_string(snapshot.channels())
-    + "}\n";
+  status.state = "ready";
+  status.frame_width = snapshot.cols;
+  status.frame_height = snapshot.rows;
+  status.frame_channels = snapshot.channels();
+
+  return status;
+}
+
+std::string camera_status_json_fields(const CameraStatus& camera_status) {
+  std::string fields =
+    ",\"camera\":\"" + camera_status.state + "\""
+    + ",\"frames_total\":" + std::to_string(camera_status.frames_total);
+
+  if (camera_status.state == "ready") {
+    fields +=
+      ",\"frame_width\":" + std::to_string(camera_status.frame_width)
+      + ",\"frame_height\":" + std::to_string(camera_status.frame_height)
+      + ",\"frame_channels\":" + std::to_string(camera_status.frame_channels);
+  }
+
+  return fields;
+}
+
+std::string compact_jsonish(const std::string& request) {
+  std::string compact;
+  compact.reserve(request.size());
+
+  for (char ch : request) {
+    if (ch != ' ' && ch != '\n' && ch != '\r' && ch != '\t') {
+      compact.push_back(ch);
+    }
+  }
+
+  return compact;
+}
+
+std::string extract_operation(const std::string& request) {
+  const std::string compact = compact_jsonish(request);
+
+  if (compact.find("\"op\":\"camera_status\"") != std::string::npos) {
+    return "camera_status";
+  }
+
+  if (compact.find("\"op\":\"auth\"") != std::string::npos) {
+    return "auth";
+  }
+
+  if (compact.find("\"op\":\"ping\"") != std::string::npos) {
+    return "ping";
+  }
+
+  return "unknown";
+}
+
+std::string build_response_for_request(const std::string& request, FrameStore* frame_store) {
+  const std::string op = extract_operation(request);
+  const CameraStatus camera_status = get_camera_status(frame_store);
+  const std::string camera_fields = camera_status_json_fields(camera_status);
+
+  if (op == "ping") {
+    return "{\"status\":\"ok\",\"op\":\"ping\",\"reason\":\"daemon_alive\""
+      + camera_fields + "}\n";
+  }
+
+  if (op == "camera_status") {
+    return "{\"status\":\"ok\",\"op\":\"camera_status\""
+      + camera_fields + "}\n";
+  }
+
+  if (op == "auth") {
+    return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_not_implemented\""
+      + camera_fields + "}\n";
+  }
+
+  return "{\"status\":\"fail\",\"op\":\"unknown\",\"reason\":\"unknown_operation\""
+    + camera_fields + "}\n";
 }
 
 void handle_client(int client_fd, FrameStore* frame_store) {
@@ -348,16 +428,18 @@ void handle_client(int client_fd, FrameStore* frame_store) {
   std::cout << "peer_status: allowed" << '\n';
 
   char buffer[1024] {};
+  std::string request;
   const ssize_t bytes_read = ::read(client_fd, buffer, sizeof(buffer) - 1);
 
   if (bytes_read < 0) {
     std::cerr << "read_warning: " << std::strerror(errno) << '\n';
   } else {
     buffer[bytes_read] = '\0';
-    std::cout << "client_request: " << buffer << '\n';
+    request = buffer;
+    std::cout << "client_request: " << request << '\n';
   }
 
-  write_json_response(client_fd, build_daemon_alive_response(frame_store));
+  write_json_response(client_fd, build_response_for_request(request, frame_store));
 
   ::close(client_fd);
 }
