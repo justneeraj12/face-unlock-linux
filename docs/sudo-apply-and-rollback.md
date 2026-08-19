@@ -200,3 +200,11 @@ For development-only sudo face-auth testing, run the daemon manually with:
 or:
 
     FACE_UNLOCK_ALLOW_ROOT_AUTH=1 FACE_UNLOCK_DEV_ALLOW=1
+
+## Dry-run regression test
+
+Dry-run behavior can be tested with:
+
+    ./scripts/test-sudo-dry-run.sh
+
+The test verifies that /etc/pam.d/sudo is unchanged after running dry-run planners.

@@ -157,3 +157,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | github-issues.md | Starter issue bootstrap script |
+
+## sudo dry-run testing
+
+| Document | Purpose |
+|---|---|
+| sudo-dry-run-test.md | Verifies sudo dry-run scripts do not modify PAM |

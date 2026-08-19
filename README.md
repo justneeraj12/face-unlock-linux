@@ -539,3 +539,13 @@ Docs:
 
     docs/sudo-apply-and-rollback.md
     docs/sudo-root-peer-policy.md
+
+## sudo dry-run regression test
+
+Verify sudo planning scripts do not modify /etc/pam.d/sudo:
+
+    ./scripts/test-sudo-dry-run.sh
+
+Documentation:
+
+    docs/sudo-dry-run-test.md
