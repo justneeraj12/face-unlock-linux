@@ -194,11 +194,13 @@ int main(int argc, char* argv[]) {
 
   auto* understandButton = new QPushButton(QStringLiteral("I understand"));
   auto* refreshButton = new QPushButton(QStringLiteral("Refresh status"));
+  auto* brightnessButton = new QPushButton(QStringLiteral("Brightness assist placeholder"));
   auto* forgetButton = new QPushButton(QStringLiteral("Forget me"));
   auto* closeButton = new QPushButton(QStringLiteral("Close"));
 
   buttonRow->addWidget(understandButton);
   buttonRow->addWidget(refreshButton);
+  buttonRow->addWidget(brightnessButton);
   buttonRow->addWidget(forgetButton);
   buttonRow->addStretch();
   buttonRow->addWidget(closeButton);
@@ -223,6 +225,23 @@ int main(int argc, char* argv[]) {
 
   QObject::connect(refreshButton, &QPushButton::clicked, [status]() {
     refreshStatus(status);
+  });
+
+  QObject::connect(brightnessButton, &QPushButton::clicked, [&window]() {
+    QMessageBox::information(
+      &window,
+      QStringLiteral("Brightness assist placeholder"),
+      QStringLiteral(
+        "Brightness assist is not implemented yet.\n\n"
+        "Future versions may temporarily increase screen brightness during enrollment snapshots.\n\n"
+        "Required safety behavior:\n"
+        "- ask for explicit consent\n"
+        "- remember previous brightness\n"
+        "- restore previous brightness immediately\n"
+        "- never change brightness silently\n"
+        "- fail safely if brightness control is unavailable"
+      )
+    );
   });
 
   QObject::connect(forgetButton, &QPushButton::clicked, [&window, status]() {

@@ -748,3 +748,16 @@ It deletes only:
     ~/.local/share/face-unlock/enrollment.json
 
 It does not modify PAM or authentication settings.
+
+## Brightness assist planning
+
+Brightness assist is planned for future enrollment low-light support.
+
+Current status:
+
+- GUI placeholder only
+- no brightness changes performed
+
+Documentation:
+
+    docs/brightness-assist.md

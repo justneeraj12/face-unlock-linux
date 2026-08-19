@@ -71,3 +71,11 @@ The Forget Me button deletes:
 after confirmation.
 
 It does not modify PAM or authentication settings.
+
+## Brightness assist placeholder
+
+The GUI includes a placeholder for future brightness assist.
+
+It currently shows an explanation dialog only.
+
+It does not change screen brightness.

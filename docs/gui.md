@@ -97,3 +97,13 @@ Forget Me does not modify:
     lock-screen configuration
 
 This is still not real enrollment.
+
+## Brightness assist placeholder
+
+The GUI includes a brightness assist placeholder button.
+
+It explains planned behavior but does not change brightness.
+
+Design document:
+
+    docs/brightness-assist.md
