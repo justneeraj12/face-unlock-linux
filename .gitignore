@@ -53,3 +53,8 @@ Thumbs.db
 # Temporary
 tmp/
 temp/
+
+# Derived biometric prototype data
+embeddings.json
+*.npy
+*.npz

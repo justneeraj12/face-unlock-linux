@@ -662,3 +662,17 @@ Delete:
     ./build/daemon/face-unlock-template-tool delete --yes
 
 This is not real enrollment yet.
+
+## Python embedding prototype
+
+Prototype embedding script:
+
+    python/prototype_embed.py
+
+Documentation:
+
+    docs/python-embedding-prototype.md
+
+This uses a random stub model and is not real face recognition.
+
+Writing embeddings requires explicit biometric-risk consent.

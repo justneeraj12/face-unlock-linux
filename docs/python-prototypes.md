@@ -101,3 +101,17 @@ Python venv option:
 Prototype scripts must not silently save biometric data.
 
 Any script that saves face crops or templates must require explicit user consent.
+
+## Embedding prototype
+
+The embedding prototype is documented in:
+
+    docs/python-embedding-prototype.md
+
+Script:
+
+    python/prototype_embed.py
+
+It uses a random stub model and is not real face recognition.
+
+Writing embeddings requires explicit biometric-risk consent.
