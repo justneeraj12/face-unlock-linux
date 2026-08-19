@@ -616,3 +616,13 @@ Documentation:
     docs/sudo-apply-and-rollback.md
 
 Do not apply sudo integration unless you have a root-authenticated recovery shell open.
+
+## sudo root-peer policy
+
+For future sudo support, the daemon allows root-owned socket peers only for auth requests.
+
+Documentation:
+
+    docs/sudo-root-peer-policy.md
+
+This does not enable sudo integration by itself. It only prepares the daemon peer policy for sudo PAM behavior.

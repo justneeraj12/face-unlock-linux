@@ -147,3 +147,18 @@ These scripts do not modify:
 7. Roll back immediately if anything looks wrong.
 
        ./scripts/rollback-sudo-pam.sh --latest
+
+## Root peer policy
+
+sudo PAM clients may connect to the daemon as UID 0.
+
+The daemon root-peer policy is documented in:
+
+    docs/sudo-root-peer-policy.md
+
+Current policy:
+
+- same UID clients are allowed
+- root is allowed only for auth requests
+- root non-auth requests are rejected
+- other users are rejected

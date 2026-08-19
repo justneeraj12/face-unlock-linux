@@ -4,7 +4,7 @@ set -euo pipefail
 op="${1:-ping}"
 
 uid_now="$(id -u)"
-socket_path="${XDG_RUNTIME_DIR:-/run/user/${uid_now}}/face-unlock.sock"
+socket_path="${FACE_UNLOCK_SOCKET_PATH:-${XDG_RUNTIME_DIR:-/run/user/${uid_now}}/face-unlock.sock}"
 
 if [[ ! -S "$socket_path" ]]; then
   echo "socket_not_found: $socket_path"

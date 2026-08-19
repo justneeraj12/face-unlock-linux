@@ -454,14 +454,33 @@ void write_json_response(int client_fd, const std::string& response) {
   }
 }
 
-bool peer_is_allowed(const ucred& credentials) {
+std::string peer_policy_decision(
+  const ucred& credentials,
+  const std::string& operation
+) {
   const uid_t daemon_uid = getuid();
 
-  // Current prototype policy:
-  // - allow same user only
+  if (credentials.uid == daemon_uid) {
+    return "allow_same_uid";
+  }
+
+  // sudo/PAM may connect as root.
   //
-  // Later PAM testing may need a carefully reviewed policy for root-owned PAM clients.
-  return credentials.uid == daemon_uid;
+  // Root is allowed only for auth requests.
+  // This is needed for future sudo integration while keeping non-auth
+  // socket operations restricted to the desktop user.
+  if (credentials.uid == 0 && operation == "auth") {
+    return "allow_root_auth";
+  }
+
+  return "reject";
+}
+
+bool peer_is_allowed_for_operation(
+  const ucred& credentials,
+  const std::string& operation
+) {
+  return peer_policy_decision(credentials, operation) != "reject";
 }
 
 struct CameraStatus {
@@ -626,18 +645,6 @@ void handle_client(int client_fd, FrameStore* frame_store, AuthState* auth_state
             << " gid=" << credentials.gid
             << '\n';
 
-  if (!peer_is_allowed(credentials)) {
-    std::cout << "peer_status: rejected" << '\n';
-    write_json_response(
-      client_fd,
-      "{\"status\":\"fail\",\"reason\":\"peer_not_allowed\"}\n"
-    );
-    ::close(client_fd);
-    return;
-  }
-
-  std::cout << "peer_status: allowed" << '\n';
-
   char buffer[1024] {};
   std::string request;
   const ssize_t bytes_read = ::read(client_fd, buffer, sizeof(buffer) - 1);
@@ -649,6 +656,24 @@ void handle_client(int client_fd, FrameStore* frame_store, AuthState* auth_state
     request = buffer;
     std::cout << "client_request: " << request << '\n';
   }
+
+  const std::string operation = extract_operation(request);
+  const std::string policy = peer_policy_decision(credentials, operation);
+
+  std::cout << "client_operation: " << operation << '\n';
+  std::cout << "peer_policy: " << policy << '\n';
+
+  if (!peer_is_allowed_for_operation(credentials, operation)) {
+    std::cout << "peer_status: rejected" << '\n';
+    write_json_response(
+      client_fd,
+      "{\"status\":\"fail\",\"reason\":\"peer_not_allowed\"}\n"
+    );
+    ::close(client_fd);
+    return;
+  }
+
+  std::cout << "peer_status: allowed" << '\n';
 
   write_json_response(client_fd, build_response_for_request(request, frame_store, auth_state));
 

@@ -130,3 +130,20 @@ The current daemon reads frames into memory only.
 Socket mode currently replies with operation status and frame readiness metadata.
 
 It does not save images, face crops, embeddings, templates, or logs containing biometric data.
+
+## Root peer policy for sudo
+
+The daemon allows root-owned socket peers only for auth requests.
+
+This supports future sudo PAM integration, where pam_face_unlock.so may connect as UID 0.
+
+Policy:
+
+- same UID: allowed
+- root UID 0 with auth operation: allowed
+- root UID 0 with non-auth operation: rejected
+- other users: rejected
+
+See:
+
+    docs/sudo-root-peer-policy.md
