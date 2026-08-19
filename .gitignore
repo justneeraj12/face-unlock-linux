@@ -58,3 +58,6 @@ temp/
 embeddings.json
 *.npy
 *.npz
+
+# Local GUI build directory
+build-gui/

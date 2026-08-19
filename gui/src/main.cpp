@@ -193,6 +193,11 @@ int main(int argc, char* argv[]) {
   status->setPlainText(statusText());
   status->setMinimumHeight(210);
 
+  auto* consent = new QTextEdit();
+  consent->setReadOnly(true);
+  consent->setPlainText(consentText());
+  consent->setMinimumHeight(260);
+
   auto* poseLabel = new QLabel(QStringLiteral("Enrollment pose slots scaffold"));
   QFont poseFont = poseLabel->font();
   poseFont.setBold(true);
