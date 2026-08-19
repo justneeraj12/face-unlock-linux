@@ -69,3 +69,23 @@ Non-goals for v0.1.0-alpha:
 - lock-screen integration
 - greeter/login integration
 - Qt enrollment GUI
+
+## Phase 6: Real model evaluation
+
+Goals:
+
+- select candidate detector models
+- select candidate embedding models
+- document model licenses
+- prototype Python evaluation
+- export TorchScript/ONNX artifacts
+- calibrate matching thresholds
+- document liveness limitations
+
+Deliverables:
+
+- [ ] model evaluation plan
+- [ ] threshold calibration document
+- [ ] Python model evaluation script
+- [ ] sample local-only evaluation workflow
+- [ ] documented candidate model shortlist

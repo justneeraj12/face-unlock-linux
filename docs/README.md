@@ -96,3 +96,10 @@ Development auth requires:
     FACE_UNLOCK_DEV_ALLOW=1
 
 and must never be used as production authentication.
+
+## Model evaluation and matching
+
+| Document | Purpose |
+|---|---|
+| model-evaluation-plan.md | Plan for selecting and evaluating real models |
+| threshold-calibration.md | Matching threshold calibration plan |

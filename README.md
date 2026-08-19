@@ -455,3 +455,14 @@ See:
 All project documentation is indexed here:
 
     docs/README.md
+
+## Model evaluation planning
+
+Real model integration is planned but not implemented yet.
+
+Model evaluation docs:
+
+    docs/model-evaluation-plan.md
+    docs/threshold-calibration.md
+
+The project will not claim real biometric authentication until model behavior and thresholds are documented.
