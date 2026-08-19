@@ -107,3 +107,21 @@ It explains planned behavior but does not change brightness.
 Design document:
 
     docs/brightness-assist.md
+
+## Pose slots scaffold
+
+The GUI includes a non-camera pose slot scaffold.
+
+Current pose slots:
+
+- Center
+- Left
+- Right
+- Up
+- Down
+
+The current UI can mark demo slots complete and reset them.
+
+This does not capture images or save enrollment data.
+
+Future versions should connect pose slots to camera preview, face quality checks, and encrypted template creation.

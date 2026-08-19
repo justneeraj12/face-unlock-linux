@@ -79,3 +79,17 @@ The GUI includes a placeholder for future brightness assist.
 It currently shows an explanation dialog only.
 
 It does not change screen brightness.
+
+## Pose slots scaffold
+
+The GUI includes placeholder pose slots:
+
+- Center
+- Left
+- Right
+- Up
+- Down
+
+Current buttons only mark/reset demo state.
+
+No images are captured or saved.

@@ -761,3 +761,15 @@ Current status:
 Documentation:
 
     docs/brightness-assist.md
+
+## GUI pose slots scaffold
+
+The optional Qt GUI includes placeholder enrollment pose slots:
+
+- Center
+- Left
+- Right
+- Up
+- Down
+
+This is UI-only. No camera capture or enrollment data is saved.

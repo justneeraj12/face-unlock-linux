@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QCheckBox>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -47,6 +48,13 @@ QString statusText() {
   text += QStringLiteral("- No enrollment capture yet\n");
   text += QStringLiteral("- No PAM changes\n");
   text += QStringLiteral("- No authentication changes\n\n");
+
+  text += QStringLiteral("Pose slots:\n\n");
+  text += QStringLiteral("- Center: not captured\n");
+  text += QStringLiteral("- Left: not captured\n");
+  text += QStringLiteral("- Right: not captured\n");
+  text += QStringLiteral("- Up: not captured\n");
+  text += QStringLiteral("- Down: not captured\n\n");
 
   text += QStringLiteral("User data status:\n\n");
   text += fileStatusLine(QStringLiteral("Encrypted template"), templatePath());
@@ -185,10 +193,38 @@ int main(int argc, char* argv[]) {
   status->setPlainText(statusText());
   status->setMinimumHeight(210);
 
-  auto* consent = new QTextEdit();
-  consent->setReadOnly(true);
-  consent->setPlainText(consentText());
-  consent->setMinimumHeight(260);
+  auto* poseLabel = new QLabel(QStringLiteral("Enrollment pose slots scaffold"));
+  QFont poseFont = poseLabel->font();
+  poseFont.setBold(true);
+  poseLabel->setFont(poseFont);
+
+  auto* poseRow = new QHBoxLayout();
+
+  auto* centerPose = new QCheckBox(QStringLiteral("Center"));
+  auto* leftPose = new QCheckBox(QStringLiteral("Left"));
+  auto* rightPose = new QCheckBox(QStringLiteral("Right"));
+  auto* upPose = new QCheckBox(QStringLiteral("Up"));
+  auto* downPose = new QCheckBox(QStringLiteral("Down"));
+
+  centerPose->setEnabled(false);
+  leftPose->setEnabled(false);
+  rightPose->setEnabled(false);
+  upPose->setEnabled(false);
+  downPose->setEnabled(false);
+
+  poseRow->addWidget(centerPose);
+  poseRow->addWidget(leftPose);
+  poseRow->addWidget(rightPose);
+  poseRow->addWidget(upPose);
+  poseRow->addWidget(downPose);
+  poseRow->addStretch();
+
+  auto* poseButtonRow = new QHBoxLayout();
+  auto* markPoseButton = new QPushButton(QStringLiteral("Mark demo pose complete"));
+  auto* resetPoseButton = new QPushButton(QStringLiteral("Reset pose slots"));
+  poseButtonRow->addWidget(markPoseButton);
+  poseButtonRow->addWidget(resetPoseButton);
+  poseButtonRow->addStretch();
 
   auto* buttonRow = new QHBoxLayout();
 
@@ -210,6 +246,9 @@ int main(int argc, char* argv[]) {
   root->addWidget(warning);
   root->addWidget(status);
   root->addWidget(consent);
+  root->addWidget(poseLabel);
+  root->addLayout(poseRow);
+  root->addLayout(poseButtonRow);
   root->addLayout(buttonRow);
 
   QObject::connect(understandButton, &QPushButton::clicked, [&window]() {
@@ -225,6 +264,41 @@ int main(int argc, char* argv[]) {
 
   QObject::connect(refreshButton, &QPushButton::clicked, [status]() {
     refreshStatus(status);
+  });
+
+  QObject::connect(markPoseButton, &QPushButton::clicked, [centerPose, leftPose, rightPose, upPose, downPose]() {
+    if (!centerPose->isChecked()) {
+      centerPose->setChecked(true);
+      return;
+    }
+
+    if (!leftPose->isChecked()) {
+      leftPose->setChecked(true);
+      return;
+    }
+
+    if (!rightPose->isChecked()) {
+      rightPose->setChecked(true);
+      return;
+    }
+
+    if (!upPose->isChecked()) {
+      upPose->setChecked(true);
+      return;
+    }
+
+    if (!downPose->isChecked()) {
+      downPose->setChecked(true);
+      return;
+    }
+  });
+
+  QObject::connect(resetPoseButton, &QPushButton::clicked, [centerPose, leftPose, rightPose, upPose, downPose]() {
+    centerPose->setChecked(false);
+    leftPose->setChecked(false);
+    rightPose->setChecked(false);
+    upPose->setChecked(false);
+    downPose->setChecked(false);
   });
 
   QObject::connect(brightnessButton, &QPushButton::clicked, [&window]() {
