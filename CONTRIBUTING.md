@@ -135,3 +135,11 @@ The repository uses:
 Security-sensitive paths are routed to maintainers for review.
 
 CODEOWNERS does not replace careful review. Use the PR checklist and security docs.
+
+## Labels
+
+Project labels can be bootstrapped with:
+
+    ./scripts/bootstrap-labels.sh
+
+Labels cover areas such as daemon, PAM, GUI, models, packaging, security, privacy, and testing.

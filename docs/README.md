@@ -139,3 +139,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | codeowners.md | CODEOWNERS and review routing |
+
+## GitHub project management
+
+| Document | Purpose |
+|---|---|
+| github-labels.md | GitHub issue label setup |
