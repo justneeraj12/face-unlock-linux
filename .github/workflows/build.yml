@@ -9,37 +9,50 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ubuntu-2404-build:
     name: Ubuntu 24.04 CMake build
     runs-on: ubuntu-24.04
+    timeout-minutes: 35
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install build dependencies
+      - name: Check documentation before apt install
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          ./scripts/check-docs.sh
+
+      - name: Install build dependencies
+        timeout-minutes: 20
+        run: |
+          set -euxo pipefail
+
+          sudo sed -i \
+            -e 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' \
+            -e 's|https://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' \
+            /etc/apt/sources.list /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+
+          sudo apt-get -o Acquire::Retries=5 update
+
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             build-essential \
             cmake \
             pkg-config \
-            libopencv-dev \
-            python3-opencv \
+            file \
+            libopencv-core-dev \
+            libopencv-videoio-dev \
             libpam0g-dev \
-            libsodium-dev \
-            v4l-utils
+            libsodium-dev
 
       - name: Show tool versions
         run: |
           cmake --version
           pkg-config --modversion opencv4
-          python3 -c 'import cv2; print(cv2.__version__)'
-
-      - name: Check documentation
-        run: |
-          ./scripts/check-docs.sh
 
       - name: Configure and build
         run: |
@@ -52,13 +65,27 @@ jobs:
       - name: Smoke test daemon CLI
         run: |
           ./build/daemon/face-unlockd --help
+          ./build/daemon/face-unlockd --model-test || true
 
       - name: Verify build outputs
         run: |
           test -x ./build/daemon/face-unlockd
+          test -x ./build/daemon/face-unlock-crypto-selftest
           test -f ./build/pam/pam_face_unlock.so
           file ./build/daemon/face-unlockd
+          file ./build/daemon/face-unlock-crypto-selftest
           file ./build/pam/pam_face_unlock.so
+
+      - name: Audit PAM module dependencies
+        run: |
+          ldd ./build/pam/pam_face_unlock.so
+
+          if ldd ./build/pam/pam_face_unlock.so | grep -Ei 'opencv|torch|cuda|cudart|Qt|tensorflow|sodium'; then
+            echo "ERROR: PAM module links to disallowed heavy dependency."
+            exit 1
+          fi
+
+          echo "PAM dependency audit passed."
 
       - name: Build Debian package
         run: |
@@ -66,18 +93,6 @@ jobs:
           ls -lh build/*.deb
           dpkg-deb -I build/*.deb
           dpkg-deb -c build/*.deb | head -120
-
-
-      - name: Audit PAM module dependencies
-        run: |
-          ldd ./build/pam/pam_face_unlock.so
-
-          if ldd ./build/pam/pam_face_unlock.so | grep -Ei 'opencv|torch|cuda|cudart|Qt|tensorflow'; then
-            echo "ERROR: PAM module links to disallowed heavy dependency."
-            exit 1
-          fi
-
-          echo "PAM dependency audit passed."
 
       - name: Upload daemon artifact
         uses: actions/upload-artifact@v4
