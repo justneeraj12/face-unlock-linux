@@ -580,3 +580,17 @@ Apache License 2.0.
 See:
 
     LICENSE
+
+## sudo dry-run planner
+
+sudo integration is still not installed.
+
+Dry-run planner:
+
+    ./scripts/plan-sudo-pam-install.sh
+
+Documentation:
+
+    docs/sudo-safe-installer.md
+
+The planner prints a proposed sudo PAM diff and rollback commands but makes no changes.
