@@ -60,6 +60,14 @@ jobs:
           file ./build/daemon/face-unlockd
           file ./build/pam/pam_face_unlock.so
 
+      - name: Build Debian package
+        run: |
+          cmake --build build --target package
+          ls -lh build/*.deb
+          dpkg-deb -I build/*.deb
+          dpkg-deb -c build/*.deb | head -120
+
+
       - name: Audit PAM module dependencies
         run: |
           ldd ./build/pam/pam_face_unlock.so
@@ -82,3 +90,9 @@ jobs:
         with:
           name: pam-face-unlock-ubuntu-24.04
           path: build/pam/pam_face_unlock.so
+
+      - name: Upload Debian package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: face-unlock-linux-deb-ubuntu-24.04
+          path: build/*.deb

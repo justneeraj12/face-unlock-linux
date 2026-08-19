@@ -87,3 +87,18 @@ The current recommended development flow still uses:
     ./scripts/install-user-service.sh
 
 Future packages may provide a safer packaged helper command.
+
+## CI package build
+
+GitHub Actions builds the Debian package on Ubuntu 24.04.
+
+The CI artifact is named:
+
+    face-unlock-linux-deb-ubuntu-24.04
+
+Download it from the workflow run artifacts.
+
+Always inspect package contents before installing:
+
+    dpkg-deb -c <package>.deb
+    dpkg-deb -I <package>.deb

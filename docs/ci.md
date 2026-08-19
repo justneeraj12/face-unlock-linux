@@ -78,3 +78,17 @@ Fake PAM service testing remains manual for now.
 See:
 
     docs/pam-fake-service-test.md
+
+## Debian package artifact
+
+CI also builds the CPack Debian package with:
+
+    cmake --build build --target package
+
+The workflow uploads the package artifact as:
+
+    face-unlock-linux-deb-ubuntu-24.04
+
+The .deb artifact is for development testing and inspection.
+
+It does not automatically modify PAM files.
