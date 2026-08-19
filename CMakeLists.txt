@@ -13,3 +13,5 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(GNUInstallDirs)
 
 add_subdirectory(daemon)
+
+add_subdirectory(pam)
