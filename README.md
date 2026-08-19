@@ -7,6 +7,7 @@
 [![PAM](https://img.shields.io/badge/PAM-minimal%20IPC-red.svg)](pam/)
 [![Security](https://img.shields.io/badge/security-fail--closed-brightgreen.svg)](SECURITY.md)
 [![Status](https://img.shields.io/badge/status-v0.1.0--alpha%20prototype-yellow.svg)](docs/releases/v0.1.0-alpha.md)
+[![Release](https://img.shields.io/github/v/release/justneeraj12/face-unlock-linux?include_prereleases)](https://github.com/justneeraj12/face-unlock-linux/releases)
 
 Experimental, safety-first face unlock infrastructure for Ubuntu Linux.
 
