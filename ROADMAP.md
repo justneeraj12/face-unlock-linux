@@ -45,3 +45,27 @@ This code applies in:
 Maintainers may remove, edit, or reject comments and contributions that violate this code.
 
 Serious or repeated violations may result in a ban from project spaces.
+
+## v0.1.0-alpha target
+
+The v0.1.0-alpha milestone is an infrastructure prototype.
+
+Target contents:
+
+- daemon camera and IPC prototype
+- minimal PAM IPC module
+- fake PAM service testing
+- systemd user service helpers
+- encrypted template storage scaffold
+- Python capture prototype
+- TorchScript export/load scaffold
+- Debian package skeleton
+- CI artifacts
+
+Non-goals for v0.1.0-alpha:
+
+- real biometric authentication
+- production sudo integration
+- lock-screen integration
+- greeter/login integration
+- Qt enrollment GUI

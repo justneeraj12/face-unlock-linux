@@ -390,3 +390,15 @@ Inspect before installing:
     dpkg-deb -c build/*.deb
 
 The package does not automatically modify PAM files or enable authentication integration.
+
+## Project status and alpha release
+
+Current status:
+
+    docs/project-status.md
+
+v0.1.0-alpha checklist:
+
+    docs/releases/v0.1.0-alpha.md
+
+The first alpha release is intended to be an infrastructure prototype, not real biometric authentication.
