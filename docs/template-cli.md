@@ -98,3 +98,16 @@ When a placeholder template exists, auth responses should include:
     reason matcher_not_implemented
 
 This still does not mean real matching is implemented.
+
+## Enrollment manifest relationship
+
+Future enrollment will create both:
+
+    ~/.local/share/face-unlock/template.enc
+    ~/.local/share/face-unlock/enrollment.json
+
+The planned manifest format is documented in:
+
+    docs/enrollment-format.md
+
+Current placeholder template creation does not yet write an enrollment manifest.

@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/justneeraj12/face-unlock-linux/schemas/enrollment-manifest.schema.json",
+  "title": "face-unlock-linux enrollment manifest",
+  "type": "object",
+  "required": [
+    "format",
+    "format_version",
+    "created_at",
+    "user",
+    "model",
+    "template",
+    "privacy",
+    "status"
+  ],
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "face-unlock-enrollment-manifest"
+    },
+    "format_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "user": {
+      "type": "object",
+      "required": ["uid", "username"],
+      "properties": {
+        "uid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "required": ["embedding_model_id", "embedding_dim", "input_size"],
+      "properties": {
+        "embedding_model_id": {
+          "type": "string"
+        },
+        "detector_model_id": {
+          "type": "string"
+        },
+        "embedding_dim": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "input_size": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "preprocessing": {
+          "type": "object"
+        }
+      }
+    },
+    "template": {
+      "type": "object",
+      "required": [
+        "encrypted_template_path",
+        "encryption",
+        "contains_raw_images"
+      ],
+      "properties": {
+        "encrypted_template_path": {
+          "type": "string"
+        },
+        "encryption": {
+          "type": "string"
+        },
+        "contains_raw_images": {
+          "type": "boolean"
+        },
+        "contains_embeddings": {
+          "type": "boolean"
+        },
+        "key_storage": {
+          "type": "string"
+        }
+      }
+    },
+    "quality": {
+      "type": "object"
+    },
+    "privacy": {
+      "type": "object",
+      "required": [
+        "raw_images_saved",
+        "face_crops_saved",
+        "telemetry_enabled"
+      ],
+      "properties": {
+        "raw_images_saved": {
+          "type": "boolean"
+        },
+        "face_crops_saved": {
+          "type": "boolean"
+        },
+        "telemetry_enabled": {
+          "type": "boolean"
+        },
+        "consent_version": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "enrollment_complete",
+        "real_biometric_template",
+        "placeholder_only"
+      ],
+      "properties": {
+        "enrollment_complete": {
+          "type": "boolean"
+        },
+        "real_biometric_template": {
+          "type": "boolean"
+        },
+        "placeholder_only": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

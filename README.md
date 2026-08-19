@@ -676,3 +676,19 @@ Documentation:
 This uses a random stub model and is not real face recognition.
 
 Writing embeddings requires explicit biometric-risk consent.
+
+## Enrollment manifest scaffold
+
+Planned enrollment metadata format:
+
+    docs/enrollment-format.md
+
+Example manifest:
+
+    schemas/enrollment-manifest.example.json
+
+Schema scaffold:
+
+    schemas/enrollment-manifest.schema.json
+
+The manifest is metadata only and must not contain raw face images, unencrypted embeddings, or encryption keys.

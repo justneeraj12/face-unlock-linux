@@ -51,6 +51,10 @@ section "Documentation check"
 
 ./scripts/check-docs.sh
 
+section "JSON check"
+
+./scripts/check-json.sh
+
 section "Build"
 
 ./scripts/build.sh
