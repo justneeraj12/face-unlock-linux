@@ -449,3 +449,9 @@ Apache License 2.0.
 See:
 
     LICENSE
+
+## Documentation index
+
+All project documentation is indexed here:
+
+    docs/README.md
