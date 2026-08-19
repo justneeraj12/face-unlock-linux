@@ -112,16 +112,9 @@ jobs:
           file ./build/daemon/face-unlock-crypto-selftest
           file ./build/pam/pam_face_unlock.so
 
-      - name: Audit PAM module dependencies
+      - name: Audit dependencies
         run: |
-          ldd ./build/pam/pam_face_unlock.so
-
-          if ldd ./build/pam/pam_face_unlock.so | grep -Ei 'opencv|torch|cuda|cudart|Qt|tensorflow|sodium'; then
-            echo "ERROR: PAM module links to disallowed heavy dependency."
-            exit 1
-          fi
-
-          echo "PAM dependency audit passed."
+          ./scripts/audit-dependencies.sh
 
       - name: Build Debian package
         run: |

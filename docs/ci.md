@@ -147,3 +147,11 @@ CI validates model evaluation metrics scaffolding with:
     scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
 
 This ensures the model evaluation metrics example remains privacy-safe and structurally valid.
+
+## Dependency audit script in CI
+
+CI runs:
+
+    ./scripts/audit-dependencies.sh
+
+This keeps local and CI dependency policy aligned.
