@@ -317,3 +317,21 @@ Testing documentation:
     docs/testing.md
 
 Current automated test coverage includes the encrypted template storage self-test.
+
+## Python prototypes
+
+Python prototype scripts live in:
+
+    python/
+
+Documentation:
+
+    docs/python-prototypes.md
+
+Safe default capture test:
+
+    python3 python/prototype_capture.py --camera 0 --duration-seconds 10
+
+By default, the script saves nothing.
+
+Saving face crops requires explicit privacy consent flags.
