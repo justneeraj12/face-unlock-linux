@@ -113,3 +113,12 @@ The daemon CMake configuration manually locates:
 - libopencv_videoio
 
 This avoids requiring opencv4 pkg-config metadata in CI.
+
+## Manifest validation in CI
+
+CI validates enrollment manifest scaffolding with:
+
+    ./scripts/check-json.sh
+    scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
+
+This ensures the example manifest remains valid and privacy-safe.

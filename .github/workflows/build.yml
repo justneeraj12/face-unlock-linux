@@ -29,6 +29,14 @@ jobs:
         run: |
           ./scripts/check-docs.sh
 
+      - name: Check JSON files
+        run: |
+          ./scripts/check-json.sh
+
+      - name: Validate enrollment manifest example
+        run: |
+          scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
+
       - name: Install build dependencies
         timeout-minutes: 45
         run: |

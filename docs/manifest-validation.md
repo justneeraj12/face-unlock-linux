@@ -64,3 +64,12 @@ The JSON schema scaffold remains in:
     schemas/enrollment-manifest.schema.json
 
 Future work may add full schema validation as an optional development dependency.
+
+## CI integration
+
+GitHub Actions validates the example enrollment manifest during the build workflow.
+
+CI runs:
+
+    ./scripts/check-json.sh
+    scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
