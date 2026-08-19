@@ -414,3 +414,15 @@ Documentation:
     docs/local-verification.md
 
 This verifies docs, build, tests, PAM dependency audit, and Debian package generation. It does not modify PAM files or authentication settings.
+
+## Release process
+
+Release documentation:
+
+    docs/release-process.md
+
+Prepare release locally:
+
+    ./scripts/prepare-release.sh v0.1.0-alpha
+
+The prepare script verifies the tree and prints manual tag/release commands. It does not publish automatically.
