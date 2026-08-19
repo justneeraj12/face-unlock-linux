@@ -52,7 +52,12 @@ jobs:
       - name: Show tool versions
         run: |
           cmake --version
-          pkg-config --modversion opencv4
+          echo "Installed OpenCV packages:"
+          dpkg -l | grep -E 'libopencv-(core|videoio).*dev' || true
+          echo "OpenCV headers:"
+          find /usr/include -path '*opencv2/core.hpp' -print || true
+          echo "OpenCV libraries:"
+          ldconfig -p | grep -E 'libopencv_(core|videoio)' || true
 
       - name: Configure and build
         run: |

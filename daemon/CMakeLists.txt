@@ -1,4 +1,19 @@
-find_package(OpenCV REQUIRED COMPONENTS core videoio)
+find_path(OPENCV_INCLUDE_DIR
+  NAMES opencv2/core.hpp
+  PATH_SUFFIXES opencv4
+)
+
+find_library(OPENCV_CORE_LIBRARY
+  NAMES opencv_core
+)
+
+find_library(OPENCV_VIDEOIO_LIBRARY
+  NAMES opencv_videoio
+)
+
+if(NOT OPENCV_INCLUDE_DIR OR NOT OPENCV_CORE_LIBRARY OR NOT OPENCV_VIDEOIO_LIBRARY)
+  message(FATAL_ERROR "OpenCV core/videoio development files not found. Install libopencv-core-dev and libopencv-videoio-dev.")
+endif()
 
 find_path(SODIUM_INCLUDE_DIR sodium.h)
 find_library(SODIUM_LIBRARY sodium)
@@ -39,11 +54,12 @@ target_compile_options(face-unlockd PRIVATE
 target_compile_definitions(face-unlockd PRIVATE _GNU_SOURCE)
 
 target_include_directories(face-unlockd PRIVATE
-  ${OpenCV_INCLUDE_DIRS}
+  ${OPENCV_INCLUDE_DIR}
 )
 
 target_link_libraries(face-unlockd PRIVATE
-  ${OpenCV_LIBS}
+  ${OPENCV_CORE_LIBRARY}
+  ${OPENCV_VIDEOIO_LIBRARY}
 )
 
 if(WITH_TORCH)
