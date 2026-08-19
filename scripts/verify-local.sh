@@ -75,6 +75,10 @@ if [[ -n "$(git status --short)" ]]; then
   echo "Local verification can continue, but release verification should use a clean tree."
 fi
 
+section "Script inventory check"
+
+./scripts/check-scripts.sh
+
 section "Documentation check"
 
 ./scripts/check-docs.sh

@@ -577,3 +577,13 @@ It builds and uploads Debian package artifacts to the GitHub Release.
 Documentation:
 
     docs/release-artifacts.md
+
+## Script inventory check
+
+Verify required helper scripts exist and are executable:
+
+    ./scripts/check-scripts.sh
+
+Documentation:
+
+    docs/script-inventory.md

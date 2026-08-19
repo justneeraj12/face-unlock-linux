@@ -25,6 +25,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check required scripts
+        run: |
+          ./scripts/check-scripts.sh
+
       - name: Check documentation before apt install
         run: |
           ./scripts/check-docs.sh

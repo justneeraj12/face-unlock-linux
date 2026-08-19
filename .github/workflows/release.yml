@@ -18,6 +18,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check required scripts
+        run: |
+          ./scripts/check-scripts.sh
+
       - name: Check documentation
         run: |
           ./scripts/check-docs.sh

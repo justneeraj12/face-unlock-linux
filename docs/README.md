@@ -175,3 +175,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | release-artifacts.md | Automated GitHub Release artifact publishing |
+
+## Script inventory
+
+| Document | Purpose |
+|---|---|
+| script-inventory.md | Required scripts and executable checks |
