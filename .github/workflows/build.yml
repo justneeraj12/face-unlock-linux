@@ -28,6 +28,7 @@ jobs:
             libopencv-dev \
             python3-opencv \
             libpam0g-dev \
+            libsodium-dev \
             v4l-utils
 
       - name: Show tool versions

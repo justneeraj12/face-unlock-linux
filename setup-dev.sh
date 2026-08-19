@@ -35,6 +35,7 @@ sudo apt install -y \
   libopencv-dev \
   python3-opencv \
   libpam0g-dev \
+  libsodium-dev \
   pamtester \
   v4l-utils
 

@@ -291,3 +291,17 @@ Documentation:
     docs/configuration.md
 
 The config file currently supports camera_index and max_auth_attempts. Authentication still fails closed by default.
+
+## Encrypted template storage scaffold
+
+The project includes a libsodium encrypted template storage self-test.
+
+Documentation:
+
+    docs/template-storage.md
+
+Run:
+
+    ./build/daemon/face-unlock-crypto-selftest
+
+This currently encrypts placeholder bytes only. It does not store real face templates or images.
