@@ -372,3 +372,21 @@ Expected default result:
 
     torch_status: disabled
     status: torch_not_enabled
+
+## Debian package skeleton
+
+A basic .deb package can be built with CPack.
+
+Documentation:
+
+    docs/packaging.md
+
+Build package:
+
+    ./scripts/package-deb.sh
+
+Inspect before installing:
+
+    dpkg-deb -c build/*.deb
+
+The package does not automatically modify PAM files or enable authentication integration.

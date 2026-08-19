@@ -28,6 +28,8 @@ set_target_properties(pam_face_unlock PROPERTIES
   OUTPUT_NAME "pam_face_unlock"
 )
 
+include(GNUInstallDirs)
+
 install(TARGETS pam_face_unlock
-  LIBRARY DESTINATION lib/security
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/security
 )
