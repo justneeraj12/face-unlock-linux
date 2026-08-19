@@ -169,3 +169,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | dependency-audit.md | Dependency policy and audit commands |
+
+## Release artifacts
+
+| Document | Purpose |
+|---|---|
+| release-artifacts.md | Automated GitHub Release artifact publishing |

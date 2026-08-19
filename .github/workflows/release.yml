@@ -1,0 +1,103 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  ubuntu-2404-release:
+    name: Ubuntu 24.04 release package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check documentation
+        run: |
+          ./scripts/check-docs.sh
+
+      - name: Check JSON files
+        run: |
+          ./scripts/check-json.sh
+
+      - name: Validate enrollment manifest example
+        run: |
+          scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
+
+      - name: Validate model evaluation metrics example
+        run: |
+          scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
+
+      - name: Install build dependencies
+        timeout-minutes: 35
+        run: |
+          set -euxo pipefail
+
+          sudo tee /etc/apt/sources.list.d/ubuntu.sources >/dev/null <<'APT_EOF'
+          Types: deb
+          URIs: http://archive.ubuntu.com/ubuntu/
+          Suites: noble noble-updates noble-backports
+          Components: main restricted universe multiverse
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+          Types: deb
+          URIs: http://security.ubuntu.com/ubuntu/
+          Suites: noble-security
+          Components: main restricted universe multiverse
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          APT_EOF
+
+          sudo apt-get -o Acquire::Retries=5 update
+
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            pkg-config \
+            file \
+            libopencv-core-dev \
+            libopencv-videoio-dev \
+            libpam0g-dev \
+            libsodium-dev
+
+      - name: Configure and build
+        run: |
+          ./scripts/build.sh
+
+      - name: Run tests
+        run: |
+          ./scripts/test.sh
+
+      - name: Audit dependencies
+        run: |
+          ./scripts/audit-dependencies.sh
+
+      - name: Build Debian package
+        run: |
+          cmake --build build --target package
+          mkdir -p artifacts
+          cp build/*.deb artifacts/
+          ls -lh artifacts/
+
+      - name: Inspect Debian package
+        run: |
+          dpkg-deb -I artifacts/*.deb
+          dpkg-deb -c artifacts/*.deb | head -160
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: face-unlock-linux-release-deb
+          path: artifacts/*.deb
+
+      - name: Create or update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+          files: artifacts/*.deb
+          generate_release_notes: true

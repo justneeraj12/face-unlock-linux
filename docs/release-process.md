@@ -89,3 +89,19 @@ Delete remote tag:
     git push origin :refs/tags/v0.1.0-alpha
 
 Use caution when deleting public release tags.
+
+## Automated release artifacts
+
+Release artifacts are published by:
+
+    .github/workflows/release.yml
+
+The workflow runs on tags matching:
+
+    v*
+
+It builds the Debian package and uploads the .deb to the GitHub Release.
+
+See:
+
+    docs/release-artifacts.md

@@ -565,3 +565,15 @@ Dependency policy:
     docs/dependency-audit.md
 
 The PAM module must remain minimal and must not link heavy dependencies such as OpenCV, Torch, Qt, CUDA, or libsodium.
+
+## Automated release artifacts
+
+Version tags trigger the release workflow:
+
+    .github/workflows/release.yml
+
+It builds and uploads Debian package artifacts to the GitHub Release.
+
+Documentation:
+
+    docs/release-artifacts.md
