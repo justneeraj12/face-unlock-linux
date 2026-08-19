@@ -594,3 +594,25 @@ Documentation:
     docs/sudo-safe-installer.md
 
 The planner prints a proposed sudo PAM diff and rollback commands but makes no changes.
+
+## Guarded sudo apply and rollback
+
+sudo integration remains experimental.
+
+Dry-run:
+
+    ./scripts/apply-sudo-pam-install.sh
+
+Apply with multiple confirmations:
+
+    ./scripts/apply-sudo-pam-install.sh --apply
+
+Rollback:
+
+    ./scripts/rollback-sudo-pam.sh --latest
+
+Documentation:
+
+    docs/sudo-apply-and-rollback.md
+
+Do not apply sudo integration unless you have a root-authenticated recovery shell open.
