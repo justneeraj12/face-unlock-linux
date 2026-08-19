@@ -178,3 +178,25 @@ The packaged/user service default is:
     FACE_UNLOCK_ALLOW_ROOT_AUTH=0
 
 If disabled, sudo should fall back to password.
+
+## Apply script root-peer preflight
+
+The guarded apply script checks root-owned auth peer behavior before applying sudo PAM changes.
+
+If the daemon rejects root auth peers with:
+
+    peer_not_allowed
+
+the script warns that sudo face auth will likely fall back to password.
+
+To continue applying anyway, it requires:
+
+    ROOT_AUTH_REJECTED_OK
+
+For development-only sudo face-auth testing, run the daemon manually with:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1
+
+or:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1 FACE_UNLOCK_DEV_ALLOW=1

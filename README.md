@@ -528,3 +528,14 @@ Enable only for manual sudo development testing:
 Documentation:
 
     docs/sudo-root-peer-policy.md
+
+## sudo apply root-peer preflight
+
+The guarded sudo apply script checks whether root-owned auth peers are accepted by the daemon.
+
+If root auth peers are disabled, sudo face auth will fall back to password.
+
+Docs:
+
+    docs/sudo-apply-and-rollback.md
+    docs/sudo-root-peer-policy.md

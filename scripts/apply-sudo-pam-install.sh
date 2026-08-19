@@ -140,9 +140,11 @@ if [[ ! -f "$module_path" ]]; then
   exit 1
 fi
 
-if [[ ! -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/face-unlock.sock" ]]; then
+socket_path="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/face-unlock.sock"
+
+if [[ ! -S "$socket_path" ]]; then
   echo "ERROR: daemon socket not found:"
-  echo "  ${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/face-unlock.sock"
+  echo "  $socket_path"
   echo
   echo "Start the user daemon first:"
   echo "  ./scripts/install-user-service.sh"
@@ -150,6 +152,39 @@ if [[ ! -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/face-unlock.sock" ]]; then
   echo "or manually:"
   echo "  ./build/daemon/face-unlockd --camera 0 --daemon"
   exit 1
+fi
+
+echo "Checking root-owned auth peer behavior..."
+echo
+
+root_auth_output="$(sudo FACE_UNLOCK_SOCKET_PATH="$socket_path" ./scripts/test-socket-client.sh auth 2>&1 || true)"
+
+echo "$root_auth_output"
+echo
+
+if echo "$root_auth_output" | grep -q '"reason":"peer_not_allowed"'; then
+  echo "WARNING: root-owned PAM auth peers appear to be rejected by the daemon."
+  echo
+  echo "This usually means FACE_UNLOCK_ALLOW_ROOT_AUTH=1 is not enabled."
+  echo
+  echo "Result:"
+  echo "  sudo face auth will likely fail and fall back to password."
+  echo
+  echo "For development-only sudo face-auth testing, start daemon manually with:"
+  echo "  FACE_UNLOCK_ALLOW_ROOT_AUTH=1 ./build/daemon/face-unlockd --camera 0 --daemon"
+  echo
+  echo "or with dev auth:"
+  echo "  FACE_UNLOCK_ALLOW_ROOT_AUTH=1 FACE_UNLOCK_DEV_ALLOW=1 ./build/daemon/face-unlockd --camera 0 --daemon"
+  echo
+  read -r -p "Type ROOT_AUTH_REJECTED_OK to continue applying sudo PAM anyway: " root_policy_answer
+
+  if [[ "$root_policy_answer" != "ROOT_AUTH_REJECTED_OK" ]]; then
+    echo "Aborted."
+    exit 1
+  fi
+else
+  echo "Root auth peer check did not return peer_not_allowed."
+  echo "This may mean root auth peer is enabled or auth reached normal fail-closed logic."
 fi
 
 echo "WARNING:"

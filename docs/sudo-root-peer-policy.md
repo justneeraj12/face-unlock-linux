@@ -119,3 +119,11 @@ The systemd user service sets:
     FACE_UNLOCK_ALLOW_ROOT_AUTH=0
 
 by default.
+
+## Apply script behavior
+
+The guarded sudo apply script performs a root-owned auth peer preflight check.
+
+If root auth peers are disabled, the script warns before applying sudo PAM changes.
+
+This helps avoid confusion where sudo integration is installed but face auth always falls back to password.
