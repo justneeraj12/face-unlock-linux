@@ -117,3 +117,15 @@ writes this metrics format when called with:
 The generated metrics are marked:
 
     "safe_to_commit": false
+
+## Metrics validator
+
+Validator script:
+
+    scripts/validate-model-eval-metrics.py
+
+Validate example metrics:
+
+    scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
+
+The validator checks that privacy.safe_to_commit is false and that raw images or embeddings are not embedded in the metrics JSON.

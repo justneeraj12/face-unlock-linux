@@ -59,6 +59,10 @@ section "Enrollment manifest validation"
 
 ./scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
 
+section "Model evaluation metrics validation"
+
+./scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
+
 section "Build"
 
 ./scripts/build.sh

@@ -500,3 +500,9 @@ Example:
 Schema scaffold:
 
     schemas/model-eval-metrics.schema.json
+
+## Model metrics validation
+
+Validate model evaluation metrics:
+
+    scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json

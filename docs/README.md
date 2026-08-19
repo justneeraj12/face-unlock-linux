@@ -121,3 +121,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | model-evaluation-metrics.md | JSON format for model evaluation metrics |
+
+## Metrics validation
+
+| Document | Purpose |
+|---|---|
+| model-evaluation-metrics.md | Metrics format and validator details |

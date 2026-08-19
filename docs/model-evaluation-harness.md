@@ -107,3 +107,9 @@ The output includes:
 - warnings
 
 The privacy.safe_to_commit field is false.
+
+## Metrics validation
+
+Metrics can be validated with:
+
+    scripts/validate-model-eval-metrics.py path/to/model_eval_metrics.json
