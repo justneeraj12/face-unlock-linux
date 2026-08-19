@@ -3,9 +3,11 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <mutex>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -31,9 +33,17 @@ void handle_signal(int signal_number) {
 
 struct Options {
   int camera_index = 0;
+  bool camera_index_set = false;
   bool loop = false;
   bool serve = false;
   bool daemon = false;
+};
+
+struct AppConfig {
+  bool loaded = false;
+  std::string path;
+  int camera_index = 0;
+  int max_auth_attempts = 3;
 };
 
 struct FrameStore {
@@ -77,6 +87,105 @@ std::string get_socket_path() {
   return get_runtime_dir() + "/face-unlock.sock";
 }
 
+std::string get_default_config_path() {
+  const char* home = std::getenv("HOME");
+
+  if (home == nullptr || std::string(home).empty()) {
+    return "";
+  }
+
+  return std::string(home) + "/.config/face-unlock/config.json";
+}
+
+std::string read_text_file(const std::string& path) {
+  std::ifstream input(path);
+
+  if (!input) {
+    return "";
+  }
+
+  std::ostringstream buffer;
+  buffer << input.rdbuf();
+  return buffer.str();
+}
+
+std::optional<int> extract_int_config_value(
+  const std::string& content,
+  const std::string& key
+) {
+  const std::string quoted_key = "\"" + key + "\"";
+  const std::size_t key_pos = content.find(quoted_key);
+
+  if (key_pos == std::string::npos) {
+    return std::nullopt;
+  }
+
+  const std::size_t colon_pos = content.find(':', key_pos);
+
+  if (colon_pos == std::string::npos) {
+    return std::nullopt;
+  }
+
+  std::size_t value_pos = colon_pos + 1;
+
+  while (value_pos < content.size() &&
+         (content[value_pos] == ' ' ||
+          content[value_pos] == '\n' ||
+          content[value_pos] == '\r' ||
+          content[value_pos] == '\t')) {
+    ++value_pos;
+  }
+
+  if (value_pos >= content.size()) {
+    return std::nullopt;
+  }
+
+  char* end_ptr = nullptr;
+  const long value = std::strtol(content.c_str() + value_pos, &end_ptr, 10);
+
+  if (end_ptr == content.c_str() + value_pos) {
+    return std::nullopt;
+  }
+
+  return static_cast<int>(value);
+}
+
+AppConfig load_app_config() {
+  AppConfig config;
+  config.path = get_default_config_path();
+
+  if (config.path.empty()) {
+    return config;
+  }
+
+  const std::string content = read_text_file(config.path);
+
+  if (content.empty()) {
+    return config;
+  }
+
+  config.loaded = true;
+
+  const std::optional<int> camera_index =
+    extract_int_config_value(content, "camera_index");
+
+  if (camera_index.has_value() && camera_index.value() >= 0) {
+    config.camera_index = camera_index.value();
+  }
+
+  const std::optional<int> max_auth_attempts =
+    extract_int_config_value(content, "max_auth_attempts");
+
+  if (max_auth_attempts.has_value() &&
+      max_auth_attempts.value() >= 1 &&
+      max_auth_attempts.value() <= 10) {
+    config.max_auth_attempts = max_auth_attempts.value();
+  }
+
+  return config;
+}
+
+
 void print_usage(const char* program_name) {
   std::cout << "Usage: " << program_name
             << " [--camera INDEX] [--loop] [--serve] [--daemon]\n";
@@ -96,6 +205,7 @@ Options parse_options(int argc, char** argv) {
 
     if ((arg == "--camera" || arg == "-c") && i + 1 < argc) {
       options.camera_index = std::atoi(argv[i + 1]);
+      options.camera_index_set = true;
       ++i;
     } else if (arg == "--loop") {
       options.loop = true;
@@ -608,6 +718,9 @@ int main(int argc, char** argv) {
   std::signal(SIGTERM, handle_signal);
 
   const Options options = parse_options(argc, argv);
+  const AppConfig config = load_app_config();
+  const int camera_index =
+    options.camera_index_set ? options.camera_index : config.camera_index;
 
   const uid_t uid = getuid();
   const std::string runtime_dir = get_runtime_dir();
@@ -618,6 +731,10 @@ int main(int argc, char** argv) {
   std::cout << "uid: " << uid << '\n';
   std::cout << "runtime_dir: " << runtime_dir << '\n';
   std::cout << "planned_socket: " << socket_path << '\n';
+  std::cout << "config_path: " << (config.path.empty() ? "none" : config.path) << '\n';
+  std::cout << "config_loaded: " << (config.loaded ? "true" : "false") << '\n';
+  std::cout << "effective_camera_index: " << camera_index << '\n';
+  std::cout << "max_auth_attempts: " << config.max_auth_attempts << '\n';
   std::cout << "dev_auth_enabled: " << (dev_auth_enabled() ? "true" : "false") << '\n';
 
   if (options.serve) {
@@ -637,7 +754,7 @@ int main(int argc, char** argv) {
   if (options.daemon) {
     std::cout << "mode: daemon" << '\n';
 
-    const bool ok = run_daemon_mode(options.camera_index);
+    const bool ok = run_daemon_mode(camera_index);
 
     if (!ok) {
       std::cout << "status: daemon_error" << '\n';
@@ -652,7 +769,7 @@ int main(int argc, char** argv) {
 
   cv::VideoCapture camera;
 
-  if (!open_camera(camera, options.camera_index)) {
+  if (!open_camera(camera, camera_index)) {
     std::cout << "status: camera_error" << '\n';
     return 2;
   }

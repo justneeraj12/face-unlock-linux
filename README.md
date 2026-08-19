@@ -275,3 +275,19 @@ Documentation:
     docs/ci.md
 
 CI builds the daemon and PAM module on Ubuntu 24.04, runs documentation checks, audits PAM module dependencies, and uploads build artifacts.
+
+## Configuration
+
+Optional per-user config file:
+
+    ~/.config/face-unlock/config.json
+
+Write a default config:
+
+    ./scripts/write-default-config.sh
+
+Documentation:
+
+    docs/configuration.md
+
+The config file currently supports camera_index and max_auth_attempts. Authentication still fails closed by default.
