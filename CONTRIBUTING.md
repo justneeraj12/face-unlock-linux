@@ -92,3 +92,21 @@ Later stages will add:
 ## License
 
 By contributing, you agree that your contributions are licensed under the Apache License 2.0.
+
+## Proposing real models
+
+Use the Model candidate issue template for detector, alignment, embedding, or liveness model proposals.
+
+Model proposals must document:
+
+- source URL
+- license
+- redistribution rights
+- preprocessing
+- input/output shape
+- export path
+- threshold calibration notes
+- spoofing/liveness limitations
+- privacy/security concerns
+
+Do not attach private biometric data to issues.

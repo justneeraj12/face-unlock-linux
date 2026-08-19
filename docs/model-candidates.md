@@ -109,3 +109,22 @@ For each candidate:
 No real model is selected yet.
 
 The next step is a Python evaluation script that can load a candidate model and produce local-only metrics.
+
+## Proposing new candidates
+
+Use the GitHub Model candidate issue template.
+
+Required information:
+
+- source URL
+- license
+- redistribution rights
+- input/output details
+- preprocessing requirements
+- export path
+- performance notes
+- threshold calibration notes
+- liveness/spoofing limitations
+- privacy/security concerns
+
+Do not attach private biometric data.

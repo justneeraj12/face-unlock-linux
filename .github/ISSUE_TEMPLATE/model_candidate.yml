@@ -1,0 +1,156 @@
+name: Model candidate
+description: Propose a detector, alignment, embedding, or liveness model
+title: "[Model]: "
+labels: ["model", "research", "needs-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose a model for face-unlock-linux.
+
+        Do not attach biometric datasets, face images, face crops, embeddings, or private model weights unless redistribution is clearly allowed.
+
+  - type: dropdown
+    id: model_type
+    attributes:
+      label: Model type
+      options:
+        - face detector
+        - landmark/alignment
+        - embedding
+        - liveness/anti-spoof
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: model_name
+    attributes:
+      label: Model name
+      placeholder: "Example: YuNet, RetinaFace, MobileFaceNet, ArcFace variant"
+    validations:
+      required: true
+
+  - type: input
+    id: source_url
+    attributes:
+      label: Source URL
+      placeholder: "Repository, paper, model zoo, or release URL"
+    validations:
+      required: true
+
+  - type: input
+    id: license
+    attributes:
+      label: License
+      placeholder: "Apache-2.0, MIT, BSD, custom, unknown"
+    validations:
+      required: true
+
+  - type: textarea
+    id: redistribution
+    attributes:
+      label: Redistribution rights
+      description: Can the model weights be redistributed in this project or releases?
+      placeholder: "Explain whether weights can be committed, downloaded, mirrored, or packaged."
+    validations:
+      required: true
+
+  - type: textarea
+    id: input_output
+    attributes:
+      label: Input/output details
+      placeholder: |
+        Input shape:
+        Color order:
+        Normalization:
+        Output shape:
+        Embedding dimension or landmarks:
+    validations:
+      required: true
+
+  - type: textarea
+    id: preprocessing
+    attributes:
+      label: Preprocessing and alignment requirements
+      placeholder: |
+        Does it require aligned faces?
+        Which landmarks?
+        Crop size?
+        Mean/std normalization?
+    validations:
+      required: true
+
+  - type: textarea
+    id: export_path
+    attributes:
+      label: Export path
+      placeholder: |
+        TorchScript:
+        ONNX:
+        TensorRT:
+        Known unsupported ops:
+    validations:
+      required: false
+
+  - type: textarea
+    id: performance
+    attributes:
+      label: Performance notes
+      placeholder: |
+        CPU latency:
+        GPU latency:
+        Model size:
+        Tested hardware:
+    validations:
+      required: false
+
+  - type: textarea
+    id: calibration
+    attributes:
+      label: Threshold calibration notes
+      placeholder: |
+        Recommended metric:
+        Known threshold:
+        False accept/false reject evidence:
+        Calibration dataset:
+    validations:
+      required: false
+
+  - type: textarea
+    id: liveness
+    attributes:
+      label: Liveness and spoofing limitations
+      placeholder: |
+        Photo spoof risk:
+        Video spoof risk:
+        Liveness support:
+        Known limitations:
+    validations:
+      required: true
+
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy/security considerations
+      placeholder: |
+        Any telemetry?
+        Any cloud dependency?
+        Any training data concerns?
+        Any license/privacy risks?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I did not attach private biometric data.
+          required: true
+        - label: I documented the model license.
+          required: true
+        - label: I documented redistribution status.
+          required: true
+        - label: I understand this project will not claim real auth without calibration and security review.
+          required: true
