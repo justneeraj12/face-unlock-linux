@@ -1,0 +1,79 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ubuntu-2404-build:
+    name: Ubuntu 24.04 CMake build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            pkg-config \
+            libopencv-dev \
+            python3-opencv \
+            libpam0g-dev \
+            v4l-utils
+
+      - name: Show tool versions
+        run: |
+          cmake --version
+          pkg-config --modversion opencv4
+          python3 -c 'import cv2; print(cv2.__version__)'
+
+      - name: Check documentation
+        run: |
+          ./scripts/check-docs.sh
+
+      - name: Configure and build
+        run: |
+          ./scripts/build.sh
+
+      - name: Smoke test daemon CLI
+        run: |
+          ./build/daemon/face-unlockd --help
+
+      - name: Verify build outputs
+        run: |
+          test -x ./build/daemon/face-unlockd
+          test -f ./build/pam/pam_face_unlock.so
+          file ./build/daemon/face-unlockd
+          file ./build/pam/pam_face_unlock.so
+
+      - name: Audit PAM module dependencies
+        run: |
+          ldd ./build/pam/pam_face_unlock.so
+
+          if ldd ./build/pam/pam_face_unlock.so | grep -Ei 'opencv|torch|cuda|cudart|Qt|tensorflow'; then
+            echo "ERROR: PAM module links to disallowed heavy dependency."
+            exit 1
+          fi
+
+          echo "PAM dependency audit passed."
+
+      - name: Upload daemon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: face-unlockd-ubuntu-24.04
+          path: build/daemon/face-unlockd
+
+      - name: Upload PAM module artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pam-face-unlock-ubuntu-24.04
+          path: build/pam/pam_face_unlock.so

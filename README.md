@@ -261,3 +261,15 @@ Documentation:
     docs/development-setup.md
 
 The setup script installs development packages only. It does not modify PAM files or enable authentication integration.
+
+## Continuous integration
+
+GitHub Actions CI is configured in:
+
+    .github/workflows/build.yml
+
+Documentation:
+
+    docs/ci.md
+
+CI builds the daemon and PAM module on Ubuntu 24.04, runs documentation checks, audits PAM module dependencies, and uploads build artifacts.
