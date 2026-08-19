@@ -88,3 +88,22 @@ Schema scaffold:
 Example:
 
     schemas/model-eval-metrics.example.json
+
+## Current metrics output
+
+evaluate_model_stub.py now writes the face-unlock-model-eval-metrics format when --write-metrics is used.
+
+The output includes:
+
+- format
+- format_version
+- created_at
+- model
+- dataset
+- performance
+- similarity
+- threshold
+- privacy
+- warnings
+
+The privacy.safe_to_commit field is false.

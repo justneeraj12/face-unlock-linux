@@ -25,6 +25,7 @@ import itertools
 import json
 import statistics
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -149,6 +150,10 @@ def summarize(values: list[float]) -> dict[str, Any]:
     }
 
 
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
 def main() -> int:
     args = parse_args()
 
@@ -206,22 +211,56 @@ def main() -> int:
     inference_times = [float(item["inference_ms"]) for item in embeddings]
 
     metrics: dict[str, Any] = {
-        "model_id": "random-embedding-stub",
-        "warning": "not real face recognition",
-        "images_count": len(images),
-        "embedding_dim": args.embedding_dim,
-        "total_ms": total_ms,
-        "inference_ms": summarize(inference_times),
-        "pairwise_cosine_similarity": summarize(similarities),
-        "created_from": str(args.input_dir),
+        "format": "face-unlock-model-eval-metrics",
+        "format_version": 1,
+        "created_at": utc_now_iso(),
+        "model": {
+            "model_id": "random-embedding-stub",
+            "model_type": "embedding",
+            "real_face_recognition": False,
+            "embedding_dim": args.embedding_dim,
+        },
+        "dataset": {
+            "source": str(args.input_dir),
+            "images_count": len(images),
+            "contains_biometric_data": True,
+            "committed_to_git": False,
+        },
+        "performance": {
+            "total_ms": total_ms,
+            "inference_ms": summarize(inference_times),
+        },
+        "similarity": {
+            "metric": "cosine_similarity",
+            "pairwise": summarize(similarities),
+        },
+        "threshold": {
+            "selected": None,
+            "method": "not_calibrated",
+        },
+        "privacy": {
+            "raw_images_included": False,
+            "embeddings_included": False,
+            "safe_to_commit": False,
+        },
+        "warnings": [
+            "random stub model",
+            "not real face recognition",
+            "metrics derived from biometric images if real crops are used",
+        ],
     }
 
-    print(f"images_count: {metrics['images_count']}")
-    print(f"embedding_dim: {metrics['embedding_dim']}")
-    print(f"total_ms: {metrics['total_ms']:.3f}")
-    print(f"inference_ms_mean: {metrics['inference_ms']['mean']:.3f}")
-    print(f"pairwise_count: {metrics['pairwise_cosine_similarity']['count']}")
-    print(f"pairwise_mean: {metrics['pairwise_cosine_similarity']['mean']:.6f}")
+    print(f"images_count: {metrics['dataset']['images_count']}")
+    print(f"embedding_dim: {metrics['model']['embedding_dim']}")
+    print(f"total_ms: {metrics['performance']['total_ms']:.3f}")
+
+    inference_mean = metrics["performance"]["inference_ms"]["mean"]
+    pairwise_count = metrics["similarity"]["pairwise"]["count"]
+    pairwise_mean = metrics["similarity"]["pairwise"]["mean"]
+
+    print(f"inference_ms_mean: {inference_mean:.3f}")
+    print(f"pairwise_count: {pairwise_count}")
+    print(f"pairwise_mean: {pairwise_mean:.6f}")
 
     if args.write_metrics:
         args.output.parent.mkdir(parents=True, exist_ok=True)

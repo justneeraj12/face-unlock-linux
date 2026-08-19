@@ -102,3 +102,18 @@ Future real model evaluation must record:
 ## Future work
 
 Future scripts should write this format when evaluation metrics are explicitly requested with privacy consent.
+
+## Harness writer
+
+The script:
+
+    python/evaluate_model_stub.py
+
+writes this metrics format when called with:
+
+    --write-metrics
+    --i-understand-biometric-risk
+
+The generated metrics are marked:
+
+    "safe_to_commit": false
