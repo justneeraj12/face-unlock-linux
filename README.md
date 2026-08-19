@@ -557,3 +557,11 @@ Run full local verification including sudo dry-run regression test:
     ./scripts/verify-local.sh --with-sudo-dry-run
 
 This checks that sudo planning scripts do not modify /etc/pam.d/sudo in dry-run mode.
+
+## Dependency audit
+
+Dependency policy:
+
+    docs/dependency-audit.md
+
+The PAM module must remain minimal and must not link heavy dependencies such as OpenCV, Torch, Qt, CUDA, or libsodium.

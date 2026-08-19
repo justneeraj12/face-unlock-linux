@@ -97,3 +97,11 @@ Before any installer modifies PAM files, it must:
 5. recommend keeping a root shell open
 
 See docs/pam-safety.md.
+
+## Dependency audit
+
+Dependency policy is documented in:
+
+    docs/dependency-audit.md
+
+The PAM module must remain minimal and must not link OpenCV, Torch, Qt, CUDA, TensorRT, Python, or libsodium.

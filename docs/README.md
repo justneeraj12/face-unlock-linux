@@ -163,3 +163,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | sudo-dry-run-test.md | Verifies sudo dry-run scripts do not modify PAM |
+
+## Dependency audit
+
+| Document | Purpose |
+|---|---|
+| dependency-audit.md | Dependency policy and audit commands |
