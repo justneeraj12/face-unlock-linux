@@ -58,3 +58,16 @@ Future versions should provide:
 The GUI must not silently store biometric data.
 
 Any future feature that saves face crops, embeddings, or templates must require explicit user consent.
+
+## Template status and Forget Me
+
+The GUI displays whether the prototype encrypted template and enrollment manifest exist.
+
+The Forget Me button deletes:
+
+    ~/.local/share/face-unlock/template.enc
+    ~/.local/share/face-unlock/enrollment.json
+
+after confirmation.
+
+It does not modify PAM or authentication settings.

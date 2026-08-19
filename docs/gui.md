@@ -77,3 +77,23 @@ Future brightness boost must:
 The GUI must not save raw images by default.
 
 Any future saving of crops or embeddings must require explicit consent.
+
+## Template status and Forget Me
+
+The GUI scaffold now displays status for:
+
+    ~/.local/share/face-unlock/template.enc
+    ~/.local/share/face-unlock/enrollment.json
+
+The Forget Me button deletes these prototype files after confirmation.
+
+Forget Me does not modify:
+
+    /etc/pam.d/sudo
+    /etc/pam.d/common-auth
+    GDM
+    SDDM
+    LightDM
+    lock-screen configuration
+
+This is still not real enrollment.

@@ -737,3 +737,14 @@ Documentation:
     docs/gui.md
 
 The GUI currently shows consent/status only. It does not access the camera or save biometric data.
+
+## GUI Forget Me scaffold
+
+The optional Qt GUI can display prototype template/enrollment status and delete placeholder files with confirmation.
+
+It deletes only:
+
+    ~/.local/share/face-unlock/template.enc
+    ~/.local/share/face-unlock/enrollment.json
+
+It does not modify PAM or authentication settings.
