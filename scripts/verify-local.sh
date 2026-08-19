@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+with_sudo_dry_run="false"
+
+usage() {
+  echo "Usage:"
+  echo "  ./scripts/verify-local.sh"
+  echo "  ./scripts/verify-local.sh --with-sudo-dry-run"
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --with-sudo-dry-run)
+      with_sudo_dry_run="true"
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $arg"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
 echo "[verify-local] face-unlock-linux local verification"
 echo
 echo "This script verifies the local development tree."
@@ -13,6 +38,9 @@ echo "  - run crypto self-test"
 echo "  - audit PAM module dependencies"
 echo "  - build Debian package with CPack"
 echo "  - inspect package metadata and contents"
+if [[ "$with_sudo_dry_run" == "true" ]]; then
+  echo "  - run sudo PAM dry-run regression test"
+fi
 echo
 echo "It will NOT:"
 echo "  - modify /etc/pam.d/*"

@@ -80,3 +80,17 @@ Before v0.1.0-alpha, run:
     ./scripts/verify-local.sh
 
 A clean release candidate should pass this script and GitHub Actions.
+
+## Optional sudo dry-run verification
+
+By default, local verification does not test /etc/pam.d/sudo.
+
+To include the sudo dry-run regression test, run:
+
+    ./scripts/verify-local.sh --with-sudo-dry-run
+
+This runs:
+
+    ./scripts/test-sudo-dry-run.sh
+
+The test verifies that sudo planning scripts do not modify /etc/pam.d/sudo in dry-run mode.

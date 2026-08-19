@@ -44,3 +44,11 @@ Expected final output:
 This test is local because it depends on /etc/pam.d/sudo.
 
 It is not currently run in GitHub Actions.
+
+## Local verification integration
+
+The dry-run test can be included in local verification with:
+
+    ./scripts/verify-local.sh --with-sudo-dry-run
+
+It is optional because sudo PAM files are system-specific.

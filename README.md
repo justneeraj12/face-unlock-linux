@@ -549,3 +549,11 @@ Verify sudo planning scripts do not modify /etc/pam.d/sudo:
 Documentation:
 
     docs/sudo-dry-run-test.md
+
+## Optional sudo dry-run verification
+
+Run full local verification including sudo dry-run regression test:
+
+    ./scripts/verify-local.sh --with-sudo-dry-run
+
+This checks that sudo planning scripts do not modify /etc/pam.d/sudo in dry-run mode.
