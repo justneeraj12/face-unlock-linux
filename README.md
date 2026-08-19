@@ -194,3 +194,17 @@ This test uses:
     /etc/pam.d/face-unlock-test
 
 It does not modify sudo, login, lock-screen, GDM, SDDM, or LightDM PAM files.
+
+## Fake PAM helper scripts
+
+For safe fake-service testing only:
+
+    ./scripts/install-fake-pam-test.sh
+    ./scripts/remove-fake-pam-test.sh
+
+These scripts only manage:
+
+    /etc/pam.d/face-unlock-test
+    /usr/lib/x86_64-linux-gnu/security/pam_face_unlock.so
+
+They do not modify sudo, login, lock-screen, GDM, SDDM, LightDM, or common-auth PAM files.

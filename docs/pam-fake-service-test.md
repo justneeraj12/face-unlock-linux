@@ -172,3 +172,20 @@ The development-only auth path is controlled by:
 This must never be used as real authentication.
 
 Production auth must remain fail-closed until real enrollment, encrypted templates, matching, retry limits, and liveness checks are implemented.
+
+## Helper scripts
+
+The fake PAM test can be installed with:
+
+    ./scripts/install-fake-pam-test.sh
+
+It can be removed with:
+
+    ./scripts/remove-fake-pam-test.sh
+
+The install script prints the exact files it modifies and requires typing YES before making changes.
+
+The remove script deletes only:
+
+    /etc/pam.d/face-unlock-test
+    /usr/lib/x86_64-linux-gnu/security/pam_face_unlock.so
