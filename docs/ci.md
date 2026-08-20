@@ -216,3 +216,11 @@ The detector factory uses lazy imports so noop tests do not require Python OpenC
 The Python detector smoke test runs before apt dependency installation.
 
 It uses the noop backend and should not require NumPy, OpenCV, or camera hardware.
+
+## Detector output validation in CI
+
+CI validates detector output metadata scaffolding with:
+
+    scripts/validate-detector-output.py schemas/detector-output.example.json
+
+This check does not require a camera.
