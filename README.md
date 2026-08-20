@@ -412,3 +412,7 @@ The operation can verify development-key decryptability without returning plaint
 The daemon auth path now reports more specific fail-closed reasons based on template/key state, such as template_missing, key_missing, template_decrypt_failed, and matcher_not_implemented.
 
 Real matching is still not implemented.
+
+## Auth reason integration test
+
+CTest includes an auth reason integration test that verifies fail-closed reasons for missing templates, non-decryptable templates, missing keys, and matcher-not-implemented state.

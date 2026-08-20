@@ -210,3 +210,15 @@ Possible fail-closed reasons include:
 - matcher_not_implemented
 
 Even when a development-key placeholder decrypts successfully, auth still fails with matcher_not_implemented until real matching exists.
+
+## Auth reason integration test
+
+The auth reason integration test verifies key-aware auth failures.
+
+Run:
+
+    ./scripts/test-auth-reasons.sh
+
+CTest also runs it as:
+
+    auth_reasons

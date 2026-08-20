@@ -132,3 +132,22 @@ It checks:
 - template_decrypt ok
 
 No plaintext is returned.
+
+## Auth reason integration test
+
+CTest includes:
+
+    auth_reasons
+
+This test runs:
+
+    ./scripts/test-auth-reasons.sh
+
+It verifies fail-closed auth reasons:
+
+- template_missing
+- template_not_decryptable
+- key_missing
+- matcher_not_implemented
+
+The test uses daemon --serve mode and temporary HOME/XDG_RUNTIME_DIR directories.

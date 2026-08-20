@@ -63,3 +63,7 @@ Additional integration tests:
 Additional daemon integration tests:
 
 - scripts/test-daemon-metadata.sh
+
+Additional auth integration tests:
+
+- scripts/test-auth-reasons.sh

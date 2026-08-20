@@ -149,6 +149,20 @@ if(BUILD_TESTING)
   set_tests_properties(daemon_metadata PROPERTIES
     TIMEOUT 30
   )
+
+  add_test(
+    NAME auth_reasons
+    COMMAND bash
+      ${CMAKE_SOURCE_DIR}/scripts/test-auth-reasons.sh
+      $<TARGET_FILE:face-unlockd>
+      $<TARGET_FILE:face-unlock-key-tool>
+      $<TARGET_FILE:face-unlock-template-tool>
+      ${CMAKE_SOURCE_DIR}/scripts/test-socket-client.sh
+  )
+
+  set_tests_properties(auth_reasons PROPERTIES
+    TIMEOUT 30
+  )
 endif()
 
 install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-tool face-unlock-key-tool
