@@ -454,3 +454,13 @@ Package artifacts are built by a separate workflow:
 Release assets are built by:
 
     .github/workflows/release.yml
+
+## Shared CI dependency installer
+
+CI workflows use:
+
+    ./scripts/ci-install-deps.sh
+
+Documentation:
+
+    docs/ci-dependencies.md

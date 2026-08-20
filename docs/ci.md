@@ -189,3 +189,14 @@ Release workflow:
     .github/workflows/release.yml
 
 Runs on version tags and publishes release assets.
+
+## Shared CI dependency installer
+
+CI workflows use:
+
+    ./scripts/ci-install-deps.sh core
+    ./scripts/ci-install-deps.sh gui
+
+Documentation:
+
+    docs/ci-dependencies.md

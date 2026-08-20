@@ -6,6 +6,7 @@ echo "[check-scripts] Checking required scripts"
 required_scripts=(
   scripts/check-docs.sh
   scripts/check-json.sh
+  scripts/ci-install-deps.sh
   scripts/build.sh
   scripts/test.sh
   scripts/verify-local.sh

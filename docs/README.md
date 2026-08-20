@@ -205,3 +205,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | fast-builds.md | Ninja, ccache, and faster build configuration |
+
+## CI dependencies
+
+| Document | Purpose |
+|---|---|
+| ci-dependencies.md | Shared CI dependency installer |
