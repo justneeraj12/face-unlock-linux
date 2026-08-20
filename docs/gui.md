@@ -206,3 +206,13 @@ The GUI parses detector_status enough to display:
 The raw JSON response is still shown below the parsed summary.
 
 This uses simple string extraction and not a full JSON parser.
+
+## Tabbed layout
+
+The GUI now uses tabs to fit better on laptop screens:
+
+- Status
+- Enrollment
+- Privacy
+
+Each tab is scrollable to avoid content running off screen.

@@ -135,3 +135,13 @@ The GUI shows a small parsed summary from detector_status:
 - faces detected
 
 The raw JSON response remains visible.
+
+## Tabbed layout
+
+The GUI uses scrollable tabs:
+
+- Status
+- Enrollment
+- Privacy
+
+This keeps the scaffold usable on laptop displays.

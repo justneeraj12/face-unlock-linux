@@ -11,6 +11,8 @@
 #include <QLocalSocket>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QTabWidget>
 #include <QTextEdit>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -37,6 +39,102 @@ QString runtimeSocketPath() {
   return QStringLiteral("/run/user/") +
     QString::number(getuid()) +
     QStringLiteral("/face-unlock.sock");
+}
+
+QString fileStatusLine(const QString& label, const QString& path) {
+  const QFileInfo info(path);
+
+  if (!info.exists()) {
+    return label + QStringLiteral(": missing\n  ") + path + QStringLiteral("\n");
+  }
+
+  return label +
+    QStringLiteral(": present\n  ") +
+    path +
+    QStringLiteral("\n  size: ") +
+    QString::number(info.size()) +
+    QStringLiteral(" bytes\n");
+}
+
+QString statusText() {
+  QString text;
+
+  text += QStringLiteral("Current GUI status:\n\n");
+  text += QStringLiteral("- Consent/status scaffold\n");
+  text += QStringLiteral("- Template status display enabled\n");
+  text += QStringLiteral("- Forget-me deletion enabled for placeholder files\n");
+  text += QStringLiteral("- Brightness assist placeholder only\n");
+  text += QStringLiteral("- Pose slots scaffold only\n");
+  text += QStringLiteral("- Quality checklist scaffold only\n");
+  text += QStringLiteral("- Camera preview placeholder only\n");
+  text += QStringLiteral("- Daemon detector_status query button\n");
+  text += QStringLiteral("- No camera access yet\n");
+  text += QStringLiteral("- No enrollment capture yet\n");
+  text += QStringLiteral("- No PAM changes\n");
+  text += QStringLiteral("- No authentication changes\n\n");
+
+  text += QStringLiteral("User data status:\n\n");
+  text += fileStatusLine(QStringLiteral("Encrypted template"), templatePath());
+  text += fileStatusLine(QStringLiteral("Enrollment manifest"), enrollmentPath());
+
+  return text;
+}
+
+QString consentText() {
+  return QStringLiteral(
+    "face-unlock-linux is currently an experimental prototype.\n"
+    "\n"
+    "Before future enrollment, you must understand:\n"
+    "\n"
+    "1. Face data is biometric data.\n"
+    "2. Raw images should not be stored by default.\n"
+    "3. Templates must be encrypted at rest.\n"
+    "4. Password fallback must remain available.\n"
+    "5. Development auth is not real authentication.\n"
+    "6. You should be able to delete enrollment data.\n"
+    "\n"
+    "This GUI does not enroll yet.\n"
+    "\n"
+    "The Forget Me button currently deletes only the placeholder template and "
+    "placeholder enrollment manifest paths used by this prototype."
+  );
+}
+
+QString queryDaemonOperation(const QString& operation) {
+  QLocalSocket socket;
+  const QString path = runtimeSocketPath();
+
+  socket.connectToServer(path);
+
+  if (!socket.waitForConnected(700)) {
+    return QStringLiteral(
+      "{\"status\":\"fail\",\"reason\":\"daemon_socket_unavailable\",\"socket\":\"%1\"}"
+    ).arg(path);
+  }
+
+  const QByteArray request =
+    QByteArray("{\"op\":\"") +
+    operation.toUtf8() +
+    QByteArray("\",\"client\":\"qt_gui\"}\n");
+
+  socket.write(request);
+
+  if (!socket.waitForBytesWritten(700)) {
+    return QStringLiteral(
+      "{\"status\":\"fail\",\"reason\":\"daemon_write_timeout\"}"
+    );
+  }
+
+  if (!socket.waitForReadyRead(1000)) {
+    return QStringLiteral(
+      "{\"status\":\"fail\",\"reason\":\"daemon_response_timeout\"}"
+    );
+  }
+
+  const QByteArray response = socket.readAll();
+  socket.disconnectFromServer();
+
+  return QString::fromUtf8(response).trimmed();
 }
 
 QString extractJsonStringField(const QString& json, const QString& key) {
@@ -100,102 +198,8 @@ QString detectorStatusSummary(const QString& response) {
   return summary;
 }
 
-QString queryDaemonOperation(const QString& operation) {
-  QLocalSocket socket;
-  const QString path = runtimeSocketPath();
-
-  socket.connectToServer(path);
-
-  if (!socket.waitForConnected(700)) {
-    return QStringLiteral(
-      "{\"status\":\"fail\",\"reason\":\"daemon_socket_unavailable\",\"socket\":\"%1\"}"
-    ).arg(path);
-  }
-
-  const QByteArray request =
-    QByteArray("{\"op\":\"") +
-    operation.toUtf8() +
-    QByteArray("\",\"client\":\"qt_gui\"}\n");
-
-  socket.write(request);
-
-  if (!socket.waitForBytesWritten(700)) {
-    return QStringLiteral(
-      "{\"status\":\"fail\",\"reason\":\"daemon_write_timeout\"}"
-    );
-  }
-
-  if (!socket.waitForReadyRead(1000)) {
-    return QStringLiteral(
-      "{\"status\":\"fail\",\"reason\":\"daemon_response_timeout\"}"
-    );
-  }
-
-  const QByteArray response = socket.readAll();
-  socket.disconnectFromServer();
-
-  return QString::fromUtf8(response).trimmed();
-}
-
-QString fileStatusLine(const QString& label, const QString& path) {
-  const QFileInfo info(path);
-
-  if (!info.exists()) {
-    return label + QStringLiteral(": missing\n  ") + path + QStringLiteral("\n");
-  }
-
-  return label +
-    QStringLiteral(": present\n  ") +
-    path +
-    QStringLiteral("\n  size: ") +
-    QString::number(info.size()) +
-    QStringLiteral(" bytes\n");
-}
-
-QString statusText() {
-  QString text;
-
-  text += QStringLiteral("Current GUI status:\n\n");
-  text += QStringLiteral("- Consent/status scaffold\n");
-  text += QStringLiteral("- Template status display enabled\n");
-  text += QStringLiteral("- Forget-me deletion enabled for placeholder files\n");
-  text += QStringLiteral("- No camera access yet\n");
-  text += QStringLiteral("- No enrollment capture yet\n");
-  text += QStringLiteral("- No PAM changes\n");
-  text += QStringLiteral("- No authentication changes\n\n");
-
-  text += QStringLiteral("Pose slots:\n\n");
-  text += QStringLiteral("- Center: not captured\n");
-  text += QStringLiteral("- Left: not captured\n");
-  text += QStringLiteral("- Right: not captured\n");
-  text += QStringLiteral("- Up: not captured\n");
-  text += QStringLiteral("- Down: not captured\n\n");
-
-  text += QStringLiteral("User data status:\n\n");
-  text += fileStatusLine(QStringLiteral("Encrypted template"), templatePath());
-  text += fileStatusLine(QStringLiteral("Enrollment manifest"), enrollmentPath());
-
-  return text;
-}
-
-QString consentText() {
-  return QStringLiteral(
-    "face-unlock-linux is currently an experimental prototype.\n"
-    "\n"
-    "Before future enrollment, you must understand:\n"
-    "\n"
-    "1. Face data is biometric data.\n"
-    "2. Raw images should not be stored by default.\n"
-    "3. Templates must be encrypted at rest.\n"
-    "4. Password fallback must remain available.\n"
-    "5. Development auth is not real authentication.\n"
-    "6. You should be able to delete enrollment data.\n"
-    "\n"
-    "This GUI does not enroll yet.\n"
-    "\n"
-    "The Forget Me button currently deletes only the placeholder template and "
-    "placeholder enrollment manifest paths used by this prototype."
-  );
+void refreshStatus(QTextEdit* status) {
+  status->setPlainText(statusText());
 }
 
 bool removeIfExists(const QString& path, QStringList& removed, QStringList& failed) {
@@ -212,10 +216,6 @@ bool removeIfExists(const QString& path, QStringList& removed, QStringList& fail
 
   failed << path;
   return false;
-}
-
-void refreshStatus(QTextEdit* status) {
-  status->setPlainText(statusText());
 }
 
 void forgetMe(QWidget* parent, QTextEdit* status) {
@@ -276,6 +276,21 @@ void forgetMe(QWidget* parent, QTextEdit* status) {
   );
 }
 
+QTextEdit* readOnlyTextEdit(const QString& text, int minHeight = 120) {
+  auto* edit = new QTextEdit();
+  edit->setReadOnly(true);
+  edit->setPlainText(text);
+  edit->setMinimumHeight(minHeight);
+  return edit;
+}
+
+QWidget* scrollable(QWidget* content) {
+  auto* area = new QScrollArea();
+  area->setWidgetResizable(true);
+  area->setWidget(content);
+  return area;
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -288,52 +303,70 @@ int main(int argc, char* argv[]) {
 
   auto* title = new QLabel(QStringLiteral("face-unlock-linux"));
   QFont titleFont = title->font();
-  titleFont.setPointSize(22);
+  titleFont.setPointSize(20);
   titleFont.setBold(true);
   title->setFont(titleFont);
 
-  auto* subtitle = new QLabel(
-    QStringLiteral("Experimental enrollment GUI scaffold")
-  );
+  auto* subtitle = new QLabel(QStringLiteral("Experimental enrollment GUI scaffold"));
 
   auto* warning = new QLabel(
-    QStringLiteral(
-      "This is not real enrollment yet. No camera capture is performed by this GUI."
-    )
+    QStringLiteral("Not real enrollment yet. No GUI camera capture is performed.")
   );
   warning->setStyleSheet(QStringLiteral("color: #b00020; font-weight: bold;"));
 
-  auto* status = new QTextEdit();
-  status->setReadOnly(true);
-  status->setPlainText(statusText());
-  status->setMinimumHeight(210);
+  root->addWidget(title);
+  root->addWidget(subtitle);
+  root->addWidget(warning);
+
+  auto* tabs = new QTabWidget();
+  root->addWidget(tabs);
+
+  // Status tab
+  auto* statusTab = new QWidget();
+  auto* statusLayout = new QVBoxLayout(statusTab);
+
+  auto* status = readOnlyTextEdit(statusText(), 180);
+
+  auto* daemonSummary = readOnlyTextEdit(QStringLiteral("No daemon query yet."), 110);
+  auto* daemonResponse = readOnlyTextEdit(
+    QStringLiteral("Socket: %1\n\nNo daemon query yet.").arg(runtimeSocketPath()),
+    140
+  );
+
+  auto* statusButtonRow = new QHBoxLayout();
+  auto* refreshButton = new QPushButton(QStringLiteral("Refresh local status"));
+  auto* daemonStatusButton = new QPushButton(QStringLiteral("Query daemon detector_status"));
+  statusButtonRow->addWidget(refreshButton);
+  statusButtonRow->addWidget(daemonStatusButton);
+  statusButtonRow->addStretch();
 
   auto* daemonSummaryLabel = new QLabel(QStringLiteral("Daemon detector summary"));
   QFont daemonSummaryFont = daemonSummaryLabel->font();
   daemonSummaryFont.setBold(true);
   daemonSummaryLabel->setFont(daemonSummaryFont);
 
-  auto* daemonSummary = new QTextEdit();
-  daemonSummary->setReadOnly(true);
-  daemonSummary->setMinimumHeight(110);
-  daemonSummary->setPlainText(QStringLiteral("No daemon query yet."));
-
-  auto* daemonResponseLabel = new QLabel(QStringLiteral("Daemon response panel"));
+  auto* daemonResponseLabel = new QLabel(QStringLiteral("Raw daemon response"));
   QFont daemonResponseFont = daemonResponseLabel->font();
   daemonResponseFont.setBold(true);
   daemonResponseLabel->setFont(daemonResponseFont);
 
-  auto* daemonResponse = new QTextEdit();
-  daemonResponse->setReadOnly(true);
-  daemonResponse->setMinimumHeight(110);
-  daemonResponse->setPlainText(
-    QStringLiteral("Socket: %1\n\nNo daemon query yet.")
-      .arg(runtimeSocketPath())
-  );
+  statusLayout->addWidget(status);
+  statusLayout->addLayout(statusButtonRow);
+  statusLayout->addWidget(daemonSummaryLabel);
+  statusLayout->addWidget(daemonSummary);
+  statusLayout->addWidget(daemonResponseLabel);
+  statusLayout->addWidget(daemonResponse);
+  statusLayout->addStretch();
+
+  tabs->addTab(scrollable(statusTab), QStringLiteral("Status"));
+
+  // Enrollment scaffold tab
+  auto* enrollmentTab = new QWidget();
+  auto* enrollmentLayout = new QVBoxLayout(enrollmentTab);
 
   auto* previewFrame = new QFrame();
   previewFrame->setFrameShape(QFrame::StyledPanel);
-  previewFrame->setMinimumHeight(180);
+  previewFrame->setMinimumHeight(150);
   previewFrame->setStyleSheet(QStringLiteral(
     "QFrame { background-color: #202124; border: 1px solid #555; border-radius: 6px; }"
     "QLabel { color: #eeeeee; }"
@@ -343,7 +376,7 @@ int main(int argc, char* argv[]) {
   auto* previewTitle = new QLabel(QStringLiteral("Camera preview placeholder"));
   QFont previewTitleFont = previewTitle->font();
   previewTitleFont.setBold(true);
-  previewTitleFont.setPointSize(14);
+  previewTitleFont.setPointSize(13);
   previewTitle->setFont(previewTitleFont);
 
   auto* previewText = new QLabel(QStringLiteral(
@@ -358,35 +391,22 @@ int main(int argc, char* argv[]) {
   previewLayout->addWidget(previewText);
   previewLayout->addStretch();
 
-  auto* consent = new QTextEdit();
-  consent->setReadOnly(true);
-  consent->setPlainText(consentText());
-  consent->setMinimumHeight(260);
-
-  auto* poseLabel = new QLabel(QStringLiteral("Enrollment pose slots scaffold"));
-  QFont poseFont = poseLabel->font();
-  poseFont.setBold(true);
-  poseLabel->setFont(poseFont);
+  auto* poseLabel = new QLabel(QStringLiteral("Pose slots scaffold"));
+  QFont sectionFont = poseLabel->font();
+  sectionFont.setBold(true);
+  poseLabel->setFont(sectionFont);
 
   auto* poseRow = new QHBoxLayout();
-
   auto* centerPose = new QCheckBox(QStringLiteral("Center"));
   auto* leftPose = new QCheckBox(QStringLiteral("Left"));
   auto* rightPose = new QCheckBox(QStringLiteral("Right"));
   auto* upPose = new QCheckBox(QStringLiteral("Up"));
   auto* downPose = new QCheckBox(QStringLiteral("Down"));
 
-  centerPose->setEnabled(false);
-  leftPose->setEnabled(false);
-  rightPose->setEnabled(false);
-  upPose->setEnabled(false);
-  downPose->setEnabled(false);
-
-  poseRow->addWidget(centerPose);
-  poseRow->addWidget(leftPose);
-  poseRow->addWidget(rightPose);
-  poseRow->addWidget(upPose);
-  poseRow->addWidget(downPose);
+  for (auto* box : {centerPose, leftPose, rightPose, upPose, downPose}) {
+    box->setEnabled(false);
+    poseRow->addWidget(box);
+  }
   poseRow->addStretch();
 
   auto* poseButtonRow = new QHBoxLayout();
@@ -396,30 +416,22 @@ int main(int argc, char* argv[]) {
   poseButtonRow->addWidget(resetPoseButton);
   poseButtonRow->addStretch();
 
-  auto* qualityLabel = new QLabel(QStringLiteral("Enrollment quality checklist scaffold"));
+  auto* qualityLabel = new QLabel(QStringLiteral("Quality checklist scaffold"));
   QFont qualityFont = qualityLabel->font();
   qualityFont.setBold(true);
   qualityLabel->setFont(qualityFont);
 
   auto* qualityRow = new QHBoxLayout();
-
   auto* lightingQuality = new QCheckBox(QStringLiteral("Lighting OK"));
   auto* sharpnessQuality = new QCheckBox(QStringLiteral("Sharpness OK"));
   auto* centeredQuality = new QCheckBox(QStringLiteral("Face centered"));
   auto* poseQuality = new QCheckBox(QStringLiteral("Pose coverage OK"));
   auto* templateQuality = new QCheckBox(QStringLiteral("Template ready"));
 
-  lightingQuality->setEnabled(false);
-  sharpnessQuality->setEnabled(false);
-  centeredQuality->setEnabled(false);
-  poseQuality->setEnabled(false);
-  templateQuality->setEnabled(false);
-
-  qualityRow->addWidget(lightingQuality);
-  qualityRow->addWidget(sharpnessQuality);
-  qualityRow->addWidget(centeredQuality);
-  qualityRow->addWidget(poseQuality);
-  qualityRow->addWidget(templateQuality);
+  for (auto* box : {lightingQuality, sharpnessQuality, centeredQuality, poseQuality, templateQuality}) {
+    box->setEnabled(false);
+    qualityRow->addWidget(box);
+  }
   qualityRow->addStretch();
 
   auto* qualityButtonRow = new QHBoxLayout();
@@ -429,51 +441,40 @@ int main(int argc, char* argv[]) {
   qualityButtonRow->addWidget(resetQualityButton);
   qualityButtonRow->addStretch();
 
-  auto* buttonRow = new QHBoxLayout();
+  enrollmentLayout->addWidget(previewFrame);
+  enrollmentLayout->addWidget(poseLabel);
+  enrollmentLayout->addLayout(poseRow);
+  enrollmentLayout->addLayout(poseButtonRow);
+  enrollmentLayout->addWidget(qualityLabel);
+  enrollmentLayout->addLayout(qualityRow);
+  enrollmentLayout->addLayout(qualityButtonRow);
+  enrollmentLayout->addStretch();
 
+  tabs->addTab(scrollable(enrollmentTab), QStringLiteral("Enrollment"));
+
+  // Privacy tab
+  auto* privacyTab = new QWidget();
+  auto* privacyLayout = new QVBoxLayout(privacyTab);
+
+  auto* consent = readOnlyTextEdit(consentText(), 260);
+
+  auto* privacyButtonRow = new QHBoxLayout();
   auto* understandButton = new QPushButton(QStringLiteral("I understand"));
-  auto* refreshButton = new QPushButton(QStringLiteral("Refresh status"));
-  auto* daemonStatusButton = new QPushButton(QStringLiteral("Query daemon detector status"));
   auto* brightnessButton = new QPushButton(QStringLiteral("Brightness assist placeholder"));
   auto* forgetButton = new QPushButton(QStringLiteral("Forget me"));
   auto* closeButton = new QPushButton(QStringLiteral("Close"));
 
-  buttonRow->addWidget(understandButton);
-  buttonRow->addWidget(refreshButton);
-  buttonRow->addWidget(daemonStatusButton);
-  buttonRow->addWidget(brightnessButton);
-  buttonRow->addWidget(forgetButton);
-  buttonRow->addStretch();
-  buttonRow->addWidget(closeButton);
+  privacyButtonRow->addWidget(understandButton);
+  privacyButtonRow->addWidget(brightnessButton);
+  privacyButtonRow->addWidget(forgetButton);
+  privacyButtonRow->addStretch();
+  privacyButtonRow->addWidget(closeButton);
 
-  root->addWidget(title);
-  root->addWidget(subtitle);
-  root->addWidget(warning);
-  root->addWidget(status);
-  root->addWidget(daemonSummaryLabel);
-  root->addWidget(daemonSummary);
-  root->addWidget(daemonResponseLabel);
-  root->addWidget(daemonResponse);
-  root->addWidget(previewFrame);
-  root->addWidget(consent);
-  root->addWidget(poseLabel);
-  root->addLayout(poseRow);
-  root->addLayout(poseButtonRow);
-  root->addWidget(qualityLabel);
-  root->addLayout(qualityRow);
-  root->addLayout(qualityButtonRow);
-  root->addLayout(buttonRow);
+  privacyLayout->addWidget(consent);
+  privacyLayout->addLayout(privacyButtonRow);
+  privacyLayout->addStretch();
 
-  QObject::connect(understandButton, &QPushButton::clicked, [&window]() {
-    QMessageBox::information(
-      &window,
-      QStringLiteral("Consent acknowledged"),
-      QStringLiteral(
-        "Acknowledged. Future versions will use this step before enrollment.\n\n"
-        "No enrollment was performed."
-      )
-    );
-  });
+  tabs->addTab(scrollable(privacyTab), QStringLiteral("Privacy"));
 
   QObject::connect(refreshButton, &QPushButton::clicked, [status]() {
     refreshStatus(status);
@@ -495,22 +496,18 @@ int main(int argc, char* argv[]) {
       centerPose->setChecked(true);
       return;
     }
-
     if (!leftPose->isChecked()) {
       leftPose->setChecked(true);
       return;
     }
-
     if (!rightPose->isChecked()) {
       rightPose->setChecked(true);
       return;
     }
-
     if (!upPose->isChecked()) {
       upPose->setChecked(true);
       return;
     }
-
     if (!downPose->isChecked()) {
       downPose->setChecked(true);
       return;
@@ -541,6 +538,17 @@ int main(int argc, char* argv[]) {
     templateQuality->setChecked(false);
   });
 
+  QObject::connect(understandButton, &QPushButton::clicked, [&window]() {
+    QMessageBox::information(
+      &window,
+      QStringLiteral("Consent acknowledged"),
+      QStringLiteral(
+        "Acknowledged. Future versions will use this step before enrollment.\n\n"
+        "No enrollment was performed."
+      )
+    );
+  });
+
   QObject::connect(brightnessButton, &QPushButton::clicked, [&window]() {
     QMessageBox::information(
       &window,
@@ -564,7 +572,8 @@ int main(int argc, char* argv[]) {
 
   QObject::connect(closeButton, &QPushButton::clicked, &window, &QWidget::close);
 
-  window.resize(820, 700);
+  window.resize(900, 680);
+  window.setMinimumSize(760, 520);
   window.show();
 
   return app.exec();

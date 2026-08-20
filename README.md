@@ -568,3 +568,7 @@ The optional Qt GUI now displays daemon detector_status responses in a persisten
 ## GUI parsed detector summary
 
 The optional Qt GUI displays a parsed detector_status summary and the raw daemon JSON response.
+
+## GUI tabbed layout
+
+The optional Qt GUI uses scrollable tabs so the enrollment scaffold fits laptop screens better.
