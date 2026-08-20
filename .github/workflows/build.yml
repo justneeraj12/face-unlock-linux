@@ -55,6 +55,11 @@ jobs:
         run: |
           scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
 
+      - name: Python detector smoke test
+        run: |
+          ./scripts/test-python-detectors.sh
+
+
       - name: Install build dependencies
         timeout-minutes: 35
         run: |

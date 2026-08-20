@@ -123,3 +123,9 @@ It verifies:
 - noop backend works
 - unknown backend fails safely
 - prototype_detect.py help includes detector options
+
+## Lazy backend imports
+
+The detector factory imports Haar/YuNet backends lazily.
+
+This allows the noop backend and smoke tests to run even when Python OpenCV is unavailable or incomplete.

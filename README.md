@@ -490,3 +490,9 @@ Run:
     ./scripts/test-python-detectors.sh
 
 This verifies detector imports and noop backend behavior without requiring a camera.
+
+## Detector smoke test in CI
+
+CI runs the Python detector smoke test using the noop backend.
+
+The test does not require a camera or Python OpenCV objdetect support.

@@ -46,6 +46,7 @@ packages=(
   ccache
   pkg-config
   file
+  python3-numpy
   libopencv-core-dev
   libopencv-videoio-dev
   libpam0g-dev

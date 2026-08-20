@@ -200,3 +200,13 @@ CI workflows use:
 Documentation:
 
     docs/ci-dependencies.md
+
+## Python detector smoke test in CI
+
+CI runs:
+
+    ./scripts/test-python-detectors.sh
+
+This test uses the noop detector backend and does not require a camera.
+
+The detector factory uses lazy imports so noop tests do not require Python OpenCV.
