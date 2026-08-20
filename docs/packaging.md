@@ -102,3 +102,13 @@ Always inspect package contents before installing:
 
     dpkg-deb -c <package>.deb
     dpkg-deb -I <package>.deb
+
+## Package workflow
+
+Development package artifacts are built by:
+
+    .github/workflows/package.yml
+
+The package workflow can be run manually from GitHub Actions.
+
+It also runs for version tags.

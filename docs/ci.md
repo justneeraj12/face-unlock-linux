@@ -155,3 +155,37 @@ CI runs:
     ./scripts/audit-dependencies.sh
 
 This keeps local and CI dependency policy aligned.
+
+## Split build and package workflows
+
+The main build workflow is intended to stay fast.
+
+Main workflow:
+
+    .github/workflows/build.yml
+
+Runs:
+
+- docs
+- JSON checks
+- validators
+- build
+- tests
+- dependency audit
+
+Package workflow:
+
+    .github/workflows/package.yml
+
+Runs on:
+
+- workflow_dispatch
+- version tags
+
+It builds and uploads the Debian package artifact.
+
+Release workflow:
+
+    .github/workflows/release.yml
+
+Runs on version tags and publishes release assets.

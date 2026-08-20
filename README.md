@@ -442,3 +442,15 @@ Install tools:
 Build:
 
     ./scripts/build.sh
+
+## Split CI/package workflows
+
+Main CI is optimized for faster feedback.
+
+Package artifacts are built by a separate workflow:
+
+    .github/workflows/package.yml
+
+Release assets are built by:
+
+    .github/workflows/release.yml
