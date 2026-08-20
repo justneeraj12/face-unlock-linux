@@ -125,3 +125,13 @@ This does not start camera capture in the GUI.
 ## Daemon response panel
 
 The GUI displays the latest detector_status daemon response in a persistent panel.
+
+## Parsed detector summary
+
+The GUI shows a small parsed summary from detector_status:
+
+- daemon available
+- detector backend
+- faces detected
+
+The raw JSON response remains visible.

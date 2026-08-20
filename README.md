@@ -564,3 +564,7 @@ This is a safe bridge toward GUI/daemon integration.
 ## GUI daemon response panel
 
 The optional Qt GUI now displays daemon detector_status responses in a persistent panel.
+
+## GUI parsed detector summary
+
+The optional Qt GUI displays a parsed detector_status summary and the raw daemon JSON response.

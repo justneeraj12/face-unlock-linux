@@ -39,6 +39,67 @@ QString runtimeSocketPath() {
     QStringLiteral("/face-unlock.sock");
 }
 
+QString extractJsonStringField(const QString& json, const QString& key) {
+  const QString needle = QStringLiteral("\"%1\":\"").arg(key);
+  const int start = json.indexOf(needle);
+
+  if (start < 0) {
+    return QStringLiteral("unknown");
+  }
+
+  const int valueStart = start + needle.size();
+  const int valueEnd = json.indexOf(QStringLiteral("\""), valueStart);
+
+  if (valueEnd < 0) {
+    return QStringLiteral("unknown");
+  }
+
+  return json.mid(valueStart, valueEnd - valueStart);
+}
+
+QString extractJsonNumberField(const QString& json, const QString& key) {
+  const QString needle = QStringLiteral("\"%1\":").arg(key);
+  const int start = json.indexOf(needle);
+
+  if (start < 0) {
+    return QStringLiteral("unknown");
+  }
+
+  int valueStart = start + needle.size();
+  int valueEnd = valueStart;
+
+  while (valueEnd < json.size() && json[valueEnd].isDigit()) {
+    ++valueEnd;
+  }
+
+  if (valueEnd == valueStart) {
+    return QStringLiteral("unknown");
+  }
+
+  return json.mid(valueStart, valueEnd - valueStart);
+}
+
+QString detectorStatusSummary(const QString& response) {
+  const QString status = extractJsonStringField(response, QStringLiteral("status"));
+  const QString reason = extractJsonStringField(response, QStringLiteral("reason"));
+  const QString op = extractJsonStringField(response, QStringLiteral("op"));
+  const QString detector = extractJsonStringField(response, QStringLiteral("detector"));
+  const QString faces = extractJsonNumberField(response, QStringLiteral("faces_detected"));
+
+  const bool available = status == QStringLiteral("ok") &&
+                         op == QStringLiteral("detector_status");
+
+  QString summary;
+  summary += QStringLiteral("Daemon available: %1\n").arg(available ? "yes" : "no");
+  summary += QStringLiteral("Status: %1\n").arg(status);
+  summary += QStringLiteral("Reason: %1\n").arg(reason);
+  summary += QStringLiteral("Operation: %1\n").arg(op);
+  summary += QStringLiteral("Detector: %1\n").arg(detector);
+  summary += QStringLiteral("Faces detected: %1\n").arg(faces);
+
+  return summary;
+}
+
 QString queryDaemonOperation(const QString& operation) {
   QLocalSocket socket;
   const QString path = runtimeSocketPath();
@@ -247,6 +308,16 @@ int main(int argc, char* argv[]) {
   status->setPlainText(statusText());
   status->setMinimumHeight(210);
 
+  auto* daemonSummaryLabel = new QLabel(QStringLiteral("Daemon detector summary"));
+  QFont daemonSummaryFont = daemonSummaryLabel->font();
+  daemonSummaryFont.setBold(true);
+  daemonSummaryLabel->setFont(daemonSummaryFont);
+
+  auto* daemonSummary = new QTextEdit();
+  daemonSummary->setReadOnly(true);
+  daemonSummary->setMinimumHeight(110);
+  daemonSummary->setPlainText(QStringLiteral("No daemon query yet."));
+
   auto* daemonResponseLabel = new QLabel(QStringLiteral("Daemon response panel"));
   QFont daemonResponseFont = daemonResponseLabel->font();
   daemonResponseFont.setBold(true);
@@ -379,6 +450,8 @@ int main(int argc, char* argv[]) {
   root->addWidget(subtitle);
   root->addWidget(warning);
   root->addWidget(status);
+  root->addWidget(daemonSummaryLabel);
+  root->addWidget(daemonSummary);
   root->addWidget(daemonResponseLabel);
   root->addWidget(daemonResponse);
   root->addWidget(previewFrame);
@@ -406,8 +479,10 @@ int main(int argc, char* argv[]) {
     refreshStatus(status);
   });
 
-  QObject::connect(daemonStatusButton, &QPushButton::clicked, [daemonResponse]() {
+  QObject::connect(daemonStatusButton, &QPushButton::clicked, [daemonSummary, daemonResponse]() {
     const QString response = queryDaemonOperation(QStringLiteral("detector_status"));
+
+    daemonSummary->setPlainText(detectorStatusSummary(response));
 
     daemonResponse->setPlainText(
       QStringLiteral("Socket: %1\n\nOperation: detector_status\n\nResponse:\n%2")

@@ -191,3 +191,18 @@ The detector_status button updates the panel with:
 - raw JSON response
 
 This is safer than only showing transient dialogs during daemon integration testing.
+
+## Parsed daemon detector summary
+
+The GUI parses detector_status enough to display:
+
+- daemon available
+- status
+- reason
+- operation
+- detector
+- faces detected
+
+The raw JSON response is still shown below the parsed summary.
+
+This uses simple string extraction and not a full JSON parser.
