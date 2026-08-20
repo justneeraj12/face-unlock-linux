@@ -93,3 +93,27 @@ Behavior:
 - restarting the daemon resets the counter
 
 This is a scaffold for future retry and fallback behavior.
+
+## detector_backend
+
+The daemon supports a detector_backend config field.
+
+Current supported value:
+
+    noop
+
+Example:
+
+    {
+      "camera_index": 0,
+      "detector_backend": "noop",
+      "max_auth_attempts": 3
+    }
+
+Future values may include:
+
+- haar
+- yunet
+- torchscript
+
+Unsupported values cause daemon startup to fail safely.

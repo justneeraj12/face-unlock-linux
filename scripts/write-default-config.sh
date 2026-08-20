@@ -28,6 +28,7 @@ mkdir -p "$config_dir"
 cat > "$config_path" <<'JSON_EOF'
 {
   "camera_index": 0,
+  "detector_backend": "noop",
   "max_auth_attempts": 3
 }
 JSON_EOF

@@ -540,3 +540,17 @@ Query detector metadata:
     ./scripts/test-socket-client.sh detector_status
 
 Current backend is noop.
+
+## Detector backend config
+
+Current C++ daemon detector backend:
+
+    noop
+
+CLI:
+
+    ./build/daemon/face-unlockd --detector noop --serve
+
+Config:
+
+    "detector_backend": "noop"

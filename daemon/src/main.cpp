@@ -52,6 +52,8 @@ struct Options {
   bool daemon = false;
   bool model_test = false;
   std::string model_path = "models/embedding_stub.pt";
+  std::string detector_backend = "noop";
+  bool detector_backend_set = false;
 };
 
 struct AppConfig {
@@ -59,6 +61,7 @@ struct AppConfig {
   std::string path;
   int camera_index = 0;
   int max_auth_attempts = 3;
+  std::string detector_backend = "noop";
 };
 
 struct FrameStore {
@@ -436,6 +439,51 @@ std::optional<int> extract_int_config_value(
   return static_cast<int>(value);
 }
 
+std::optional<std::string> extract_string_config_value(
+  const std::string& content,
+  const std::string& key
+) {
+  const std::string quoted_key = "\"" + key + "\"";
+  const std::size_t key_pos = content.find(quoted_key);
+
+  if (key_pos == std::string::npos) {
+    return std::nullopt;
+  }
+
+  const std::size_t colon_pos = content.find(':', key_pos);
+
+  if (colon_pos == std::string::npos) {
+    return std::nullopt;
+  }
+
+  std::size_t value_pos = colon_pos + 1;
+
+  while (value_pos < content.size() &&
+         (content[value_pos] == ' ' ||
+          content[value_pos] == '\n' ||
+          content[value_pos] == '\r' ||
+          content[value_pos] == '\t')) {
+    ++value_pos;
+  }
+
+  if (value_pos >= content.size() || content[value_pos] != '"') {
+    return std::nullopt;
+  }
+
+  ++value_pos;
+  std::size_t end_pos = value_pos;
+
+  while (end_pos < content.size() && content[end_pos] != '"') {
+    ++end_pos;
+  }
+
+  if (end_pos >= content.size()) {
+    return std::nullopt;
+  }
+
+  return content.substr(value_pos, end_pos - value_pos);
+}
+
 AppConfig load_app_config() {
   AppConfig config;
   config.path = get_default_config_path();
@@ -468,6 +516,13 @@ AppConfig load_app_config() {
     config.max_auth_attempts = max_auth_attempts.value();
   }
 
+  const std::optional<std::string> detector_backend =
+    extract_string_config_value(content, "detector_backend");
+
+  if (detector_backend.has_value()) {
+    config.detector_backend = detector_backend.value();
+  }
+
   return config;
 }
 
@@ -482,6 +537,7 @@ void print_usage(const char* program_name) {
   std::cout << "  --daemon             Run camera worker and socket server together\n";
   std::cout << "  --model-test         Load TorchScript model and run dummy forward pass\n";
   std::cout << "  --model PATH         TorchScript model path. Default: models/embedding_stub.pt\n";
+  std::cout << "  --detector NAME      Detector backend. Current supported: noop\n";
   std::cout << "  --help, -h           Show this help text\n";
 }
 
@@ -505,6 +561,10 @@ Options parse_options(int argc, char** argv) {
       options.model_test = true;
     } else if (arg == "--model" && i + 1 < argc) {
       options.model_path = argv[i + 1];
+      ++i;
+    } else if (arg == "--detector" && i + 1 < argc) {
+      options.detector_backend = argv[i + 1];
+      options.detector_backend_set = true;
       ++i;
     } else if (arg == "--help" || arg == "-h") {
       print_usage(argv[0]);
@@ -1217,6 +1277,14 @@ int main(int argc, char** argv) {
   const AppConfig config = load_app_config();
   const int camera_index =
     options.camera_index_set ? options.camera_index : config.camera_index;
+  const std::string detector_backend =
+    options.detector_backend_set ? options.detector_backend : config.detector_backend;
+
+  if (detector_backend != "noop") {
+    std::cerr << "detector_backend_error: unsupported backend " << detector_backend << '\n';
+    std::cerr << "supported_detector_backends: noop" << '\n';
+    return 6;
+  }
 
   const uid_t uid = getuid();
   const std::string runtime_dir = get_runtime_dir();
@@ -1230,6 +1298,7 @@ int main(int argc, char** argv) {
   std::cout << "config_path: " << (config.path.empty() ? "none" : config.path) << '\n';
   std::cout << "config_loaded: " << (config.loaded ? "true" : "false") << '\n';
   std::cout << "effective_camera_index: " << camera_index << '\n';
+  std::cout << "detector_backend: " << detector_backend << '\n';
   std::cout << "max_auth_attempts: " << config.max_auth_attempts << '\n';
   std::cout << "dev_auth_enabled: " << (dev_auth_enabled() ? "true" : "false") << '\n';
   std::cout << "root_auth_peer_enabled: " << (root_auth_peer_enabled() ? "true" : "false") << '\n';

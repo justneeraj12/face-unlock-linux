@@ -70,3 +70,19 @@ Current fields:
 
     detector noop
     faces_detected 0
+
+## Detector backend configuration
+
+Current supported backend:
+
+    noop
+
+CLI:
+
+    ./build/daemon/face-unlockd --detector noop --serve
+
+Config:
+
+    "detector_backend": "noop"
+
+Unsupported detector backends fail safely at startup.
