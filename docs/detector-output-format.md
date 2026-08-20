@@ -95,3 +95,11 @@ Validate detector output:
     scripts/validate-detector-output.py schemas/detector-output.example.json
 
 The validator checks that raw images and face crops are not embedded and that safe_to_commit is false.
+
+## Generated output test
+
+The generated output test uses synthetic-frame mode:
+
+    ./scripts/test-detector-output-generation.sh
+
+It writes detector output in a temporary directory and validates it.

@@ -157,3 +157,19 @@ prototype_detect.py now writes the face-unlock-detector-output format.
 Validate output with:
 
     scripts/validate-detector-output.py path/to/detections.json
+
+## Synthetic frame mode
+
+prototype_detect.py supports a camera-free synthetic mode:
+
+    python3 python/prototype_detect.py --backend noop --synthetic-frame 640x480
+
+This is useful for CI and output-format tests.
+
+## Generated output test
+
+Run:
+
+    ./scripts/test-detector-output-generation.sh
+
+This generates detector output with the noop backend and validates the JSON format.

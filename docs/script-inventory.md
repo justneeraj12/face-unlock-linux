@@ -75,3 +75,7 @@ Additional Python prototype tests:
 Additional validators:
 
 - scripts/validate-detector-output.py
+
+Additional detector tests:
+
+- scripts/test-detector-output-generation.sh

@@ -512,3 +512,11 @@ Example:
 Validate detector output metadata:
 
     scripts/validate-detector-output.py schemas/detector-output.example.json
+
+## Detector output generation test
+
+Run:
+
+    ./scripts/test-detector-output-generation.sh
+
+This validates generated detector output without requiring a camera.

@@ -161,3 +161,16 @@ Run:
 This test does not require a camera.
 
 It verifies detector imports, noop backend behavior, and prototype_detect.py CLI help.
+
+## Detector output generation test
+
+Run:
+
+    ./scripts/test-detector-output-generation.sh
+
+This test does not require camera hardware.
+
+It uses prototype_detect.py with:
+
+    --backend noop
+    --synthetic-frame 640x480

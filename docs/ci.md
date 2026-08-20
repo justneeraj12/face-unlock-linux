@@ -224,3 +224,11 @@ CI validates detector output metadata scaffolding with:
     scripts/validate-detector-output.py schemas/detector-output.example.json
 
 This check does not require a camera.
+
+## Detector output generation in CI
+
+CI runs:
+
+    ./scripts/test-detector-output-generation.sh
+
+This uses a synthetic frame and does not require camera hardware or OpenCV.

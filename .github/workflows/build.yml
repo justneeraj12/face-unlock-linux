@@ -63,6 +63,10 @@ jobs:
         run: |
           ./scripts/test-python-detectors.sh
 
+      - name: Detector output generation test
+        run: |
+          ./scripts/test-detector-output-generation.sh
+
 
       - name: Install build dependencies
         timeout-minutes: 35
