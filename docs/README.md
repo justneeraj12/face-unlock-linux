@@ -217,3 +217,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | detector-prototype.md | Python face detector backend scaffold |
+
+## Detector output
+
+| Document | Purpose |
+|---|---|
+| detector-output-format.md | Detector output JSON format |

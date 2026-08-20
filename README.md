@@ -496,3 +496,13 @@ This verifies detector imports and noop backend behavior without requiring a cam
 CI runs the Python detector smoke test using the noop backend.
 
 The test does not require a camera or Python OpenCV objdetect support.
+
+## Detector output format
+
+Detector metadata format:
+
+    docs/detector-output-format.md
+
+Example:
+
+    schemas/detector-output.example.json

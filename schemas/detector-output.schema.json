@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/justneeraj12/face-unlock-linux/schemas/detector-output.schema.json",
+  "title": "face-unlock-linux detector output",
+  "type": "object",
+  "required": [
+    "format",
+    "format_version",
+    "created_at",
+    "backend",
+    "source",
+    "summary",
+    "privacy"
+  ],
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "face-unlock-detector-output"
+    },
+    "format_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "backend": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "camera_index": {
+          "type": "integer"
+        },
+        "frame_width": {
+          "type": "integer"
+        },
+        "frame_height": {
+          "type": "integer"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "frames_total",
+        "detections_total"
+      ],
+      "properties": {
+        "frames_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "detections_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mean_detect_ms": {
+          "type": ["number", "null"]
+        }
+      }
+    },
+    "frames": {
+      "type": "array"
+    },
+    "privacy": {
+      "type": "object",
+      "required": [
+        "raw_images_included",
+        "face_crops_included",
+        "safe_to_commit"
+      ],
+      "properties": {
+        "raw_images_included": {
+          "type": "boolean"
+        },
+        "face_crops_included": {
+          "type": "boolean"
+        },
+        "safe_to_commit": {
+          "type": "boolean"
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

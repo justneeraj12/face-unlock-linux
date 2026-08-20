@@ -135,3 +135,17 @@ This allows the noop backend and smoke tests to run even when Python OpenCV is u
 The detector smoke test intentionally uses the noop backend and does not require NumPy, OpenCV, or camera hardware.
 
 This allows CI to run the smoke test before installing apt dependencies.
+
+## Detector output format
+
+The planned detector metadata output format is documented in:
+
+    docs/detector-output-format.md
+
+Example:
+
+    schemas/detector-output.example.json
+
+Schema scaffold:
+
+    schemas/detector-output.schema.json
