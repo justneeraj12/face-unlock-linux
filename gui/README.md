@@ -155,3 +155,7 @@ The GUI uses scrollable tabs:
 - Privacy
 
 This keeps the enrollment scaffold usable on laptop displays.
+
+## Daemon JSON parsing
+
+The GUI uses Qt JSON APIs to parse daemon detector_status responses.

@@ -576,3 +576,7 @@ The optional Qt GUI uses scrollable tabs so the enrollment scaffold fits laptop 
 ## GUI tabbed layout
 
 The optional Qt GUI uses scrollable tabs so the enrollment scaffold fits laptop screens better.
+
+## GUI daemon JSON parsing
+
+The optional Qt GUI parses daemon metadata responses with Qt JSON APIs.

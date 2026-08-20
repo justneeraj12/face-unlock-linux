@@ -226,3 +226,13 @@ The GUI uses scrollable tabs to fit better on laptop screens:
 - Privacy
 
 Each tab is wrapped in a scroll area so scaffold content does not run off-screen.
+
+## JSON parsing
+
+The GUI parses daemon JSON responses with Qt JSON APIs:
+
+- QJsonDocument
+- QJsonObject
+- QJsonValue
+
+This replaced earlier string-based parsing.

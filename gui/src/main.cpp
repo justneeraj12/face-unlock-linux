@@ -7,6 +7,9 @@
 #include <QFont>
 #include <QFrame>
 #include <QHBoxLayout>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
 #include <QLabel>
 #include <QLocalSocket>
 #include <QMessageBox>
@@ -137,52 +140,42 @@ QString queryDaemonOperation(const QString& operation) {
   return QString::fromUtf8(response).trimmed();
 }
 
-QString extractJsonStringField(const QString& json, const QString& key) {
-  const QString needle = QStringLiteral("\"%1\":\"").arg(key);
-  const int start = json.indexOf(needle);
+QString jsonStringValue(const QJsonObject& object, const QString& key) {
+  const QJsonValue value = object.value(key);
 
-  if (start < 0) {
-    return QStringLiteral("unknown");
+  if (value.isString()) {
+    return value.toString();
   }
 
-  const int valueStart = start + needle.size();
-  const int valueEnd = json.indexOf(QStringLiteral("\""), valueStart);
-
-  if (valueEnd < 0) {
-    return QStringLiteral("unknown");
+  if (value.isDouble()) {
+    return QString::number(value.toInt());
   }
 
-  return json.mid(valueStart, valueEnd - valueStart);
-}
-
-QString extractJsonNumberField(const QString& json, const QString& key) {
-  const QString needle = QStringLiteral("\"%1\":").arg(key);
-  const int start = json.indexOf(needle);
-
-  if (start < 0) {
-    return QStringLiteral("unknown");
+  if (value.isBool()) {
+    return value.toBool() ? QStringLiteral("true") : QStringLiteral("false");
   }
 
-  int valueStart = start + needle.size();
-  int valueEnd = valueStart;
-
-  while (valueEnd < json.size() && json[valueEnd].isDigit()) {
-    ++valueEnd;
-  }
-
-  if (valueEnd == valueStart) {
-    return QStringLiteral("unknown");
-  }
-
-  return json.mid(valueStart, valueEnd - valueStart);
+  return QStringLiteral("unknown");
 }
 
 QString detectorStatusSummary(const QString& response) {
-  const QString status = extractJsonStringField(response, QStringLiteral("status"));
-  const QString reason = extractJsonStringField(response, QStringLiteral("reason"));
-  const QString op = extractJsonStringField(response, QStringLiteral("op"));
-  const QString detector = extractJsonStringField(response, QStringLiteral("detector"));
-  const QString faces = extractJsonNumberField(response, QStringLiteral("faces_detected"));
+  QJsonParseError error {};
+  const QJsonDocument document = QJsonDocument::fromJson(response.toUtf8(), &error);
+
+  if (error.error != QJsonParseError::NoError || !document.isObject()) {
+    QString summary;
+    summary += QStringLiteral("Daemon available: no\n");
+    summary += QStringLiteral("Parse error: %1\n").arg(error.errorString());
+    return summary;
+  }
+
+  const QJsonObject object = document.object();
+
+  const QString status = jsonStringValue(object, QStringLiteral("status"));
+  const QString reason = jsonStringValue(object, QStringLiteral("reason"));
+  const QString op = jsonStringValue(object, QStringLiteral("op"));
+  const QString detector = jsonStringValue(object, QStringLiteral("detector"));
+  const QString faces = jsonStringValue(object, QStringLiteral("faces_detected"));
 
   const bool available = status == QStringLiteral("ok") &&
                          op == QStringLiteral("detector_status");
