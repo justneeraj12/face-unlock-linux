@@ -193,3 +193,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | key-management.md | Development key scaffold and production key management plan |
+
+## v0.1.1-alpha
+
+| Document | Purpose |
+|---|---|
+| releases/v0.1.1-alpha.md | v0.1.1-alpha release notes |

@@ -6,6 +6,13 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 
 ## Unreleased
 
+_No unreleased changes yet._
+
+## v0.1.1-alpha
+
+See docs/releases/v0.1.1-alpha.md.
+
+
 ### Added
 
 - Guarded sudo PAM apply and rollback scripts.
