@@ -174,3 +174,11 @@ It uses prototype_detect.py with:
 
     --backend noop
     --synthetic-frame 640x480
+
+## Detector self-test
+
+CTest includes:
+
+    detector_selftest
+
+It verifies the C++ NoopFaceDetector returns zero detections.

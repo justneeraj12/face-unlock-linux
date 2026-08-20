@@ -520,3 +520,15 @@ Run:
     ./scripts/test-detector-output-generation.sh
 
 This validates generated detector output without requiring a camera.
+
+## Daemon detector scaffold
+
+The C++ daemon now includes a detector abstraction scaffold.
+
+Current backend:
+
+    noop
+
+Documentation:
+
+    docs/daemon-detector-scaffold.md

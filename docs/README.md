@@ -223,3 +223,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | detector-output-format.md | Detector output JSON format |
+
+## Daemon detector scaffold
+
+| Document | Purpose |
+|---|---|
+| daemon-detector-scaffold.md | C++ daemon detector abstraction scaffold |

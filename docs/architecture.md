@@ -537,3 +537,20 @@ Planned future documents or sections:
 - sudo integration design
 - lock-screen integration notes
 - greeter/system-helper threat model
+
+## Daemon detector scaffold
+
+The daemon includes a C++ detector abstraction scaffold.
+
+Current backend:
+
+    noop
+
+Socket responses include:
+
+    detector noop
+    faces_detected 0
+
+Details:
+
+    docs/daemon-detector-scaffold.md

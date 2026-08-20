@@ -41,6 +41,25 @@ target_link_libraries(face_unlock_crypto PUBLIC
   ${SODIUM_LIBRARY}
 )
 
+add_library(face_unlock_detector STATIC
+  src/detector.cpp
+)
+
+target_compile_options(face_unlock_detector PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+)
+
+target_include_directories(face_unlock_detector PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${OPENCV_INCLUDE_DIR}
+)
+
+target_link_libraries(face_unlock_detector PUBLIC
+  ${OPENCV_CORE_LIBRARY}
+)
+
 add_executable(face-unlockd
   src/main.cpp
 )
@@ -61,6 +80,7 @@ target_link_libraries(face-unlockd PRIVATE
   ${OPENCV_CORE_LIBRARY}
   ${OPENCV_VIDEOIO_LIBRARY}
   face_unlock_crypto
+  face_unlock_detector
 )
 
 if(WITH_TORCH)
@@ -118,11 +138,31 @@ target_link_libraries(face-unlock-key-tool PRIVATE
 )
 
 
+add_executable(face-unlock-detector-selftest
+  src/detector_selftest.cpp
+)
+
+target_compile_options(face-unlock-detector-selftest PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+)
+
+target_link_libraries(face-unlock-detector-selftest PRIVATE
+  face_unlock_detector
+)
+
 if(BUILD_TESTING)
   add_test(
     NAME crypto_selftest
     COMMAND face-unlock-crypto-selftest
   )
+
+  add_test(
+    NAME detector_selftest
+    COMMAND face-unlock-detector-selftest
+  )
+
 
   add_test(
     NAME key_template_flow
@@ -165,6 +205,6 @@ if(BUILD_TESTING)
   )
 endif()
 
-install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-tool face-unlock-key-tool
+install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-tool face-unlock-key-tool face-unlock-detector-selftest
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
