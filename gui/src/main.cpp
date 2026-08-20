@@ -247,6 +247,19 @@ int main(int argc, char* argv[]) {
   status->setPlainText(statusText());
   status->setMinimumHeight(210);
 
+  auto* daemonResponseLabel = new QLabel(QStringLiteral("Daemon response panel"));
+  QFont daemonResponseFont = daemonResponseLabel->font();
+  daemonResponseFont.setBold(true);
+  daemonResponseLabel->setFont(daemonResponseFont);
+
+  auto* daemonResponse = new QTextEdit();
+  daemonResponse->setReadOnly(true);
+  daemonResponse->setMinimumHeight(110);
+  daemonResponse->setPlainText(
+    QStringLiteral("Socket: %1\n\nNo daemon query yet.")
+      .arg(runtimeSocketPath())
+  );
+
   auto* previewFrame = new QFrame();
   previewFrame->setFrameShape(QFrame::StyledPanel);
   previewFrame->setMinimumHeight(180);
@@ -366,6 +379,8 @@ int main(int argc, char* argv[]) {
   root->addWidget(subtitle);
   root->addWidget(warning);
   root->addWidget(status);
+  root->addWidget(daemonResponseLabel);
+  root->addWidget(daemonResponse);
   root->addWidget(previewFrame);
   root->addWidget(consent);
   root->addWidget(poseLabel);
@@ -391,13 +406,11 @@ int main(int argc, char* argv[]) {
     refreshStatus(status);
   });
 
-  QObject::connect(daemonStatusButton, &QPushButton::clicked, [&window]() {
+  QObject::connect(daemonStatusButton, &QPushButton::clicked, [daemonResponse]() {
     const QString response = queryDaemonOperation(QStringLiteral("detector_status"));
 
-    QMessageBox::information(
-      &window,
-      QStringLiteral("Daemon detector status"),
-      QStringLiteral("Socket:\n%1\n\nResponse:\n%2")
+    daemonResponse->setPlainText(
+      QStringLiteral("Socket: %1\n\nOperation: detector_status\n\nResponse:\n%2")
         .arg(runtimeSocketPath(), response)
     );
   });

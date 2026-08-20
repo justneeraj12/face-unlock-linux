@@ -560,3 +560,7 @@ Config:
 The optional Qt GUI can query the running daemon for detector_status and display the raw JSON response.
 
 This is a safe bridge toward GUI/daemon integration.
+
+## GUI daemon response panel
+
+The optional Qt GUI now displays daemon detector_status responses in a persistent panel.

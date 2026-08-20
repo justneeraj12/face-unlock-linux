@@ -121,3 +121,7 @@ The GUI can query the running daemon for detector_status and display the raw JSO
 The daemon must be running separately.
 
 This does not start camera capture in the GUI.
+
+## Daemon response panel
+
+The GUI displays the latest detector_status daemon response in a persistent panel.

@@ -179,3 +179,15 @@ and displays the raw JSON response.
 This does not access the camera from the GUI.
 
 The daemon must already be running.
+
+## Daemon response panel
+
+The GUI includes a persistent daemon response panel.
+
+The detector_status button updates the panel with:
+
+- socket path
+- operation name
+- raw JSON response
+
+This is safer than only showing transient dialogs during daemon integration testing.
