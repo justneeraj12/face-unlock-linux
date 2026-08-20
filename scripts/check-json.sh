@@ -14,6 +14,8 @@ for path in sorted(Path(".").rglob("*.json")):
         continue
     if "build" in path.parts:
         continue
+    if "build-gui" in path.parts:
+        continue
     if ".venv" in path.parts:
         continue
 

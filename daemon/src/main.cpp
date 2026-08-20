@@ -888,9 +888,42 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
         + "}\n";
     }
 
+    const std::string decryptability = decryptability_status_value();
+
+    if (decryptability == "not_possible_discarded_key") {
+      return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"template_not_decryptable\""
+        + camera_fields
+        + template_fields + enrollment_fields + key_fields
+        + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
+        + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
+        + "}\n";
+    }
+
+    if (decryptability == "key_missing") {
+      return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"key_missing\""
+        + camera_fields
+        + template_fields + enrollment_fields + key_fields
+        + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
+        + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
+        + "}\n";
+    }
+
+    const std::string decrypt_status = template_decrypt_status_value();
+
+    if (decrypt_status != "ok") {
+      return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"template_decrypt_failed\""
+        + camera_fields
+        + template_fields + enrollment_fields + key_fields
+        + template_decrypt_json_fields()
+        + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
+        + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
+        + "}\n";
+    }
+
     return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"matcher_not_implemented\""
       + camera_fields
       + template_fields + enrollment_fields + key_fields
+      + template_decrypt_json_fields()
       + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
       + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
       + "}\n";
