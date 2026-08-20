@@ -145,3 +145,13 @@ The GUI uses scrollable tabs:
 - Privacy
 
 This keeps the scaffold usable on laptop displays.
+
+## Tabbed layout
+
+The GUI uses scrollable tabs:
+
+- Status
+- Enrollment
+- Privacy
+
+This keeps the enrollment scaffold usable on laptop displays.

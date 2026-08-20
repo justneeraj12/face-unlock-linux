@@ -216,3 +216,13 @@ The GUI now uses tabs to fit better on laptop screens:
 - Privacy
 
 Each tab is scrollable to avoid content running off screen.
+
+## Tabbed layout
+
+The GUI uses scrollable tabs to fit better on laptop screens:
+
+- Status
+- Enrollment
+- Privacy
+
+Each tab is wrapped in a scroll area so scaffold content does not run off-screen.

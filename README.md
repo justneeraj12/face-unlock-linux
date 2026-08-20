@@ -572,3 +572,7 @@ The optional Qt GUI displays a parsed detector_status summary and the raw daemon
 ## GUI tabbed layout
 
 The optional Qt GUI uses scrollable tabs so the enrollment scaffold fits laptop screens better.
+
+## GUI tabbed layout
+
+The optional Qt GUI uses scrollable tabs so the enrollment scaffold fits laptop screens better.
