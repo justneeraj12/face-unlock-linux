@@ -134,6 +134,20 @@ if(BUILD_TESTING)
   set_tests_properties(key_template_flow PROPERTIES
     TIMEOUT 30
   )
+
+  add_test(
+    NAME daemon_metadata
+    COMMAND bash
+      ${CMAKE_SOURCE_DIR}/scripts/test-daemon-metadata.sh
+      $<TARGET_FILE:face-unlockd>
+      $<TARGET_FILE:face-unlock-key-tool>
+      $<TARGET_FILE:face-unlock-template-tool>
+      ${CMAKE_SOURCE_DIR}/scripts/test-socket-client.sh
+  )
+
+  set_tests_properties(daemon_metadata PROPERTIES
+    TIMEOUT 30
+  )
 endif()
 
 install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-tool face-unlock-key-tool

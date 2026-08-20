@@ -80,3 +80,25 @@ This test runs:
     ./scripts/test-key-template-flow.sh
 
 It verifies the development key plus placeholder template flow using a temporary HOME directory.
+
+## Daemon metadata integration test
+
+CTest includes:
+
+    daemon_metadata
+
+This test runs:
+
+    ./scripts/test-daemon-metadata.sh
+
+It uses temporary HOME and XDG_RUNTIME_DIR directories.
+
+It verifies daemon socket responses include:
+
+- template present
+- enrollment placeholder
+- key present
+- decryptability possible_with_dev_key
+- key_storage local_development_key_file
+
+The test uses daemon --serve mode and does not require a camera.

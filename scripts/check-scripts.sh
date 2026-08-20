@@ -21,6 +21,7 @@ required_scripts=(
   scripts/rollback-sudo-pam.sh
   scripts/test-sudo-dry-run.sh
   scripts/test-key-template-flow.sh
+  scripts/test-daemon-metadata.sh
   scripts/validate-enrollment-manifest.py
   scripts/validate-model-eval-metrics.py
 )

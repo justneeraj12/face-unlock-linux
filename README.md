@@ -386,3 +386,7 @@ It does not decrypt or print plaintext by default.
 Daemon socket responses include key/decryptability metadata.
 
 The daemon reports whether a placeholder template may be decryptable with the development key, but does not decrypt templates yet.
+
+## Daemon metadata integration test
+
+CTest includes a daemon metadata integration test that verifies template, enrollment, key, and decryptability fields over the daemon socket without requiring a camera.

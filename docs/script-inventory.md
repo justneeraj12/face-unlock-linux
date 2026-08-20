@@ -59,3 +59,7 @@ Validation:
 Additional integration tests:
 
 - scripts/test-key-template-flow.sh
+
+Additional daemon integration tests:
+
+- scripts/test-daemon-metadata.sh

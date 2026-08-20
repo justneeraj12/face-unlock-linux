@@ -152,3 +152,15 @@ Example fields:
     "key_storage":"local_development_key_file"
 
 The daemon does not decrypt templates yet.
+
+## Daemon metadata test
+
+The daemon metadata integration test verifies that key/decryptability metadata appears in socket responses.
+
+Run:
+
+    ./scripts/test-daemon-metadata.sh
+
+CTest also runs this test as:
+
+    daemon_metadata
