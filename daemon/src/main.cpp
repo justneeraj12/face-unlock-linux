@@ -23,6 +23,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 
+#include "detector.h"
 #include "template_crypto.h"
 
 #include <sodium.h>
@@ -789,6 +790,10 @@ std::string compact_jsonish(const std::string& request) {
 std::string extract_operation(const std::string& request) {
   const std::string compact = compact_jsonish(request);
 
+  if (compact.find("\"op\":\"detector_status\"") != std::string::npos) {
+    return "detector_status";
+  }
+
   if (compact.find("\"op\":\"template_status\"") != std::string::npos) {
     return "template_status";
   }
@@ -814,10 +819,33 @@ bool dev_auth_enabled() {
   return value != nullptr && std::string(value) == "1";
 }
 
+std::string detector_json_fields(FrameStore* frame_store) {
+  face_unlock::NoopFaceDetector detector;
+
+  if (frame_store == nullptr) {
+    return ",\"detector\":\"noop\",\"faces_detected\":0";
+  }
+
+  cv::Mat snapshot;
+  unsigned long long frames_total = 0;
+
+  if (!frame_store->snapshot(snapshot, frames_total)) {
+    return ",\"detector\":\"noop\",\"faces_detected\":0";
+  }
+
+  const face_unlock::DetectorResult result = detector.detect(snapshot);
+
+  return std::string(",\"detector\":\"") +
+    result.backend +
+    "\",\"faces_detected\":" +
+    std::to_string(result.boxes.size());
+}
+
 std::string build_response_for_request(const std::string& request, FrameStore* frame_store, AuthState* auth_state) {
   const std::string op = extract_operation(request);
   const CameraStatus camera_status = get_camera_status(frame_store);
   const std::string camera_fields = camera_status_json_fields(camera_status);
+  const std::string detector_fields = detector_json_fields(frame_store);
   const std::string template_fields = template_json_fields();
   const std::string enrollment_fields = enrollment_json_fields();
   const std::string key_fields = key_json_fields();
@@ -825,6 +853,13 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
   if (op == "ping") {
     return "{\"status\":\"ok\",\"op\":\"ping\",\"reason\":\"daemon_alive\""
       + camera_fields + template_fields + enrollment_fields + key_fields + "}\n";
+  }
+
+  if (op == "detector_status") {
+    return "{\"status\":\"ok\",\"op\":\"detector_status\""
+      + camera_fields
+      + detector_fields
+      + "}\n";
   }
 
   if (op == "template_status") {

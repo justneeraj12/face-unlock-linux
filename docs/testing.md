@@ -182,3 +182,14 @@ CTest includes:
     detector_selftest
 
 It verifies the C++ NoopFaceDetector returns zero detections.
+
+## detector_status integration
+
+The daemon_metadata test verifies:
+
+    detector_status
+
+Expected current metadata:
+
+    detector noop
+    faces_detected 0

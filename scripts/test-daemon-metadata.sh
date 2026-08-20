@@ -107,6 +107,26 @@ check_contains '"key_storage":"local_development_key_file"'
 check_contains '"template_decrypt":"ok"'
 
 echo
+echo "[test-daemon-metadata] Query detector_status metadata"
+detector_response="$("$client" detector_status)"
+echo "detector_response: $detector_response"
+
+if [[ "$detector_response" != *'"op":"detector_status"'* ]]; then
+  echo "ERROR: detector_status response missing op"
+  exit 1
+fi
+
+if [[ "$detector_response" != *'"detector":"noop"'* ]]; then
+  echo "ERROR: detector_status response missing noop detector"
+  exit 1
+fi
+
+if [[ "$detector_response" != *'"faces_detected":0'* ]]; then
+  echo "ERROR: detector_status response missing faces_detected 0"
+  exit 1
+fi
+
+echo
 echo "[test-daemon-metadata] Stop daemon"
 kill "$daemon_pid"
 wait "$daemon_pid" 2>/dev/null || true

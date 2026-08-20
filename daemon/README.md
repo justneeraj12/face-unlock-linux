@@ -240,3 +240,18 @@ Auth failure reasons now distinguish:
 - matcher_not_implemented
 
 Auth still fails closed because real matching is not implemented.
+
+## detector_status operation
+
+The daemon supports:
+
+    detector_status
+
+Example:
+
+    ./scripts/test-socket-client.sh detector_status
+
+Current response reports:
+
+    detector noop
+    faces_detected 0

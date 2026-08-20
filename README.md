@@ -532,3 +532,11 @@ Current backend:
 Documentation:
 
     docs/daemon-detector-scaffold.md
+
+## detector_status operation
+
+Query detector metadata:
+
+    ./scripts/test-socket-client.sh detector_status
+
+Current backend is noop.

@@ -55,3 +55,18 @@ Future detector metadata should include:
 The current Noop detector does not inspect or save images.
 
 Real detector integration must not log raw frames or store images by default.
+
+## detector_status operation
+
+The daemon supports a dedicated socket operation:
+
+    detector_status
+
+Run:
+
+    ./scripts/test-socket-client.sh detector_status
+
+Current fields:
+
+    detector noop
+    faces_detected 0
