@@ -1,0 +1,110 @@
+# Detector Prototype
+
+This document describes the Python detector prototype.
+
+## Script
+
+    python/prototype_detect.py
+
+## Current backend
+
+Implemented:
+
+    haar
+
+Placeholder:
+
+    yunet
+
+## Safe default
+
+By default, the detector prototype saves nothing.
+
+Run:
+
+    python3 python/prototype_detect.py --camera 0 --duration-seconds 10
+
+## Preview
+
+Show preview:
+
+    python3 python/prototype_detect.py --camera 0 --preview
+
+Press q to exit early.
+
+## Metadata writing
+
+Detection metadata may be biometric-adjacent.
+
+Writing metadata requires:
+
+    --write-metadata
+    --i-understand-biometric-risk
+
+Example:
+
+    python3 python/prototype_detect.py --camera 0 --write-metadata --i-understand-biometric-risk
+
+Default output:
+
+    enrollment_samples/detections.json
+
+Do not commit generated metadata.
+
+## Backends
+
+### haar
+
+OpenCV Haar cascade baseline.
+
+Pros:
+
+- simple
+- available locally
+- good for plumbing tests
+
+Cons:
+
+- not robust enough for production
+
+### yunet
+
+Planned future backend.
+
+Goal:
+
+- modern lightweight face detector
+- OpenCV ecosystem
+- better production candidate than Haar
+
+## Future work
+
+- add YuNet backend
+- add detector metrics
+- add bbox quality checks
+- add GUI preview overlay
+- add daemon detector abstraction
+
+## auto and noop backends
+
+The default backend is:
+
+    auto
+
+auto tries Haar first.
+
+If the local Python cv2 module does not provide CascadeClassifier or a Haar cascade cannot be found, auto falls back to:
+
+    noop
+
+noop returns zero detections but keeps the camera/prototype pipeline running.
+
+Run explicit noop mode:
+
+    python3 python/prototype_detect.py --backend noop --camera 0 --duration-seconds 5
+
+If you want Haar specifically:
+
+    python3 python/prototype_detect.py --backend haar --camera 0 --duration-seconds 5
+
+If Haar fails, check your Python OpenCV installation.

@@ -464,3 +464,21 @@ CI workflows use:
 Documentation:
 
     docs/ci-dependencies.md
+
+## Detector prototype
+
+Python detector prototype:
+
+    python3 python/prototype_detect.py --camera 0 --duration-seconds 10
+
+Documentation:
+
+    docs/detector-prototype.md
+
+Current backend is Haar baseline. YuNet backend is planned.
+
+## Detector backend fallback
+
+The Python detector prototype defaults to auto mode.
+
+If Haar detection is unavailable in the local cv2 build, it falls back to noop mode so the camera pipeline can still be tested.
