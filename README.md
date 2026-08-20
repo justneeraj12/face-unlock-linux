@@ -362,3 +362,15 @@ Verify decryptability without printing plaintext:
     ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key
 
 This is not production key management.
+
+## Key/template integration self-test
+
+Run the development key plus placeholder template integration test:
+
+    ./scripts/test-key-template-flow.sh
+
+CTest also runs this as:
+
+    key_template_flow
+
+The test uses a temporary HOME and does not touch real user template files.

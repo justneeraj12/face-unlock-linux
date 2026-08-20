@@ -161,3 +161,11 @@ If --use-dev-key is not provided, the placeholder is encrypted with a random key
 Development key management is documented in:
 
     docs/key-management.md
+
+## Integration self-test
+
+The key/template placeholder flow is tested by:
+
+    ./scripts/test-key-template-flow.sh
+
+This test uses a temporary HOME directory and is safe to run locally and in CI.

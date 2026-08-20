@@ -55,3 +55,7 @@ Validation:
 
 - scripts/validate-enrollment-manifest.py
 - scripts/validate-model-eval-metrics.py
+
+Additional integration tests:
+
+- scripts/test-key-template-flow.sh

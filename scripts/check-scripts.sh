@@ -20,6 +20,7 @@ required_scripts=(
   scripts/apply-sudo-pam-install.sh
   scripts/rollback-sudo-pam.sh
   scripts/test-sudo-dry-run.sh
+  scripts/test-key-template-flow.sh
   scripts/validate-enrollment-manifest.py
   scripts/validate-model-eval-metrics.py
 )

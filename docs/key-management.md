@@ -108,3 +108,25 @@ Verify decryptability without printing plaintext:
     ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key
 
 This is still not production key management.
+
+## Key/template integration self-test
+
+The project includes an integration self-test:
+
+    ./scripts/test-key-template-flow.sh
+
+CTest also runs this test.
+
+The test uses a temporary HOME directory and verifies:
+
+- development key creation
+- key file mode 0600
+- placeholder template creation with --use-dev-key
+- template file mode 0600
+- enrollment manifest mode 0600
+- decrypt verification without printing plaintext
+- manifest JSON parsing
+- template/manifest deletion
+- key deletion
+
+It does not touch the user's real template or key files.

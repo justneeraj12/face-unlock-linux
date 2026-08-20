@@ -68,3 +68,15 @@ GitHub Actions runs build and dependency checks.
 The CI workflow should also run CTest:
 
     ctest --test-dir build --output-on-failure
+
+## Key/template flow test
+
+CTest includes:
+
+    key_template_flow
+
+This test runs:
+
+    ./scripts/test-key-template-flow.sh
+
+It verifies the development key plus placeholder template flow using a temporary HOME directory.
