@@ -67,3 +67,7 @@ Additional daemon integration tests:
 Additional auth integration tests:
 
 - scripts/test-auth-reasons.sh
+
+Additional Python prototype tests:
+
+- scripts/test-python-detectors.sh

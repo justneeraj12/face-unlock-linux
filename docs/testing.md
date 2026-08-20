@@ -151,3 +151,13 @@ It verifies fail-closed auth reasons:
 - matcher_not_implemented
 
 The test uses daemon --serve mode and temporary HOME/XDG_RUNTIME_DIR directories.
+
+## Python detector smoke test
+
+Run:
+
+    ./scripts/test-python-detectors.sh
+
+This test does not require a camera.
+
+It verifies detector imports, noop backend behavior, and prototype_detect.py CLI help.

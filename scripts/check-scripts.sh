@@ -24,6 +24,7 @@ required_scripts=(
   scripts/test-key-template-flow.sh
   scripts/test-daemon-metadata.sh
   scripts/test-auth-reasons.sh
+  scripts/test-python-detectors.sh
   scripts/validate-enrollment-manifest.py
   scripts/validate-model-eval-metrics.py
 )

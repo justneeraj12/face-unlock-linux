@@ -108,3 +108,18 @@ If you want Haar specifically:
     python3 python/prototype_detect.py --backend haar --camera 0 --duration-seconds 5
 
 If Haar fails, check your Python OpenCV installation.
+
+## Smoke test
+
+Run:
+
+    ./scripts/test-python-detectors.sh
+
+This test does not require a camera.
+
+It verifies:
+
+- detector package imports
+- noop backend works
+- unknown backend fails safely
+- prototype_detect.py help includes detector options

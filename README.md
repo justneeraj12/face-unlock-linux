@@ -482,3 +482,11 @@ Current backend is Haar baseline. YuNet backend is planned.
 The Python detector prototype defaults to auto mode.
 
 If Haar detection is unavailable in the local cv2 build, it falls back to noop mode so the camera pipeline can still be tested.
+
+## Python detector smoke test
+
+Run:
+
+    ./scripts/test-python-detectors.sh
+
+This verifies detector imports and noop backend behavior without requiring a camera.
