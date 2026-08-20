@@ -169,3 +169,19 @@ The key/template placeholder flow is tested by:
     ./scripts/test-key-template-flow.sh
 
 This test uses a temporary HOME directory and is safe to run locally and in CI.
+
+## Decryptability status
+
+The status command reports decryptability metadata without decrypting:
+
+    decrypt_status: possible_with_dev_key
+    decrypt_status: key_missing
+    decrypt_status: not_possible_discarded_key
+    decrypt_status: template_missing
+    decrypt_status: unknown
+
+To actually verify decryptability, explicitly run:
+
+    ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key
+
+The status command does not print plaintext.

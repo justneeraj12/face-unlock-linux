@@ -130,3 +130,13 @@ The test uses a temporary HOME directory and verifies:
 - key deletion
 
 It does not touch the user's real template or key files.
+
+## Decryptability status
+
+The template tool status command reports whether decrypting may be possible with the development key.
+
+It does not decrypt by default and never prints plaintext.
+
+Explicit decrypt verification requires:
+
+    ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key

@@ -175,6 +175,77 @@ bool read_dev_key(std::vector<unsigned char>& key, std::string& error) {
   return true;
 }
 
+bool read_text_file(const std::string& path, std::string& text, std::string& error) {
+  std::vector<unsigned char> bytes;
+
+  if (!face_unlock::read_file_bytes(path, bytes, error)) {
+    return false;
+  }
+
+  text.assign(bytes.begin(), bytes.end());
+  return true;
+}
+
+std::string compact_text(const std::string& input) {
+  std::string compact;
+  compact.reserve(input.size());
+
+  for (char ch : input) {
+    if (ch != ' ' && ch != '\n' && ch != '\r' && ch != '\t') {
+      compact.push_back(ch);
+    }
+  }
+
+  return compact;
+}
+
+std::string manifest_key_storage_status(const std::string& manifest_path) {
+  if (!file_exists(manifest_path)) {
+    return "manifest_missing";
+  }
+
+  std::string text;
+  std::string error;
+
+  if (!read_text_file(manifest_path, text, error)) {
+    return "manifest_unreadable";
+  }
+
+  const std::string compact = compact_text(text);
+
+  if (compact.find("\"key_storage\":\"local_development_key_file\"") != std::string::npos) {
+    return "local_development_key_file";
+  }
+
+  if (compact.find("\"key_storage\":\"discarded_random_key\"") != std::string::npos) {
+    return "discarded_random_key";
+  }
+
+  return "unknown";
+}
+
+std::string decryptability_status(
+  const std::string& template_path,
+  const std::string& manifest_path,
+  const std::string& key_path
+) {
+  if (!file_exists(template_path)) {
+    return "template_missing";
+  }
+
+  const std::string key_storage = manifest_key_storage_status(manifest_path);
+
+  if (key_storage == "local_development_key_file") {
+    return file_exists(key_path) ? "possible_with_dev_key" : "key_missing";
+  }
+
+  if (key_storage == "discarded_random_key") {
+    return "not_possible_discarded_key";
+  }
+
+  return "unknown";
+}
+
 int command_status() {
   const std::string path = face_unlock::default_template_path();
 
@@ -191,6 +262,8 @@ int command_status() {
   std::cout << "manifest_path: " << manifest_path << "\n";
   std::cout << "key_path: " << key_path << "\n";
   std::cout << "key_status: " << (file_exists(key_path) ? "present" : "missing") << "\n";
+  std::cout << "manifest_key_storage: " << manifest_key_storage_status(manifest_path) << "\n";
+  std::cout << "decrypt_status: " << decryptability_status(path, manifest_path, key_path) << "\n";
 
   if (!file_exists(path)) {
     std::cout << "template_status: missing\n";

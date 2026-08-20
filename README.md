@@ -374,3 +374,9 @@ CTest also runs this as:
     key_template_flow
 
 The test uses a temporary HOME and does not touch real user template files.
+
+## Template decryptability status
+
+The template tool status command reports whether a placeholder template may be decryptable with the development key.
+
+It does not decrypt or print plaintext by default.
