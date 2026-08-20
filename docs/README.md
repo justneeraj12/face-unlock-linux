@@ -187,3 +187,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | ../CHANGELOG.md | Project changelog |
+
+## Key management
+
+| Document | Purpose |
+|---|---|
+| key-management.md | Development key scaffold and production key management plan |

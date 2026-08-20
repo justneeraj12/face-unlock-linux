@@ -100,3 +100,11 @@ Tool:
 This currently creates encrypted placeholder data only.
 
 It does not create real biometric templates.
+
+## Key management
+
+Key management is documented in:
+
+    docs/key-management.md
+
+Production key management is not implemented yet.

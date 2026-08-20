@@ -334,3 +334,15 @@ Apache License 2.0.
 See:
 
     LICENSE
+
+## Key management scaffold
+
+Development key tool:
+
+    ./build/daemon/face-unlock-key-tool
+
+Documentation:
+
+    docs/key-management.md
+
+Production key management is not implemented yet.
