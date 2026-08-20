@@ -13,9 +13,9 @@ Experimental, safety-first face unlock infrastructure for Ubuntu Linux.
 
 face-unlock-linux is building a local, user-controlled face unlock system for Ubuntu 24.04 using a user daemon, UNIX socket IPC, a minimal PAM bridge, OpenCV, encrypted template storage scaffolding, Qt GUI scaffolding, and optional TorchScript model loading.
 
-This project is currently an alpha infrastructure prototype.
-
-It is not real biometric authentication yet.
+> Current status: alpha infrastructure prototype.
+>
+> This is not real biometric authentication yet.
 
 ## Why this project exists
 
@@ -48,6 +48,7 @@ This project is built around the opposite approach:
 | PAM testing | Fake PAM service and guarded sudo test flow |
 | Auth default | Fail-closed |
 | Dev auth | Explicit FACE_UNLOCK_DEV_ALLOW=1 only |
+| Root sudo peer | Explicit FACE_UNLOCK_ALLOW_ROOT_AUTH=1 only |
 | Templates | libsodium encrypted placeholder scaffold |
 | Enrollment | Manifest scaffold only |
 | GUI | Optional Qt consent/status scaffold |
@@ -204,21 +205,19 @@ In another terminal:
 
 Default auth should fail closed.
 
-## Development-only auth
+## Common development commands
 
-Development auth is disabled by default.
-
-Manual dev-only test:
-
-    FACE_UNLOCK_DEV_ALLOW=1 ./build/daemon/face-unlockd --camera 0 --daemon
-
-Then:
-
-    ./scripts/test-socket-client.sh auth
-
-Warning:
-
-    FACE_UNLOCK_DEV_ALLOW=1 must never be used as real authentication.
+| Task | Command |
+|---|---|
+| Check docs | ./scripts/check-docs.sh |
+| Check JSON | ./scripts/check-json.sh |
+| Check scripts | ./scripts/check-scripts.sh |
+| Build | ./scripts/build.sh |
+| Run tests | ./scripts/test.sh |
+| Full verification | ./scripts/verify-local.sh |
+| Audit dependencies | ./scripts/audit-dependencies.sh |
+| Build Debian package | ./scripts/package-deb.sh |
+| Build GUI | cmake -S . -B build-gui -DBUILD_GUI=ON && cmake --build build-gui |
 
 ## PAM and sudo safety
 
@@ -243,157 +242,37 @@ Read before touching sudo:
     docs/pam-safety.md
     docs/pam-fake-service-test.md
     docs/sudo-integration-plan.md
-    docs/sudo-safe-installer.md
     docs/sudo-apply-and-rollback.md
     docs/sudo-root-peer-policy.md
-    docs/sudo-test-results.md
+    docs/sudo-troubleshooting.md
 
 Do not modify real PAM files unless you understand the rollback path.
 
-## systemd user service
+## Documentation
 
-Install user service:
+Start here:
 
-    ./scripts/install-user-service.sh
+    docs/README.md
 
-Check status:
+Important docs:
 
-    systemctl --user status face-unlockd.service
-
-Remove:
-
-    ./scripts/remove-user-service.sh
-
-Docs:
-
-    docs/systemd-user-service.md
-
-The user service runs with auth fail-closed by default.
-
-## Template and enrollment scaffold
-
-Create encrypted placeholder template and manifest:
-
-    ./build/daemon/face-unlock-template-tool create-placeholder --i-understand-placeholder
-
-Check status:
-
-    ./build/daemon/face-unlock-template-tool status
-
-Delete:
-
-    ./build/daemon/face-unlock-template-tool delete --yes
-
-Validate manifest:
-
-    scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
-
-Docs:
-
-    docs/template-storage.md
-    docs/template-cli.md
-    docs/enrollment-format.md
-    docs/manifest-validation.md
-
-## Python prototypes
-
-Capture prototype:
-
-    python3 python/prototype_capture.py --camera 0 --duration-seconds 10
-
-Embedding prototype:
-
-    python3 python/prototype_embed.py --help
-
-TorchScript stub export:
-
-    python3 python/export_torchscript_stub.py
-
-Docs:
-
-    docs/python-prototypes.md
-    docs/python-embedding-prototype.md
-    docs/model-export.md
-    docs/libtorch-loader.md
-
-Python scripts save nothing by default.
-
-Saving crops or embeddings requires explicit privacy-risk flags.
-
-## Optional Qt GUI
-
-Build GUI:
-
-    cmake -S . -B build-gui -DBUILD_GUI=ON
-    cmake --build build-gui
-
-Run:
-
-    ./build-gui/gui/face-unlock-enroll
-
-Current GUI includes:
-
-- consent/status screen
-- template status
-- Forget Me scaffold
-- brightness assist placeholder
-- pose slots scaffold
-- quality checklist scaffold
-- camera preview placeholder
-
-Docs:
-
-    docs/gui.md
-    docs/gui-camera-preview.md
-    docs/brightness-assist.md
-
-The GUI does not perform real enrollment yet.
-
-## Packaging
-
-Build Debian package:
-
-    ./scripts/package-deb.sh
-
-Inspect:
-
-    dpkg-deb -c build/*.deb
-    dpkg-deb -I build/*.deb
-
-Docs:
-
-    docs/packaging.md
-
-The package does not automatically modify PAM files.
-
-## CI
-
-Main build workflow:
-
-    .github/workflows/build.yml
-
-Optional GUI workflow:
-
-    .github/workflows/gui-build.yml
-
-CI docs:
-
-    docs/ci.md
-
-## Release
-
-Current alpha release:
-
-    v0.1.0-alpha
-
-Prepare release:
-
-    ./scripts/prepare-release.sh v0.1.0-alpha
-
-Docs:
-
-    docs/release-process.md
-    docs/releases/v0.1.0-alpha.md
+| Topic | Document |
+|---|---|
+| Architecture | docs/architecture.md |
+| Project status | docs/project-status.md |
+| Security policy | SECURITY.md |
+| Threat model | docs/threat-model.md |
+| PAM safety | docs/pam-safety.md |
+| sudo troubleshooting | docs/sudo-troubleshooting.md |
+| Dependency audit | docs/dependency-audit.md |
+| Template storage | docs/template-storage.md |
+| Enrollment format | docs/enrollment-format.md |
+| GUI | docs/gui.md |
+| Model evaluation | docs/model-evaluation-plan.md |
+| Packaging | docs/packaging.md |
+| CI | docs/ci.md |
+| Release process | docs/release-process.md |
+| Changelog | CHANGELOG.md |
 
 ## Repository layout
 
@@ -404,7 +283,7 @@ Docs:
 | gui/ | optional Qt enrollment GUI scaffold |
 | python/ | capture, embedding, model export prototypes |
 | models/ | local model artifact docs |
-| schemas/ | enrollment manifest schema/example |
+| schemas/ | enrollment manifest and metrics schemas/examples |
 | packaging/ | systemd and packaging assets |
 | scripts/ | build, test, setup, safety helpers |
 | docs/ | architecture, security, testing, release docs |
@@ -424,13 +303,19 @@ During development:
 - do not commit model artifacts by default
 - inspect PAM diffs before applying
 
-Security policy:
+## Release
 
-    SECURITY.md
+Current alpha release:
 
-Threat model:
+    v0.1.0-alpha
 
-    docs/threat-model.md
+Release notes:
+
+    docs/releases/v0.1.0-alpha.md
+
+Prepare release:
+
+    ./scripts/prepare-release.sh v0.1.0-alpha
 
 ## Contributing
 
@@ -449,147 +334,3 @@ Apache License 2.0.
 See:
 
     LICENSE
-
-## Documentation index
-
-All project documentation is indexed here:
-
-    docs/README.md
-
-## Model evaluation planning
-
-Real model integration is planned but not implemented yet.
-
-Model evaluation docs:
-
-    docs/model-evaluation-plan.md
-    docs/threshold-calibration.md
-
-The project will not claim real biometric authentication until model behavior and thresholds are documented.
-
-## Candidate model shortlist
-
-Candidate detector, alignment, and embedding models are tracked in:
-
-    docs/model-candidates.md
-
-No real model is selected yet.
-
-## Model evaluation harness
-
-Python model evaluation scaffold:
-
-    python/evaluate_model_stub.py
-
-Documentation:
-
-    docs/model-evaluation-harness.md
-
-It currently uses a random stub model and is not real face recognition.
-
-## Model evaluation metrics format
-
-Model evaluation metrics format:
-
-    docs/model-evaluation-metrics.md
-
-Example:
-
-    schemas/model-eval-metrics.example.json
-
-Schema scaffold:
-
-    schemas/model-eval-metrics.schema.json
-
-## Model metrics validation
-
-Validate model evaluation metrics:
-
-    scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
-
-## Milestones
-
-Project milestone plan:
-
-    docs/milestones.md
-
-Optional GitHub milestone bootstrap:
-
-    ./scripts/bootstrap-milestones.sh
-
-## Root auth peer opt-in
-
-Root-owned sudo PAM auth peers are disabled by default.
-
-Enable only for manual sudo development testing:
-
-    FACE_UNLOCK_ALLOW_ROOT_AUTH=1 ./build/daemon/face-unlockd --camera 0 --daemon
-
-Documentation:
-
-    docs/sudo-root-peer-policy.md
-
-## sudo apply root-peer preflight
-
-The guarded sudo apply script checks whether root-owned auth peers are accepted by the daemon.
-
-If root auth peers are disabled, sudo face auth will fall back to password.
-
-Docs:
-
-    docs/sudo-apply-and-rollback.md
-    docs/sudo-root-peer-policy.md
-
-## sudo dry-run regression test
-
-Verify sudo planning scripts do not modify /etc/pam.d/sudo:
-
-    ./scripts/test-sudo-dry-run.sh
-
-Documentation:
-
-    docs/sudo-dry-run-test.md
-
-## Optional sudo dry-run verification
-
-Run full local verification including sudo dry-run regression test:
-
-    ./scripts/verify-local.sh --with-sudo-dry-run
-
-This checks that sudo planning scripts do not modify /etc/pam.d/sudo in dry-run mode.
-
-## Dependency audit
-
-Dependency policy:
-
-    docs/dependency-audit.md
-
-The PAM module must remain minimal and must not link heavy dependencies such as OpenCV, Torch, Qt, CUDA, or libsodium.
-
-## Automated release artifacts
-
-Version tags trigger the release workflow:
-
-    .github/workflows/release.yml
-
-It builds and uploads Debian package artifacts to the GitHub Release.
-
-Documentation:
-
-    docs/release-artifacts.md
-
-## Script inventory check
-
-Verify required helper scripts exist and are executable:
-
-    ./scripts/check-scripts.sh
-
-Documentation:
-
-    docs/script-inventory.md
-
-## Changelog
-
-Project changelog:
-
-    CHANGELOG.md
