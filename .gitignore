@@ -68,3 +68,6 @@ model_eval_metrics.json
 # Local key material
 *.key
 *.keyring
+
+# Detection prototype outputs
+detections.json

@@ -200,3 +200,13 @@ It currently uses a random stub model and defines the metrics/reporting flow.
 Documentation:
 
     docs/model-evaluation-harness.md
+
+## Detector prototype
+
+Python detector prototype:
+
+    python/prototype_detect.py
+
+Documentation:
+
+    docs/detector-prototype.md

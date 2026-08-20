@@ -211,3 +211,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | ci-dependencies.md | Shared CI dependency installer |
+
+## Detector prototype
+
+| Document | Purpose |
+|---|---|
+| detector-prototype.md | Python face detector backend scaffold |
