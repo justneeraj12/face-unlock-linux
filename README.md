@@ -390,3 +390,19 @@ The daemon reports whether a placeholder template may be decryptable with the de
 ## Daemon metadata integration test
 
 CTest includes a daemon metadata integration test that verifies template, enrollment, key, and decryptability fields over the daemon socket without requiring a camera.
+
+## Daemon template_status operation
+
+Query template/key/decrypt metadata:
+
+    ./scripts/test-socket-client.sh template_status
+
+The operation can verify development-key decryptability without returning plaintext.
+
+## Daemon template_status operation
+
+Query template/key/decrypt metadata:
+
+    ./scripts/test-socket-client.sh template_status
+
+The operation can verify development-key decryptability without returning plaintext.

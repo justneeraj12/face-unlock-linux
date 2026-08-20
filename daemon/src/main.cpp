@@ -23,6 +23,10 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 
+#include "template_crypto.h"
+
+#include <sodium.h>
+
 #ifdef FACE_UNLOCK_WITH_TORCH
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -306,6 +310,74 @@ std::string key_json_fields() {
     decryptability_status_value() +
     "\",\"key_storage\":\"" +
     manifest_key_storage_status() +
+    "\"";
+}
+
+bool read_dev_key_bytes(std::vector<unsigned char>& key) {
+  const std::string path = get_default_key_path();
+
+  if (path.empty()) {
+    return false;
+  }
+
+  std::string error;
+
+  if (!face_unlock::read_file_bytes(path, key, error)) {
+    return false;
+  }
+
+  return key.size() == crypto_secretbox_KEYBYTES;
+}
+
+std::string template_decrypt_status_value() {
+  const std::string decryptability = decryptability_status_value();
+
+  if (decryptability == "template_missing") {
+    return "template_missing";
+  }
+
+  if (decryptability == "not_possible_discarded_key") {
+    return "not_possible_discarded_key";
+  }
+
+  if (decryptability == "key_missing") {
+    return "key_missing";
+  }
+
+  if (decryptability != "possible_with_dev_key") {
+    return "not_checked";
+  }
+
+  std::vector<unsigned char> key;
+
+  if (!read_dev_key_bytes(key)) {
+    return "key_unavailable";
+  }
+
+  std::vector<unsigned char> encrypted;
+  std::string error;
+
+  if (!face_unlock::read_file_bytes(get_default_template_path(), encrypted, error)) {
+    return "template_read_failed";
+  }
+
+  try {
+    face_unlock::EncryptedBlob blob;
+    blob.bytes = encrypted;
+
+    const std::vector<unsigned char> plaintext =
+      face_unlock::decrypt_template_bytes(blob, key);
+
+    (void)plaintext;
+    return "ok";
+  } catch (const std::exception&) {
+    return "failed";
+  }
+}
+
+std::string template_decrypt_json_fields() {
+  return std::string(",\"template_decrypt\":\"") +
+    template_decrypt_status_value() +
     "\"";
 }
 
@@ -717,6 +789,10 @@ std::string compact_jsonish(const std::string& request) {
 std::string extract_operation(const std::string& request) {
   const std::string compact = compact_jsonish(request);
 
+  if (compact.find("\"op\":\"template_status\"") != std::string::npos) {
+    return "template_status";
+  }
+
   if (compact.find("\"op\":\"camera_status\"") != std::string::npos) {
     return "camera_status";
   }
@@ -749,6 +825,16 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
   if (op == "ping") {
     return "{\"status\":\"ok\",\"op\":\"ping\",\"reason\":\"daemon_alive\""
       + camera_fields + template_fields + enrollment_fields + key_fields + "}\n";
+  }
+
+  if (op == "template_status") {
+    return "{\"status\":\"ok\",\"op\":\"template_status\""
+      + camera_fields
+      + template_fields
+      + enrollment_fields
+      + key_fields
+      + template_decrypt_json_fields()
+      + "}\n";
   }
 
   if (op == "camera_status") {

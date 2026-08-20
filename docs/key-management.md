@@ -164,3 +164,35 @@ Run:
 CTest also runs this test as:
 
     daemon_metadata
+
+## Daemon template_status decrypt verification
+
+The daemon supports:
+
+    template_status
+
+This operation can verify whether the placeholder template decrypts with the development key.
+
+It returns:
+
+    "template_decrypt":"ok"
+
+when decrypt verification succeeds.
+
+It never returns plaintext and never prints key material.
+
+## Daemon template_status decrypt verification
+
+The daemon supports:
+
+    template_status
+
+This operation can verify whether the placeholder template decrypts with the development key.
+
+It returns:
+
+    "template_decrypt":"ok"
+
+when decrypt verification succeeds.
+
+It never returns plaintext and never prints key material.

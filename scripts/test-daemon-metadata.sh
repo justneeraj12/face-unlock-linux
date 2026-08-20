@@ -81,8 +81,8 @@ fi
 echo "socket_status: present"
 
 echo
-echo "[test-daemon-metadata] Query camera_status metadata"
-response="$("$client" camera_status)"
+echo "[test-daemon-metadata] Query template_status metadata"
+response="$("$client" template_status)"
 
 echo "response: $response"
 
@@ -104,6 +104,7 @@ check_contains '"enrollment":"placeholder"'
 check_contains '"key":"present"'
 check_contains '"decryptability":"possible_with_dev_key"'
 check_contains '"key_storage":"local_development_key_file"'
+check_contains '"template_decrypt":"ok"'
 
 echo
 echo "[test-daemon-metadata] Stop daemon"

@@ -200,3 +200,31 @@ Possible fields:
     decryptability template_missing
 
 The daemon does not decrypt templates yet.
+
+## template_status operation
+
+The daemon supports an explicit socket operation:
+
+    template_status
+
+Example:
+
+    ./scripts/test-socket-client.sh template_status
+
+This reports template, enrollment, key, decryptability, and template_decrypt metadata.
+
+The daemon does not return plaintext or key material.
+
+## template_status operation
+
+The daemon supports an explicit socket operation:
+
+    template_status
+
+Example:
+
+    ./scripts/test-socket-client.sh template_status
+
+This reports template, enrollment, key, decryptability, and template_decrypt metadata.
+
+The daemon does not return plaintext or key material.

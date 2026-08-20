@@ -60,6 +60,7 @@ target_include_directories(face-unlockd PRIVATE
 target_link_libraries(face-unlockd PRIVATE
   ${OPENCV_CORE_LIBRARY}
   ${OPENCV_VIDEOIO_LIBRARY}
+  face_unlock_crypto
 )
 
 if(WITH_TORCH)

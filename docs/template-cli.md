@@ -193,3 +193,23 @@ The daemon reports key and decryptability metadata based on the same template/ke
 This is metadata only.
 
 The daemon does not decrypt templates yet.
+
+## Daemon template_status operation
+
+The daemon can report template/key/decrypt metadata with:
+
+    ./scripts/test-socket-client.sh template_status
+
+This is metadata only.
+
+Plaintext is not returned.
+
+## Daemon template_status operation
+
+The daemon can report template/key/decrypt metadata with:
+
+    ./scripts/test-socket-client.sh template_status
+
+This is metadata only.
+
+Plaintext is not returned.

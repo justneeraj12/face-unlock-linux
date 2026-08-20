@@ -102,3 +102,33 @@ It verifies daemon socket responses include:
 - key_storage local_development_key_file
 
 The test uses daemon --serve mode and does not require a camera.
+
+## template_status operation test
+
+The daemon_metadata CTest verifies the template_status socket operation.
+
+It checks:
+
+- template present
+- enrollment placeholder
+- key present
+- decryptability possible_with_dev_key
+- key_storage local_development_key_file
+- template_decrypt ok
+
+No plaintext is returned.
+
+## template_status operation test
+
+The daemon_metadata CTest verifies the template_status socket operation.
+
+It checks:
+
+- template present
+- enrollment placeholder
+- key present
+- decryptability possible_with_dev_key
+- key_storage local_development_key_file
+- template_decrypt ok
+
+No plaintext is returned.
