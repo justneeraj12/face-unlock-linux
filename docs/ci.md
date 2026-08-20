@@ -232,3 +232,11 @@ CI runs:
     ./scripts/test-detector-output-generation.sh
 
 This uses a synthetic frame and does not require camera hardware or OpenCV.
+
+## Detector output generation in package/release workflows
+
+The package and release workflows also run:
+
+    ./scripts/test-detector-output-generation.sh
+
+This ensures release artifacts are built only after detector output generation and validation pass.
