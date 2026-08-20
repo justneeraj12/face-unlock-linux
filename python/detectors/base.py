@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
-
-import numpy as np
+from typing import Any, Protocol
 
 
 @dataclass
@@ -29,5 +27,5 @@ class Detection:
 class FaceDetector(Protocol):
     backend_name: str
 
-    def detect(self, frame_bgr: np.ndarray) -> list[Detection]:
+    def detect(self, frame_bgr: Any) -> list[Detection]:
         ...

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import numpy as np
+from typing import Any
 
 from detectors.base import Detection
 
@@ -8,5 +8,5 @@ from detectors.base import Detection
 class NoopFaceDetector:
     backend_name = "noop"
 
-    def detect(self, frame_bgr: np.ndarray) -> list[Detection]:
+    def detect(self, frame_bgr: Any) -> list[Detection]:
         return []

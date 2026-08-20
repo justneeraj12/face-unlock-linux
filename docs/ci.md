@@ -210,3 +210,9 @@ CI runs:
 This test uses the noop detector backend and does not require a camera.
 
 The detector factory uses lazy imports so noop tests do not require Python OpenCV.
+
+## Detector smoke test dependency behavior
+
+The Python detector smoke test runs before apt dependency installation.
+
+It uses the noop backend and should not require NumPy, OpenCV, or camera hardware.

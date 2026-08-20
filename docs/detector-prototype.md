@@ -129,3 +129,9 @@ It verifies:
 The detector factory imports Haar/YuNet backends lazily.
 
 This allows the noop backend and smoke tests to run even when Python OpenCV is unavailable or incomplete.
+
+## Dependency-free smoke test
+
+The detector smoke test intentionally uses the noop backend and does not require NumPy, OpenCV, or camera hardware.
+
+This allows CI to run the smoke test before installing apt dependencies.

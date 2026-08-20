@@ -15,7 +15,8 @@ from detectors.factory import create_detector
 detector = create_detector("noop")
 assert detector.backend_name == "noop"
 
-detections = detector.detect(__import__("numpy").zeros((32, 32, 3), dtype="uint8"))
+# Noop detector ignores the frame object, so this test needs no numpy/cv2.
+detections = detector.detect(object())
 assert detections == []
 
 print("noop_detector_status: ok")

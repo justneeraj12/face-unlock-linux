@@ -8,8 +8,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-import cv2
-
 from detectors.factory import create_detector
 
 
@@ -45,6 +43,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+
+    import cv2
 
     if args.write_metadata and not args.i_understand_biometric_risk:
         print(
