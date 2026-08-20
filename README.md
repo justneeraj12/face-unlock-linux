@@ -416,3 +416,13 @@ Real matching is still not implemented.
 ## Auth reason integration test
 
 CTest includes an auth reason integration test that verifies fail-closed reasons for missing templates, non-decryptable templates, missing keys, and matcher-not-implemented state.
+
+## Current development target
+
+Current post-alpha development target:
+
+    v0.2.0-dev-auth-sudo
+
+Release planning:
+
+    docs/releases/v0.2.0-dev-auth-sudo.md

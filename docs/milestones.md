@@ -123,3 +123,15 @@ Required before 1.0:
 - template encryption reviewed
 - no raw image telemetry
 - external security review preferred
+
+## Current active development
+
+Current active target after v0.1.1-alpha:
+
+    v0.2.0-dev-auth-sudo
+
+Primary focus:
+
+- harden development-only sudo integration
+- improve rollback/testing
+- keep real biometric auth out of scope until model/enrollment work is ready
