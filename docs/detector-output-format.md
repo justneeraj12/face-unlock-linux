@@ -80,3 +80,18 @@ This format may be used by:
 - GUI preview overlay prototype
 - daemon detector status reporting
 - model comparison tools
+
+## Writer
+
+python/prototype_detect.py writes this format when called with:
+
+    --write-metadata
+    --i-understand-biometric-risk
+
+## Validator
+
+Validate detector output:
+
+    scripts/validate-detector-output.py schemas/detector-output.example.json
+
+The validator checks that raw images and face crops are not embedded and that safe_to_commit is false.

@@ -27,6 +27,7 @@ required_scripts=(
   scripts/test-python-detectors.sh
   scripts/validate-enrollment-manifest.py
   scripts/validate-model-eval-metrics.py
+  scripts/validate-detector-output.py
 )
 
 missing=0

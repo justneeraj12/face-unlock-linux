@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +42,16 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def summarize_mean(values: list[float]) -> float | None:
+    if not values:
+        return None
+    return sum(values) / len(values)
+
 def main() -> int:
     args = parse_args()
 
@@ -75,6 +86,7 @@ def main() -> int:
     frames_total = 0
     detections_total = 0
     reports: list[dict[str, Any]] = []
+    detect_times: list[float] = []
 
     while True:
         now = time.monotonic()
@@ -94,6 +106,7 @@ def main() -> int:
         detections = detector.detect(frame)
         detect_ms = (time.perf_counter() - before) * 1000.0
         detections_total += len(detections)
+        detect_times.append(detect_ms)
 
         if args.write_metadata:
             reports.append(
@@ -133,7 +146,36 @@ def main() -> int:
 
     if args.write_metadata:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps(reports, indent=2))
+
+        output = {
+            "format": "face-unlock-detector-output",
+            "format_version": 1,
+            "created_at": utc_now_iso(),
+            "backend": args.backend,
+            "source": {
+                "type": "camera",
+                "camera_index": args.camera,
+                "frame_width": 640,
+                "frame_height": 480,
+            },
+            "summary": {
+                "frames_total": frames_total,
+                "detections_total": detections_total,
+                "mean_detect_ms": summarize_mean(detect_times),
+            },
+            "frames": reports,
+            "privacy": {
+                "raw_images_included": False,
+                "face_crops_included": False,
+                "safe_to_commit": False,
+            },
+            "warnings": [
+                "detection metadata may be biometric-adjacent",
+                "do not commit generated detector output",
+            ],
+        }
+
+        args.output.write_text(json.dumps(output, indent=2))
         print(f"metadata_written: {args.output}")
         print("privacy_warning: detection metadata is local-only and should not be committed")
 

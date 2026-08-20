@@ -71,3 +71,7 @@ Additional auth integration tests:
 Additional Python prototype tests:
 
 - scripts/test-python-detectors.sh
+
+Additional validators:
+
+- scripts/validate-detector-output.py

@@ -149,3 +149,11 @@ Example:
 Schema scaffold:
 
     schemas/detector-output.schema.json
+
+## Current metadata output
+
+prototype_detect.py now writes the face-unlock-detector-output format.
+
+Validate output with:
+
+    scripts/validate-detector-output.py path/to/detections.json

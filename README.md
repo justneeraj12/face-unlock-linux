@@ -506,3 +506,9 @@ Detector metadata format:
 Example:
 
     schemas/detector-output.example.json
+
+## Detector output validator
+
+Validate detector output metadata:
+
+    scripts/validate-detector-output.py schemas/detector-output.example.json
