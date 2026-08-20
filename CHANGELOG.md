@@ -16,22 +16,59 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 - Dependency audit documentation and script.
 - Required script inventory checker.
 - Release artifact workflow.
-- GUI scaffolds for Forget Me, brightness assist, pose slots, quality checklist, and camera preview placeholder.
+- GitHub labels bootstrap script.
+- GitHub milestones bootstrap script.
+- GitHub starter issues bootstrap script.
+- CODEOWNERS review routing.
+- Expanded pull request security checklist.
+- Model candidate issue template.
+- GUI scaffolds for:
+  - Forget Me
+  - brightness assist
+  - pose slots
+  - quality checklist
+  - camera preview placeholder
 - Enrollment manifest format scaffold.
-- Model evaluation planning, candidate shortlist, harness, metrics format, and validators.
-- GitHub labels, milestones, issue bootstrap, CODEOWNERS, and expanded PR checklist.
+- Enrollment manifest JSON validator.
+- Model evaluation planning docs.
+- Candidate model shortlist.
+- Python model evaluation harness scaffold.
+- Model evaluation metrics format.
+- Model evaluation metrics validator.
+- Placeholder enrollment manifest writer.
+- Daemon enrollment manifest status reporting.
+- Development key management scaffold.
+- Development-key encrypted placeholder template support.
+- Key/template integration self-test.
+- Daemon key/decryptability metadata reporting.
+- Explicit daemon template_status operation.
+- Daemon metadata integration test.
+- Key-aware auth failure reasons.
+- Auth reason integration test.
 
 ### Changed
 
 - README refactored into a cleaner project front page.
 - CI now uses shared dependency audit and script inventory checks.
+- CI validates enrollment manifest and model evaluation metrics examples.
+- Local verification now includes script inventory, JSON, manifest, metrics, tests, dependency audit, and package inspection.
 - Root-owned sudo auth peers are disabled by default and must be explicitly enabled.
+- Placeholder template status now reports decryptability metadata.
+- Daemon auth failures now distinguish:
+  - template_missing
+  - template_not_decryptable
+  - key_missing
+  - template_decrypt_failed
+  - matcher_not_implemented
 
 ### Security
 
 - PAM module dependency audit remains enforced.
 - sudo integration remains guarded and rollback-focused.
 - Development auth remains explicitly opt-in and non-production.
+- Root sudo peer auth is explicitly opt-in.
+- Template/key tooling avoids printing plaintext or key material.
+- Integration tests use temporary HOME and XDG_RUNTIME_DIR where possible.
 
 ## v0.1.0-alpha
 
