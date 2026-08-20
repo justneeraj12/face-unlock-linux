@@ -158,6 +158,47 @@ QString jsonStringValue(const QJsonObject& object, const QString& key) {
   return QStringLiteral("unknown");
 }
 
+QString templateStatusSummary(const QString& response) {
+  QJsonParseError error {};
+  const QJsonDocument document = QJsonDocument::fromJson(response.toUtf8(), &error);
+
+  if (error.error != QJsonParseError::NoError || !document.isObject()) {
+    QString summary;
+    summary += QStringLiteral("Daemon available: no\n");
+    summary += QStringLiteral("Parse error: %1\n").arg(error.errorString());
+    return summary;
+  }
+
+  const QJsonObject object = document.object();
+
+  const QString status = jsonStringValue(object, QStringLiteral("status"));
+  const QString reason = jsonStringValue(object, QStringLiteral("reason"));
+  const QString op = jsonStringValue(object, QStringLiteral("op"));
+  const QString templ = jsonStringValue(object, QStringLiteral("template"));
+  const QString enrollment = jsonStringValue(object, QStringLiteral("enrollment"));
+  const QString key = jsonStringValue(object, QStringLiteral("key"));
+  const QString decryptability = jsonStringValue(object, QStringLiteral("decryptability"));
+  const QString keyStorage = jsonStringValue(object, QStringLiteral("key_storage"));
+  const QString templateDecrypt = jsonStringValue(object, QStringLiteral("template_decrypt"));
+
+  const bool available = status == QStringLiteral("ok") &&
+                         op == QStringLiteral("template_status");
+
+  QString summary;
+  summary += QStringLiteral("Daemon available: %1\n").arg(available ? "yes" : "no");
+  summary += QStringLiteral("Status: %1\n").arg(status);
+  summary += QStringLiteral("Reason: %1\n").arg(reason);
+  summary += QStringLiteral("Operation: %1\n").arg(op);
+  summary += QStringLiteral("Template: %1\n").arg(templ);
+  summary += QStringLiteral("Enrollment: %1\n").arg(enrollment);
+  summary += QStringLiteral("Key: %1\n").arg(key);
+  summary += QStringLiteral("Key storage: %1\n").arg(keyStorage);
+  summary += QStringLiteral("Decryptability: %1\n").arg(decryptability);
+  summary += QStringLiteral("Template decrypt: %1\n").arg(templateDecrypt);
+
+  return summary;
+}
+
 QString detectorStatusSummary(const QString& response) {
   QJsonParseError error {};
   const QJsonDocument document = QJsonDocument::fromJson(response.toUtf8(), &error);
@@ -320,7 +361,8 @@ int main(int argc, char* argv[]) {
 
   auto* status = readOnlyTextEdit(statusText(), 180);
 
-  auto* daemonSummary = readOnlyTextEdit(QStringLiteral("No daemon query yet."), 110);
+  auto* daemonSummary = readOnlyTextEdit(QStringLiteral("No detector_status query yet."), 110);
+  auto* templateSummary = readOnlyTextEdit(QStringLiteral("No template_status query yet."), 150);
   auto* daemonResponse = readOnlyTextEdit(
     QStringLiteral("Socket: %1\n\nNo daemon query yet.").arg(runtimeSocketPath()),
     140
@@ -328,15 +370,22 @@ int main(int argc, char* argv[]) {
 
   auto* statusButtonRow = new QHBoxLayout();
   auto* refreshButton = new QPushButton(QStringLiteral("Refresh local status"));
-  auto* daemonStatusButton = new QPushButton(QStringLiteral("Query daemon detector_status"));
+  auto* daemonStatusButton = new QPushButton(QStringLiteral("Query detector_status"));
+  auto* templateStatusButton = new QPushButton(QStringLiteral("Query template_status"));
   statusButtonRow->addWidget(refreshButton);
   statusButtonRow->addWidget(daemonStatusButton);
+  statusButtonRow->addWidget(templateStatusButton);
   statusButtonRow->addStretch();
 
   auto* daemonSummaryLabel = new QLabel(QStringLiteral("Daemon detector summary"));
   QFont daemonSummaryFont = daemonSummaryLabel->font();
   daemonSummaryFont.setBold(true);
   daemonSummaryLabel->setFont(daemonSummaryFont);
+
+  auto* templateSummaryLabel = new QLabel(QStringLiteral("Template status summary"));
+  QFont templateSummaryFont = templateSummaryLabel->font();
+  templateSummaryFont.setBold(true);
+  templateSummaryLabel->setFont(templateSummaryFont);
 
   auto* daemonResponseLabel = new QLabel(QStringLiteral("Raw daemon response"));
   QFont daemonResponseFont = daemonResponseLabel->font();
@@ -347,6 +396,8 @@ int main(int argc, char* argv[]) {
   statusLayout->addLayout(statusButtonRow);
   statusLayout->addWidget(daemonSummaryLabel);
   statusLayout->addWidget(daemonSummary);
+  statusLayout->addWidget(templateSummaryLabel);
+  statusLayout->addWidget(templateSummary);
   statusLayout->addWidget(daemonResponseLabel);
   statusLayout->addWidget(daemonResponse);
   statusLayout->addStretch();
@@ -480,6 +531,17 @@ int main(int argc, char* argv[]) {
 
     daemonResponse->setPlainText(
       QStringLiteral("Socket: %1\n\nOperation: detector_status\n\nResponse:\n%2")
+        .arg(runtimeSocketPath(), response)
+    );
+  });
+
+  QObject::connect(templateStatusButton, &QPushButton::clicked, [templateSummary, daemonResponse]() {
+    const QString response = queryDaemonOperation(QStringLiteral("template_status"));
+
+    templateSummary->setPlainText(templateStatusSummary(response));
+
+    daemonResponse->setPlainText(
+      QStringLiteral("Socket: %1\n\nOperation: template_status\n\nResponse:\n%2")
         .arg(runtimeSocketPath(), response)
     );
   });

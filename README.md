@@ -580,3 +580,7 @@ The optional Qt GUI uses scrollable tabs so the enrollment scaffold fits laptop 
 ## GUI daemon JSON parsing
 
 The optional Qt GUI parses daemon metadata responses with Qt JSON APIs.
+
+## GUI template_status query
+
+The optional Qt GUI can query template_status and display parsed template/enrollment/key/decryptability metadata.

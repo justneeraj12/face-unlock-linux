@@ -159,3 +159,7 @@ This keeps the enrollment scaffold usable on laptop displays.
 ## Daemon JSON parsing
 
 The GUI uses Qt JSON APIs to parse daemon detector_status responses.
+
+## template_status query
+
+The GUI can query template_status and show parsed template/key/decryptability metadata.

@@ -236,3 +236,16 @@ The GUI parses daemon JSON responses with Qt JSON APIs:
 - QJsonValue
 
 This replaced earlier string-based parsing.
+
+## template_status query
+
+The GUI can query daemon template_status and display:
+
+- template
+- enrollment
+- key
+- key_storage
+- decryptability
+- template_decrypt
+
+No plaintext or key material is displayed.
