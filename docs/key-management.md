@@ -92,3 +92,19 @@ Future real encrypted templates should be decryptable only with the user's key.
 Current placeholder templates may still use random/discarded keys or development-key scaffolding depending on the test path.
 
 Real biometric enrollment is still not implemented.
+
+## Template tool integration
+
+The placeholder template tool can use the development key with:
+
+    ./build/daemon/face-unlock-template-tool create-placeholder --i-understand-placeholder --use-dev-key
+
+This requires a development key to exist:
+
+    ./build/daemon/face-unlock-key-tool create-dev-key --i-understand-dev-key-risk
+
+Verify decryptability without printing plaintext:
+
+    ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key
+
+This is still not production key management.

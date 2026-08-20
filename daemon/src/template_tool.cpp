@@ -1,12 +1,14 @@
 #include "template_crypto.h"
 
-#include <filesystem>
 #include <ctime>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
+
+#include <sodium.h>
 
 namespace fs = std::filesystem;
 
@@ -15,7 +17,8 @@ namespace {
 void print_usage(const char* program) {
   std::cout << "Usage:\n";
   std::cout << "  " << program << " status\n";
-  std::cout << "  " << program << " create-placeholder --i-understand-placeholder [--overwrite]\n";
+  std::cout << "  " << program << " create-placeholder --i-understand-placeholder [--overwrite] [--use-dev-key]\n";
+  std::cout << "  " << program << " verify-decrypt --use-dev-key\n";
   std::cout << "  " << program << " delete --yes\n";
   std::cout << "\n";
   std::cout << "This tool manages the encrypted placeholder template scaffold.\n";
@@ -37,6 +40,16 @@ std::string mode_string(const std::string& path) {
   char buffer[16] {};
   std::snprintf(buffer, sizeof(buffer), "%04o", static_cast<unsigned>(st.st_mode & 0777));
   return buffer;
+}
+
+std::string default_key_path() {
+  const char* home = std::getenv("HOME");
+
+  if (home == nullptr || std::string(home).empty()) {
+    return "";
+  }
+
+  return std::string(home) + "/.local/share/face-unlock/template.key";
 }
 
 std::string default_enrollment_manifest_path() {
@@ -71,7 +84,10 @@ std::string current_username() {
   return "unknown";
 }
 
-std::string placeholder_manifest_json(const std::string& template_path) {
+std::string placeholder_manifest_json(
+  const std::string& template_path,
+  const std::string& key_storage
+) {
   const std::string now = current_utc_timestamp();
 
   return std::string()
@@ -100,7 +116,7 @@ std::string placeholder_manifest_json(const std::string& template_path) {
     + "    \"encryption\": \"libsodium_crypto_secretbox\",\n"
     + "    \"contains_raw_images\": false,\n"
     + "    \"contains_embeddings\": false,\n"
-    + "    \"key_storage\": \"not_implemented\"\n"
+    + "    \"key_storage\": \"" + key_storage + "\"\n"
     + "  },\n"
     + "  \"quality\": {\n"
     + "    \"samples_total\": 0,\n"
@@ -139,6 +155,26 @@ bool write_text_file_0600(
   return face_unlock::write_file_0600(path, bytes, error);
 }
 
+bool read_dev_key(std::vector<unsigned char>& key, std::string& error) {
+  const std::string path = default_key_path();
+
+  if (path.empty()) {
+    error = "home_unavailable";
+    return false;
+  }
+
+  if (!face_unlock::read_file_bytes(path, key, error)) {
+    return false;
+  }
+
+  if (key.size() != crypto_secretbox_KEYBYTES) {
+    error = "invalid_key_size";
+    return false;
+  }
+
+  return true;
+}
+
 int command_status() {
   const std::string path = face_unlock::default_template_path();
 
@@ -149,9 +185,12 @@ int command_status() {
   }
 
   const std::string manifest_path = default_enrollment_manifest_path();
+  const std::string key_path = default_key_path();
 
   std::cout << "template_path: " << path << "\n";
   std::cout << "manifest_path: " << manifest_path << "\n";
+  std::cout << "key_path: " << key_path << "\n";
+  std::cout << "key_status: " << (file_exists(key_path) ? "present" : "missing") << "\n";
 
   if (!file_exists(path)) {
     std::cout << "template_status: missing\n";
@@ -163,6 +202,7 @@ int command_status() {
   std::cout << "template_status: present\n";
   std::cout << "template_mode: " << mode_string(path) << "\n";
   std::cout << "manifest_status: " << (file_exists(manifest_path) ? "present" : "missing") << "\n";
+
   if (file_exists(manifest_path)) {
     std::cout << "manifest_mode: " << mode_string(manifest_path) << "\n";
   }
@@ -181,7 +221,7 @@ int command_status() {
   return 0;
 }
 
-int command_create_placeholder(bool consent, bool overwrite) {
+int command_create_placeholder(bool consent, bool overwrite, bool use_dev_key) {
   if (!consent) {
     std::cerr << "ERROR: create-placeholder requires --i-understand-placeholder\n";
     std::cerr << "This creates an encrypted placeholder, not a real biometric template.\n";
@@ -239,13 +279,26 @@ int command_create_placeholder(bool consent, bool overwrite) {
     placeholder.end()
   );
 
-  const std::vector<unsigned char> key =
-    face_unlock::generate_random_key();
+  std::vector<unsigned char> key;
+  std::string key_storage = "discarded_random_key";
+  std::string error;
+
+  if (use_dev_key) {
+    if (!read_dev_key(key, error)) {
+      std::cerr << "dev_key_status: unavailable\n";
+      std::cerr << "dev_key_error: " << error << "\n";
+      std::cerr << "Create one with:\n";
+      std::cerr << "  ./build/daemon/face-unlock-key-tool create-dev-key --i-understand-dev-key-risk\n";
+      return 1;
+    }
+
+    key_storage = "local_development_key_file";
+  } else {
+    key = face_unlock::generate_random_key();
+  }
 
   const face_unlock::EncryptedBlob encrypted =
     face_unlock::encrypt_template_bytes(plaintext, key);
-
-  std::string error;
 
   if (!face_unlock::write_file_0600(path, encrypted.bytes, error)) {
     std::cerr << "write_status: failed\n";
@@ -254,7 +307,7 @@ int command_create_placeholder(bool consent, bool overwrite) {
   }
 
   const std::string manifest_path = default_enrollment_manifest_path();
-  const std::string manifest = placeholder_manifest_json(path);
+  const std::string manifest = placeholder_manifest_json(path, key_storage);
 
   if (!write_text_file_0600(manifest_path, manifest, error)) {
     std::cerr << "manifest_write_status: failed\n";
@@ -269,11 +322,69 @@ int command_create_placeholder(bool consent, bool overwrite) {
   std::cout << "manifest_create_status: ok\n";
   std::cout << "manifest_path: " << manifest_path << "\n";
   std::cout << "manifest_mode: " << mode_string(manifest_path) << "\n";
-  std::cout << "key_status: discarded\n";
-  std::cout << "warning: placeholder is encrypted but not decryptable later because the random test key is discarded\n";
+  std::cout << "key_storage: " << key_storage << "\n";
+
+  if (use_dev_key) {
+    std::cout << "key_status: development_key_used\n";
+    std::cout << "warning: development key is not production key management\n";
+  } else {
+    std::cout << "key_status: discarded\n";
+    std::cout << "warning: placeholder is encrypted but not decryptable later because the random test key is discarded\n";
+  }
+
   std::cout << "status: ok\n";
 
   return 0;
+}
+
+int command_verify_decrypt(bool use_dev_key) {
+  if (!use_dev_key) {
+    std::cerr << "ERROR: verify-decrypt requires --use-dev-key\n";
+    return 1;
+  }
+
+  const std::string path = face_unlock::default_template_path();
+
+  if (path.empty()) {
+    std::cerr << "template_status: error\n";
+    std::cerr << "reason: home_unavailable\n";
+    return 1;
+  }
+
+  std::vector<unsigned char> key;
+  std::string error;
+
+  if (!read_dev_key(key, error)) {
+    std::cerr << "dev_key_status: unavailable\n";
+    std::cerr << "dev_key_error: " << error << "\n";
+    return 1;
+  }
+
+  std::vector<unsigned char> encrypted_bytes;
+
+  if (!face_unlock::read_file_bytes(path, encrypted_bytes, error)) {
+    std::cerr << "template_read_status: failed\n";
+    std::cerr << "template_read_error: " << error << "\n";
+    return 1;
+  }
+
+  try {
+    face_unlock::EncryptedBlob blob;
+    blob.bytes = encrypted_bytes;
+
+    const std::vector<unsigned char> plaintext =
+      face_unlock::decrypt_template_bytes(blob, key);
+
+    std::cout << "template_decrypt_status: ok\n";
+    std::cout << "plaintext_size: " << plaintext.size() << "\n";
+    std::cout << "plaintext_status: not_printed\n";
+    std::cout << "status: ok\n";
+    return 0;
+  } catch (const std::exception& e) {
+    std::cerr << "template_decrypt_status: failed\n";
+    std::cerr << "decrypt_error: " << e.what() << "\n";
+    return 1;
+  }
 }
 
 int command_delete(bool yes) {
@@ -291,6 +402,13 @@ int command_delete(bool yes) {
   }
 
   if (!file_exists(path)) {
+    const std::string manifest_path = default_enrollment_manifest_path();
+
+    if (file_exists(manifest_path)) {
+      std::error_code manifest_ec;
+      fs::remove(manifest_path, manifest_ec);
+    }
+
     std::cout << "template_delete_status: already_missing\n";
     std::cout << "template_path: " << path << "\n";
     std::cout << "status: ok\n";
@@ -342,6 +460,7 @@ int main(int argc, char** argv) {
   if (command == "create-placeholder") {
     bool consent = false;
     bool overwrite = false;
+    bool use_dev_key = false;
 
     for (int i = 2; i < argc; ++i) {
       const std::string arg = argv[i];
@@ -350,6 +469,8 @@ int main(int argc, char** argv) {
         consent = true;
       } else if (arg == "--overwrite") {
         overwrite = true;
+      } else if (arg == "--use-dev-key") {
+        use_dev_key = true;
       } else {
         std::cerr << "unknown_argument: " << arg << "\n";
         print_usage(argv[0]);
@@ -357,7 +478,25 @@ int main(int argc, char** argv) {
       }
     }
 
-    return command_create_placeholder(consent, overwrite);
+    return command_create_placeholder(consent, overwrite, use_dev_key);
+  }
+
+  if (command == "verify-decrypt") {
+    bool use_dev_key = false;
+
+    for (int i = 2; i < argc; ++i) {
+      const std::string arg = argv[i];
+
+      if (arg == "--use-dev-key") {
+        use_dev_key = true;
+      } else {
+        std::cerr << "unknown_argument: " << arg << "\n";
+        print_usage(argv[0]);
+        return 1;
+      }
+    }
+
+    return command_verify_decrypt(use_dev_key);
   }
 
   if (command == "delete") {

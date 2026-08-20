@@ -145,3 +145,19 @@ After delete --yes, daemon socket responses should include:
 
     "template":"missing"
     "enrollment":"missing"
+
+## Development key option
+
+create-placeholder can use the local development key:
+
+    ./build/daemon/face-unlock-template-tool create-placeholder --i-understand-placeholder --use-dev-key
+
+Verify decryptability:
+
+    ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key
+
+If --use-dev-key is not provided, the placeholder is encrypted with a random key that is discarded.
+
+Development key management is documented in:
+
+    docs/key-management.md

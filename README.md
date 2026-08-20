@@ -346,3 +346,19 @@ Documentation:
     docs/key-management.md
 
 Production key management is not implemented yet.
+
+## Development-key encrypted placeholder
+
+Create a local development key:
+
+    ./build/daemon/face-unlock-key-tool create-dev-key --i-understand-dev-key-risk
+
+Create a placeholder template using it:
+
+    ./build/daemon/face-unlock-template-tool create-placeholder --i-understand-placeholder --use-dev-key
+
+Verify decryptability without printing plaintext:
+
+    ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key
+
+This is not production key management.
