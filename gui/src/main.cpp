@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QByteArray>
 #include <QCheckBox>
 #include <QDir>
 #include <QFile>
@@ -7,11 +8,14 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QLocalSocket>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QTextEdit>
 #include <QVBoxLayout>
 #include <QWidget>
+
+#include <unistd.h>
 
 namespace {
 
@@ -21,6 +25,55 @@ QString templatePath() {
 
 QString enrollmentPath() {
   return QDir::homePath() + QStringLiteral("/.local/share/face-unlock/enrollment.json");
+}
+
+QString runtimeSocketPath() {
+  const QByteArray runtime = qgetenv("XDG_RUNTIME_DIR");
+
+  if (!runtime.isEmpty()) {
+    return QString::fromLocal8Bit(runtime) + QStringLiteral("/face-unlock.sock");
+  }
+
+  return QStringLiteral("/run/user/") +
+    QString::number(getuid()) +
+    QStringLiteral("/face-unlock.sock");
+}
+
+QString queryDaemonOperation(const QString& operation) {
+  QLocalSocket socket;
+  const QString path = runtimeSocketPath();
+
+  socket.connectToServer(path);
+
+  if (!socket.waitForConnected(700)) {
+    return QStringLiteral(
+      "{\"status\":\"fail\",\"reason\":\"daemon_socket_unavailable\",\"socket\":\"%1\"}"
+    ).arg(path);
+  }
+
+  const QByteArray request =
+    QByteArray("{\"op\":\"") +
+    operation.toUtf8() +
+    QByteArray("\",\"client\":\"qt_gui\"}\n");
+
+  socket.write(request);
+
+  if (!socket.waitForBytesWritten(700)) {
+    return QStringLiteral(
+      "{\"status\":\"fail\",\"reason\":\"daemon_write_timeout\"}"
+    );
+  }
+
+  if (!socket.waitForReadyRead(1000)) {
+    return QStringLiteral(
+      "{\"status\":\"fail\",\"reason\":\"daemon_response_timeout\"}"
+    );
+  }
+
+  const QByteArray response = socket.readAll();
+  socket.disconnectFromServer();
+
+  return QString::fromUtf8(response).trimmed();
 }
 
 QString fileStatusLine(const QString& label, const QString& path) {
@@ -296,12 +349,14 @@ int main(int argc, char* argv[]) {
 
   auto* understandButton = new QPushButton(QStringLiteral("I understand"));
   auto* refreshButton = new QPushButton(QStringLiteral("Refresh status"));
+  auto* daemonStatusButton = new QPushButton(QStringLiteral("Query daemon detector status"));
   auto* brightnessButton = new QPushButton(QStringLiteral("Brightness assist placeholder"));
   auto* forgetButton = new QPushButton(QStringLiteral("Forget me"));
   auto* closeButton = new QPushButton(QStringLiteral("Close"));
 
   buttonRow->addWidget(understandButton);
   buttonRow->addWidget(refreshButton);
+  buttonRow->addWidget(daemonStatusButton);
   buttonRow->addWidget(brightnessButton);
   buttonRow->addWidget(forgetButton);
   buttonRow->addStretch();
@@ -334,6 +389,17 @@ int main(int argc, char* argv[]) {
 
   QObject::connect(refreshButton, &QPushButton::clicked, [status]() {
     refreshStatus(status);
+  });
+
+  QObject::connect(daemonStatusButton, &QPushButton::clicked, [&window]() {
+    const QString response = queryDaemonOperation(QStringLiteral("detector_status"));
+
+    QMessageBox::information(
+      &window,
+      QStringLiteral("Daemon detector status"),
+      QStringLiteral("Socket:\n%1\n\nResponse:\n%2")
+        .arg(runtimeSocketPath(), response)
+    );
   });
 
   QObject::connect(markPoseButton, &QPushButton::clicked, [centerPose, leftPose, rightPose, upPose, downPose]() {

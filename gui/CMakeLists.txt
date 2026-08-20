@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
 
 qt_standard_project_setup()
 
@@ -14,6 +14,7 @@ target_compile_options(face-unlock-enroll PRIVATE
 
 target_link_libraries(face-unlock-enroll PRIVATE
   Qt6::Widgets
+  Qt6::Network
 )
 
 install(TARGETS face-unlock-enroll

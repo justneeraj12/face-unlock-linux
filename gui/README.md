@@ -113,3 +113,11 @@ No camera analysis is performed yet.
 The GUI includes a placeholder panel for future camera preview.
 
 It currently does not access the camera or save frames.
+
+## Daemon detector status query
+
+The GUI can query the running daemon for detector_status and display the raw JSON response.
+
+The daemon must be running separately.
+
+This does not start camera capture in the GUI.

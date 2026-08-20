@@ -59,3 +59,11 @@ Future versions must clearly tell the user:
 The current panel is visual only.
 
 It does not access the camera.
+
+## Daemon status bridge
+
+Before implementing live camera preview, the GUI can query daemon detector metadata with:
+
+    detector_status
+
+This lets the GUI display daemon-side detector state without directly accessing the camera.

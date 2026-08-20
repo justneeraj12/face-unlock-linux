@@ -163,3 +163,19 @@ It does not access the camera yet.
 Design document:
 
     docs/gui-camera-preview.md
+
+## Daemon detector status query
+
+The GUI includes a button to query the daemon:
+
+    detector_status
+
+It connects to:
+
+    $XDG_RUNTIME_DIR/face-unlock.sock
+
+and displays the raw JSON response.
+
+This does not access the camera from the GUI.
+
+The daemon must already be running.

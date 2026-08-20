@@ -554,3 +554,9 @@ CLI:
 Config:
 
     "detector_backend": "noop"
+
+## GUI daemon detector status query
+
+The optional Qt GUI can query the running daemon for detector_status and display the raw JSON response.
+
+This is a safe bridge toward GUI/daemon integration.
