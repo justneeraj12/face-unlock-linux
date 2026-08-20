@@ -380,3 +380,9 @@ The test uses a temporary HOME and does not touch real user template files.
 The template tool status command reports whether a placeholder template may be decryptable with the development key.
 
 It does not decrypt or print plaintext by default.
+
+## Daemon key/decryptability metadata
+
+Daemon socket responses include key/decryptability metadata.
+
+The daemon reports whether a placeholder template may be decryptable with the development key, but does not decrypt templates yet.

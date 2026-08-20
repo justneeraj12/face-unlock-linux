@@ -185,3 +185,18 @@ Root-owned auth peers are allowed only when:
 Default is disabled.
 
 This keeps sudo PAM behavior opt-in.
+
+## Key and decryptability metadata
+
+Daemon socket responses include key/decryptability metadata.
+
+Possible fields:
+
+    key present
+    key missing
+    decryptability possible_with_dev_key
+    decryptability key_missing
+    decryptability not_possible_discarded_key
+    decryptability template_missing
+
+The daemon does not decrypt templates yet.

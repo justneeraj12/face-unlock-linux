@@ -140,3 +140,15 @@ It does not decrypt by default and never prints plaintext.
 Explicit decrypt verification requires:
 
     ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key
+
+## Daemon key metadata
+
+Daemon socket responses include key and decryptability metadata.
+
+Example fields:
+
+    "key":"present"
+    "decryptability":"possible_with_dev_key"
+    "key_storage":"local_development_key_file"
+
+The daemon does not decrypt templates yet.

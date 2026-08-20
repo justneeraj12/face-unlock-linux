@@ -185,3 +185,11 @@ To actually verify decryptability, explicitly run:
     ./build/daemon/face-unlock-template-tool verify-decrypt --use-dev-key
 
 The status command does not print plaintext.
+
+## Daemon metadata relationship
+
+The daemon reports key and decryptability metadata based on the same template/key paths used by the template and key tools.
+
+This is metadata only.
+
+The daemon does not decrypt templates yet.

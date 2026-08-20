@@ -235,6 +235,80 @@ std::string enrollment_json_fields() {
   return std::string(",\"enrollment\":\"") + enrollment_status_value() + "\"";
 }
 
+std::string get_default_key_path() {
+  const char* home = std::getenv("HOME");
+
+  if (home == nullptr || std::string(home).empty()) {
+    return "";
+  }
+
+  return std::string(home) + "/.local/share/face-unlock/template.key";
+}
+
+bool key_file_exists() {
+  const std::string path = get_default_key_path();
+
+  if (path.empty()) {
+    return false;
+  }
+
+  return std::filesystem::is_regular_file(path);
+}
+
+std::string manifest_key_storage_status() {
+  const std::string path = get_default_enrollment_manifest_path();
+
+  if (path.empty() || !std::filesystem::is_regular_file(path)) {
+    return "manifest_missing";
+  }
+
+  const std::string content = read_text_file(path);
+
+  if (content.empty()) {
+    return "manifest_unreadable";
+  }
+
+  const std::string compact = compact_metadata_text(content);
+
+  if (compact.find("\"key_storage\":\"local_development_key_file\"") != std::string::npos) {
+    return "local_development_key_file";
+  }
+
+  if (compact.find("\"key_storage\":\"discarded_random_key\"") != std::string::npos) {
+    return "discarded_random_key";
+  }
+
+  return "unknown";
+}
+
+std::string decryptability_status_value() {
+  if (!template_file_exists()) {
+    return "template_missing";
+  }
+
+  const std::string key_storage = manifest_key_storage_status();
+
+  if (key_storage == "local_development_key_file") {
+    return key_file_exists() ? "possible_with_dev_key" : "key_missing";
+  }
+
+  if (key_storage == "discarded_random_key") {
+    return "not_possible_discarded_key";
+  }
+
+  return "unknown";
+}
+
+std::string key_json_fields() {
+  return std::string(",\"key\":\"") +
+    (key_file_exists() ? "present" : "missing") +
+    "\",\"decryptability\":\"" +
+    decryptability_status_value() +
+    "\",\"key_storage\":\"" +
+    manifest_key_storage_status() +
+    "\"";
+}
+
 
 std::string read_text_file(const std::string& path) {
   std::ifstream input(path);
@@ -670,21 +744,22 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
   const std::string camera_fields = camera_status_json_fields(camera_status);
   const std::string template_fields = template_json_fields();
   const std::string enrollment_fields = enrollment_json_fields();
+  const std::string key_fields = key_json_fields();
 
   if (op == "ping") {
     return "{\"status\":\"ok\",\"op\":\"ping\",\"reason\":\"daemon_alive\""
-      + camera_fields + template_fields + enrollment_fields + "}\n";
+      + camera_fields + template_fields + enrollment_fields + key_fields + "}\n";
   }
 
   if (op == "camera_status") {
     return "{\"status\":\"ok\",\"op\":\"camera_status\""
-      + camera_fields + template_fields + enrollment_fields + "}\n";
+      + camera_fields + template_fields + enrollment_fields + key_fields + "}\n";
   }
 
   if (op == "auth") {
     if (auth_state == nullptr) {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"auth_state_unavailable\""
-        + camera_fields + template_fields + enrollment_fields + "}\n";
+        + camera_fields + template_fields + enrollment_fields + key_fields + "}\n";
     }
 
     if (dev_auth_enabled() && camera_status.state == "ready") {
@@ -692,7 +767,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
 
       return "{\"status\":\"ok\",\"op\":\"auth\",\"reason\":\"dev_allow_camera_ready\""
         + camera_fields
-        + template_fields + enrollment_fields
+        + template_fields + enrollment_fields + key_fields
         + ",\"auth_attempts_failed\":0"
         + ",\"auth_attempts_remaining\":" + std::to_string(auth_state->remaining())
         + "}\n";
@@ -701,7 +776,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     if (auth_state->too_many_attempts()) {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"too_many_attempts\""
         + camera_fields
-        + template_fields + enrollment_fields
+        + template_fields + enrollment_fields + key_fields
         + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
         + ",\"auth_attempts_remaining\":0"
         + "}\n";
@@ -712,7 +787,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     if (dev_auth_enabled() && camera_status.state != "ready") {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"camera_not_ready\""
         + camera_fields
-        + template_fields + enrollment_fields
+        + template_fields + enrollment_fields + key_fields
         + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
         + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
         + "}\n";
@@ -721,7 +796,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     if (!template_file_exists()) {
       return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"template_missing\""
         + camera_fields
-        + template_fields + enrollment_fields
+        + template_fields + enrollment_fields + key_fields
         + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
         + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
         + "}\n";
@@ -729,14 +804,14 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
 
     return "{\"status\":\"fail\",\"op\":\"auth\",\"reason\":\"matcher_not_implemented\""
       + camera_fields
-      + template_fields + enrollment_fields
+      + template_fields + enrollment_fields + key_fields
       + ",\"auth_attempts_failed\":" + std::to_string(auth_state->failed_count())
       + ",\"auth_attempts_remaining\":" + std::to_string(attempts_remaining)
       + "}\n";
   }
 
   return "{\"status\":\"fail\",\"op\":\"unknown\",\"reason\":\"unknown_operation\""
-    + camera_fields + template_fields + enrollment_fields + "}\n";
+    + camera_fields + template_fields + enrollment_fields + key_fields + "}\n";
 }
 
 void handle_client(int client_fd, FrameStore* frame_store, AuthState* auth_state) {
