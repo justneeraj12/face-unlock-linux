@@ -196,3 +196,17 @@ It returns:
 when decrypt verification succeeds.
 
 It never returns plaintext and never prints key material.
+
+## Key-aware auth behavior
+
+The daemon auth operation now considers template decryptability.
+
+Possible fail-closed reasons include:
+
+- template_missing
+- template_not_decryptable
+- key_missing
+- template_decrypt_failed
+- matcher_not_implemented
+
+Even when a development-key placeholder decrypts successfully, auth still fails with matcher_not_implemented until real matching exists.

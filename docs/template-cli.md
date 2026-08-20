@@ -213,3 +213,15 @@ The daemon can report template/key/decrypt metadata with:
 This is metadata only.
 
 Plaintext is not returned.
+
+## Auth reason relationship
+
+Auth responses use template/key state to return more specific fail-closed reasons:
+
+- template_missing
+- template_not_decryptable
+- key_missing
+- template_decrypt_failed
+- matcher_not_implemented
+
+This does not implement real matching.

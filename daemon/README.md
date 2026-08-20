@@ -228,3 +228,15 @@ Example:
 This reports template, enrollment, key, decryptability, and template_decrypt metadata.
 
 The daemon does not return plaintext or key material.
+
+## Key-aware auth failure reasons
+
+Auth failure reasons now distinguish:
+
+- template_missing
+- template_not_decryptable
+- key_missing
+- template_decrypt_failed
+- matcher_not_implemented
+
+Auth still fails closed because real matching is not implemented.
