@@ -199,3 +199,9 @@ and must never be used as production authentication.
 | Document | Purpose |
 |---|---|
 | releases/v0.1.1-alpha.md | v0.1.1-alpha release notes |
+
+## Build performance
+
+| Document | Purpose |
+|---|---|
+| fast-builds.md | Ninja, ccache, and faster build configuration |

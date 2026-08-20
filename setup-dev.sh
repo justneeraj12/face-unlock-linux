@@ -30,6 +30,8 @@ sudo apt update
 sudo apt install -y \
   build-essential \
   cmake \
+  ninja-build \
+  ccache \
   pkg-config \
   git \
   libopencv-dev \

@@ -18,6 +18,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: release-ccache-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'daemon/src/**', 'pam/**', 'gui/src/**') }}
+          restore-keys: |
+            release-ccache-${{ runner.os }}-${{ github.ref_name }}-
+            release-ccache-${{ runner.os }}-
+
+
       - name: Check required scripts
         run: |
           ./scripts/check-scripts.sh
@@ -62,6 +72,8 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             build-essential \
             cmake \
+            ninja-build \
+            ccache \
             pkg-config \
             file \
             libopencv-core-dev \
@@ -71,7 +83,9 @@ jobs:
 
       - name: Configure and build
         run: |
+          ccache --zero-stats || true
           ./scripts/build.sh
+          ccache --show-stats || true
 
       - name: Run tests
         run: |

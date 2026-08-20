@@ -426,3 +426,19 @@ Current post-alpha development target:
 Release planning:
 
     docs/releases/v0.2.0-dev-auth-sudo.md
+
+## Faster builds
+
+The build script uses Ninja and ccache when available.
+
+Documentation:
+
+    docs/fast-builds.md
+
+Install tools:
+
+    sudo apt install ninja-build ccache
+
+Build:
+
+    ./scripts/build.sh
