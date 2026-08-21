@@ -271,3 +271,11 @@ Build the optional GUI with:
 Run manually:
 
     ./build-gui/gui/face-unlock-enroll
+
+## GUI workflow build helper
+
+The GUI GitHub Actions workflow uses:
+
+    ./scripts/build-gui.sh
+
+This keeps local and CI GUI build behavior aligned.

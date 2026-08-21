@@ -240,3 +240,11 @@ The package and release workflows also run:
     ./scripts/test-detector-output-generation.sh
 
 This ensures release artifacts are built only after detector output generation and validation pass.
+
+## GUI workflow build helper
+
+The GUI workflow uses:
+
+    ./scripts/build-gui.sh
+
+This keeps optional GUI build behavior consistent between local development and CI.
