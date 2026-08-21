@@ -77,3 +77,27 @@ Build optional GUI:
 Custom GUI build directory:
 
     GUI_BUILD_DIR=build-gui-fast ./scripts/build-gui.sh
+
+## Generator mismatch
+
+CMake build directories cannot switch generators after they are configured.
+
+For example, a directory created with Unix Makefiles cannot later be reused with Ninja.
+
+If you see a generator mismatch error, remove the build directory:
+
+    rm -rf build
+
+or for GUI:
+
+    rm -rf build-gui
+
+Then rebuild:
+
+    ./scripts/build.sh
+    ./scripts/build-gui.sh
+
+Alternatively, use a different build directory:
+
+    BUILD_DIR=build-ninja ./scripts/build.sh
+    GUI_BUILD_DIR=build-gui-ninja ./scripts/build-gui.sh

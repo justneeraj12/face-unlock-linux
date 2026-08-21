@@ -598,3 +598,12 @@ Build the optional Qt GUI:
 Run:
 
     ./build-gui/gui/face-unlock-enroll
+
+## CMake generator mismatch
+
+If CMake reports a generator mismatch after switching to Ninja, remove the old build directory:
+
+    rm -rf build
+    rm -rf build-gui
+
+Then rebuild.
