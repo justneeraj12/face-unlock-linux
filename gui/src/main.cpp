@@ -24,6 +24,10 @@
 
 namespace {
 
+QString detectorStatusSummary(const QString& response);
+QString templateStatusSummary(const QString& response);
+QString authDiagnosticSummary(const QString& response);
+
 QString templatePath() {
   return QDir::homePath() + QStringLiteral("/.local/share/face-unlock/template.enc");
 }
@@ -232,8 +236,72 @@ QString detectorStatusSummary(const QString& response) {
   return summary;
 }
 
+QString authDiagnosticSummary(const QString& response) {
+  QJsonParseError error {};
+  const QJsonDocument document = QJsonDocument::fromJson(response.toUtf8(), &error);
+
+  if (error.error != QJsonParseError::NoError || !document.isObject()) {
+    QString summary;
+    summary += QStringLiteral("Daemon available: no\n");
+    summary += QStringLiteral("Parse error: %1\n").arg(error.errorString());
+    return summary;
+  }
+
+  const QJsonObject object = document.object();
+
+  const QString status = jsonStringValue(object, QStringLiteral("status"));
+  const QString reason = jsonStringValue(object, QStringLiteral("reason"));
+  const QString op = jsonStringValue(object, QStringLiteral("op"));
+  const QString templ = jsonStringValue(object, QStringLiteral("template"));
+  const QString enrollment = jsonStringValue(object, QStringLiteral("enrollment"));
+  const QString key = jsonStringValue(object, QStringLiteral("key"));
+  const QString decryptability = jsonStringValue(object, QStringLiteral("decryptability"));
+  const QString templateDecrypt = jsonStringValue(object, QStringLiteral("template_decrypt"));
+  const QString failed = jsonStringValue(object, QStringLiteral("auth_attempts_failed"));
+  const QString remaining = jsonStringValue(object, QStringLiteral("auth_attempts_remaining"));
+
+  QString summary;
+  summary += QStringLiteral("Diagnostic only. This is not an unlock action.\n\n");
+  summary += QStringLiteral("Status: %1\n").arg(status);
+  summary += QStringLiteral("Reason: %1\n").arg(reason);
+  summary += QStringLiteral("Operation: %1\n").arg(op);
+  summary += QStringLiteral("Template: %1\n").arg(templ);
+  summary += QStringLiteral("Enrollment: %1\n").arg(enrollment);
+  summary += QStringLiteral("Key: %1\n").arg(key);
+  summary += QStringLiteral("Decryptability: %1\n").arg(decryptability);
+  summary += QStringLiteral("Template decrypt: %1\n").arg(templateDecrypt);
+  summary += QStringLiteral("Attempts failed: %1\n").arg(failed);
+  summary += QStringLiteral("Attempts remaining: %1\n").arg(remaining);
+
+  return summary;
+}
+
 void refreshStatus(QTextEdit* status) {
   status->setPlainText(statusText());
+}
+
+void refreshDaemonPanels(
+  QTextEdit* daemonSummary,
+  QTextEdit* templateSummary,
+  QTextEdit* authSummary,
+  QTextEdit* daemonResponse
+) {
+  const QString detectorResponse = queryDaemonOperation(QStringLiteral("detector_status"));
+  const QString templateResponse = queryDaemonOperation(QStringLiteral("template_status"));
+  const QString authResponse = queryDaemonOperation(QStringLiteral("auth"));
+
+  daemonSummary->setPlainText(detectorStatusSummary(detectorResponse));
+  templateSummary->setPlainText(templateStatusSummary(templateResponse));
+  authSummary->setPlainText(authDiagnosticSummary(authResponse));
+
+  daemonResponse->setPlainText(
+    QStringLiteral(
+      "Socket: %1\n\n"
+      "detector_status:\n%2\n\n"
+      "template_status:\n%3\n\n"
+      "auth diagnostic:\n%4"
+    ).arg(runtimeSocketPath(), detectorResponse, templateResponse, authResponse)
+  );
 }
 
 bool removeIfExists(const QString& path, QStringList& removed, QStringList& failed) {
@@ -363,6 +431,7 @@ int main(int argc, char* argv[]) {
 
   auto* daemonSummary = readOnlyTextEdit(QStringLiteral("No detector_status query yet."), 110);
   auto* templateSummary = readOnlyTextEdit(QStringLiteral("No template_status query yet."), 150);
+  auto* authSummary = readOnlyTextEdit(QStringLiteral("No auth diagnostic query yet."), 170);
   auto* daemonResponse = readOnlyTextEdit(
     QStringLiteral("Socket: %1\n\nNo daemon query yet.").arg(runtimeSocketPath()),
     140
@@ -370,9 +439,11 @@ int main(int argc, char* argv[]) {
 
   auto* statusButtonRow = new QHBoxLayout();
   auto* refreshButton = new QPushButton(QStringLiteral("Refresh local status"));
+  auto* refreshDaemonButton = new QPushButton(QStringLiteral("Refresh daemon panels"));
   auto* daemonStatusButton = new QPushButton(QStringLiteral("Query detector_status"));
   auto* templateStatusButton = new QPushButton(QStringLiteral("Query template_status"));
   statusButtonRow->addWidget(refreshButton);
+  statusButtonRow->addWidget(refreshDaemonButton);
   statusButtonRow->addWidget(daemonStatusButton);
   statusButtonRow->addWidget(templateStatusButton);
   statusButtonRow->addStretch();
@@ -387,6 +458,11 @@ int main(int argc, char* argv[]) {
   templateSummaryFont.setBold(true);
   templateSummaryLabel->setFont(templateSummaryFont);
 
+  auto* authSummaryLabel = new QLabel(QStringLiteral("Auth diagnostic summary"));
+  QFont authSummaryFont = authSummaryLabel->font();
+  authSummaryFont.setBold(true);
+  authSummaryLabel->setFont(authSummaryFont);
+
   auto* daemonResponseLabel = new QLabel(QStringLiteral("Raw daemon response"));
   QFont daemonResponseFont = daemonResponseLabel->font();
   daemonResponseFont.setBold(true);
@@ -398,6 +474,8 @@ int main(int argc, char* argv[]) {
   statusLayout->addWidget(daemonSummary);
   statusLayout->addWidget(templateSummaryLabel);
   statusLayout->addWidget(templateSummary);
+  statusLayout->addWidget(authSummaryLabel);
+  statusLayout->addWidget(authSummary);
   statusLayout->addWidget(daemonResponseLabel);
   statusLayout->addWidget(daemonResponse);
   statusLayout->addStretch();
@@ -522,6 +600,10 @@ int main(int argc, char* argv[]) {
 
   QObject::connect(refreshButton, &QPushButton::clicked, [status]() {
     refreshStatus(status);
+  });
+
+  QObject::connect(refreshDaemonButton, &QPushButton::clicked, [daemonSummary, templateSummary, authSummary, daemonResponse]() {
+    refreshDaemonPanels(daemonSummary, templateSummary, authSummary, daemonResponse);
   });
 
   QObject::connect(daemonStatusButton, &QPushButton::clicked, [daemonSummary, daemonResponse]() {

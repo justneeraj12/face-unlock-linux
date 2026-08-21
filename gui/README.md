@@ -163,3 +163,7 @@ The GUI uses Qt JSON APIs to parse daemon detector_status responses.
 ## template_status query
 
 The GUI can query template_status and show parsed template/key/decryptability metadata.
+
+## Refresh daemon panels
+
+The GUI can refresh detector, template, and auth diagnostic panels with one button.

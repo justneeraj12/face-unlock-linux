@@ -584,3 +584,7 @@ The optional Qt GUI parses daemon metadata responses with Qt JSON APIs.
 ## GUI template_status query
 
 The optional Qt GUI can query template_status and display parsed template/enrollment/key/decryptability metadata.
+
+## GUI refresh daemon panels
+
+The optional Qt GUI can refresh detector, template, and auth diagnostic daemon panels with one button.

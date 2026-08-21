@@ -249,3 +249,15 @@ The GUI can query daemon template_status and display:
 - template_decrypt
 
 No plaintext or key material is displayed.
+
+## Refresh daemon panels
+
+The GUI includes a Refresh daemon panels button.
+
+It queries:
+
+- detector_status
+- template_status
+- auth diagnostic
+
+and updates all daemon summary panels.
