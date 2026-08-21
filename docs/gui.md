@@ -261,3 +261,13 @@ It queries:
 - auth diagnostic
 
 and updates all daemon summary panels.
+
+## Local GUI build helper
+
+Build the optional GUI with:
+
+    ./scripts/build-gui.sh
+
+Run manually:
+
+    ./build-gui/gui/face-unlock-enroll

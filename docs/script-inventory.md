@@ -79,3 +79,7 @@ Additional validators:
 Additional detector tests:
 
 - scripts/test-detector-output-generation.sh
+
+GUI build helper:
+
+- scripts/build-gui.sh

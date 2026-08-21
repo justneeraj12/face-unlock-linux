@@ -588,3 +588,13 @@ The optional Qt GUI can query template_status and display parsed template/enroll
 ## GUI refresh daemon panels
 
 The optional Qt GUI can refresh detector, template, and auth diagnostic daemon panels with one button.
+
+## GUI build helper
+
+Build the optional Qt GUI:
+
+    ./scripts/build-gui.sh
+
+Run:
+
+    ./build-gui/gui/face-unlock-enroll

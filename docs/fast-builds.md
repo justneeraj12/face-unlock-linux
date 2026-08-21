@@ -67,3 +67,13 @@ CI also uses Ninja when available.
 The first CI run may still be slow because apt packages need to install.
 
 Subsequent C++ rebuilds should be faster due to ccache.
+
+## GUI builds
+
+Build optional GUI:
+
+    ./scripts/build-gui.sh
+
+Custom GUI build directory:
+
+    GUI_BUILD_DIR=build-gui-fast ./scripts/build-gui.sh

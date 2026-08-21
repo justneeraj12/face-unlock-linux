@@ -8,6 +8,7 @@ required_scripts=(
   scripts/check-json.sh
   scripts/ci-install-deps.sh
   scripts/build.sh
+  scripts/build-gui.sh
   scripts/test.sh
   scripts/verify-local.sh
   scripts/audit-dependencies.sh
