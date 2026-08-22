@@ -627,3 +627,7 @@ CTest includes detector_backends to verify noop detector_status and unsupported 
 The detector backend test checks Haar only when compiled/supported.
 
 If unavailable, Haar is skipped gracefully.
+
+## Detector latency metadata
+
+daemon detector_status responses include detector_ms for detector call latency tracking.

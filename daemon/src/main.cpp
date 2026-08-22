@@ -888,13 +888,13 @@ std::string detector_json_fields(FrameStore* frame_store) {
   } catch (const std::exception&) {
     return std::string(",\"detector\":\"") +
       g_detector_backend +
-      "\",\"detector_status\":\"unavailable\",\"faces_detected\":0";
+      "\",\"detector_status\":\"unavailable\",\"faces_detected\":0,\"detector_ms\":0";
   }
 
   if (frame_store == nullptr) {
     return std::string(",\"detector\":\"") +
       detector->backend_name() +
-      "\",\"detector_status\":\"ready\",\"faces_detected\":0";
+      "\",\"detector_status\":\"ready\",\"faces_detected\":0,\"detector_ms\":0";
   }
 
   cv::Mat snapshot;
@@ -903,15 +903,26 @@ std::string detector_json_fields(FrameStore* frame_store) {
   if (!frame_store->snapshot(snapshot, frames_total)) {
     return std::string(",\"detector\":\"") +
       detector->backend_name() +
-      "\",\"detector_status\":\"ready\",\"faces_detected\":0";
+      "\",\"detector_status\":\"ready\",\"faces_detected\":0,\"detector_ms\":0";
   }
 
+  const auto start_time = std::chrono::steady_clock::now();
   const face_unlock::DetectorResult result = detector->detect(snapshot);
+  const auto end_time = std::chrono::steady_clock::now();
+
+  const double detector_ms =
+    static_cast<double>(
+      std::chrono::duration_cast<std::chrono::microseconds>(
+        end_time - start_time
+      ).count()
+    ) / 1000.0;
 
   return std::string(",\"detector\":\"") +
     result.backend +
     "\",\"detector_status\":\"ready\",\"faces_detected\":" +
-    std::to_string(result.boxes.size());
+    std::to_string(result.boxes.size()) +
+    ",\"detector_ms\":" +
+    std::to_string(detector_ms);
 }
 
 std::string build_response_for_request(const std::string& request, FrameStore* frame_store, AuthState* auth_state) {

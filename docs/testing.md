@@ -223,3 +223,11 @@ responds to detector_status with:
     detector haar
 
 If Haar is unavailable, the test skips Haar.
+
+## Detector latency test
+
+Detector integration tests verify detector_status includes:
+
+    detector_ms
+
+This ensures future detector backends report latency metadata.

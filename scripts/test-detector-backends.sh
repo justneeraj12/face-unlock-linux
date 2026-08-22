@@ -123,6 +123,11 @@ if [[ "$selftest_output" == *"supported_backend: haar"* ]]; then
     exit 1
   fi
 
+  if [[ "$response" != *'"detector_ms":'* ]]; then
+    echo "ERROR: haar detector_status response missing detector_ms"
+    exit 1
+  fi
+
   stop_daemon
 
   echo "haar_backend_status: ok"

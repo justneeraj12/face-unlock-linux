@@ -126,6 +126,11 @@ if [[ "$detector_response" != *'"faces_detected":0'* ]]; then
   exit 1
 fi
 
+if [[ "$detector_response" != *'"detector_ms":'* ]]; then
+  echo "ERROR: detector_status response missing detector_ms"
+  exit 1
+fi
+
 echo
 echo "[test-daemon-metadata] Stop daemon"
 kill "$daemon_pid"

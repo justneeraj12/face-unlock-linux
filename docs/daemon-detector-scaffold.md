@@ -120,3 +120,15 @@ The detector backend integration test checks Haar only when the detector self-te
     supported_backend: haar
 
 If Haar is not compiled in or the cascade is unavailable, the test skips Haar gracefully.
+
+## Detector latency metadata
+
+detector_status responses include detector latency:
+
+    "detector_ms": 0.123
+
+This measures the current detector call in milliseconds.
+
+For the noop backend this should be near zero.
+
+Future real detector backends should use this field for latency tracking.
