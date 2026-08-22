@@ -621,3 +621,9 @@ Haar is baseline-only and not production quality.
 ## Detector backend integration test
 
 CTest includes detector_backends to verify noop detector_status and unsupported detector failure behavior.
+
+## Conditional Haar backend test
+
+The detector backend test checks Haar only when compiled/supported.
+
+If unavailable, Haar is skipped gracefully.

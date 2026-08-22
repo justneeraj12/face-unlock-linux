@@ -209,3 +209,17 @@ It verifies:
 - noop backend is supported
 - detector_status works with noop
 - unsupported detector backend fails safely
+
+## Conditional Haar detector test
+
+The detector_backends CTest conditionally tests Haar.
+
+If Haar is supported, it verifies:
+
+    face-unlockd --detector haar --serve
+
+responds to detector_status with:
+
+    detector haar
+
+If Haar is unavailable, the test skips Haar.

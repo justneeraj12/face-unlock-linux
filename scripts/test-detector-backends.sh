@@ -104,6 +104,33 @@ fi
 
 stop_daemon
 
+if [[ "$selftest_output" == *"supported_backend: haar"* ]]; then
+  echo
+  echo "[test-detector-backends] haar daemon detector_status"
+
+  start_daemon "haar"
+
+  response="$("$client" detector_status)"
+  echo "response: $response"
+
+  if [[ "$response" != *'"op":"detector_status"'* ]]; then
+    echo "ERROR: detector_status op missing for haar"
+    exit 1
+  fi
+
+  if [[ "$response" != *'"detector":"haar"'* ]]; then
+    echo "ERROR: haar detector response missing"
+    exit 1
+  fi
+
+  stop_daemon
+
+  echo "haar_backend_status: ok"
+else
+  echo
+  echo "haar_backend_status: skipped_not_supported"
+fi
+
 echo
 echo "[test-detector-backends] unsupported backend should fail safely"
 

@@ -112,3 +112,11 @@ Run:
 CTest also runs this as:
 
     detector_backends
+
+## Conditional Haar backend test
+
+The detector backend integration test checks Haar only when the detector self-test reports:
+
+    supported_backend: haar
+
+If Haar is not compiled in or the cascade is unavailable, the test skips Haar gracefully.
