@@ -223,6 +223,19 @@ if(BUILD_TESTING)
   set_tests_properties(auth_reasons PROPERTIES
     TIMEOUT 30
   )
+
+  add_test(
+    NAME detector_backends
+    COMMAND bash
+      ${CMAKE_SOURCE_DIR}/scripts/test-detector-backends.sh
+      $<TARGET_FILE:face-unlockd>
+      $<TARGET_FILE:face-unlock-detector-selftest>
+      ${CMAKE_SOURCE_DIR}/scripts/test-socket-client.sh
+  )
+
+  set_tests_properties(detector_backends PROPERTIES
+    TIMEOUT 30
+  )
 endif()
 
 install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-tool face-unlock-key-tool face-unlock-detector-selftest

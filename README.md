@@ -617,3 +617,7 @@ Example:
     ./build/daemon/face-unlockd --detector haar --serve
 
 Haar is baseline-only and not production quality.
+
+## Detector backend integration test
+
+CTest includes detector_backends to verify noop detector_status and unsupported detector failure behavior.

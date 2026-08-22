@@ -83,3 +83,7 @@ Additional detector tests:
 GUI build helper:
 
 - scripts/build-gui.sh
+
+Additional detector backend tests:
+
+- scripts/test-detector-backends.sh

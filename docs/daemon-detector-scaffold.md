@@ -102,3 +102,13 @@ Current behavior:
 - unsupported detector backends fail safely at startup
 
 Haar is a baseline detector only and is not considered production quality.
+
+## Detector backend integration test
+
+Run:
+
+    ./scripts/test-detector-backends.sh
+
+CTest also runs this as:
+
+    detector_backends

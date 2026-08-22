@@ -193,3 +193,19 @@ Expected current metadata:
 
     detector noop
     faces_detected 0
+
+## Detector backend integration test
+
+CTest includes:
+
+    detector_backends
+
+This test runs:
+
+    ./scripts/test-detector-backends.sh
+
+It verifies:
+
+- noop backend is supported
+- detector_status works with noop
+- unsupported detector backend fails safely

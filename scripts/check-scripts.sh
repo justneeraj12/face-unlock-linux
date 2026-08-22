@@ -27,6 +27,7 @@ required_scripts=(
   scripts/test-auth-reasons.sh
   scripts/test-python-detectors.sh
   scripts/test-detector-output-generation.sh
+  scripts/test-detector-backends.sh
   scripts/validate-enrollment-manifest.py
   scripts/validate-model-eval-metrics.py
   scripts/validate-detector-output.py
