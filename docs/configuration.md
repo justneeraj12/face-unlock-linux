@@ -117,3 +117,13 @@ Future values may include:
 - torchscript
 
 Unsupported values cause daemon startup to fail safely.
+
+## Haar detector backend
+
+If built with OpenCV objdetect support, the daemon may support:
+
+    "detector_backend": "haar"
+
+Haar is a baseline detector only.
+
+Unsupported detector backends fail safely at startup.

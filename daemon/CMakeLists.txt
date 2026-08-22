@@ -11,8 +11,20 @@ find_library(OPENCV_VIDEOIO_LIBRARY
   NAMES opencv_videoio
 )
 
+find_library(OPENCV_IMGPROC_LIBRARY
+  NAMES opencv_imgproc
+)
+
+find_library(OPENCV_OBJDETECT_LIBRARY
+  NAMES opencv_objdetect
+)
+
 if(NOT OPENCV_INCLUDE_DIR OR NOT OPENCV_CORE_LIBRARY OR NOT OPENCV_VIDEOIO_LIBRARY)
   message(FATAL_ERROR "OpenCV core/videoio development files not found. Install libopencv-core-dev and libopencv-videoio-dev.")
+endif()
+
+if(NOT OPENCV_IMGPROC_LIBRARY OR NOT OPENCV_OBJDETECT_LIBRARY)
+  message(WARNING "OpenCV imgproc/objdetect not found. Haar detector backend will not be available.")
 endif()
 
 find_path(SODIUM_INCLUDE_DIR sodium.h)
@@ -59,6 +71,14 @@ target_include_directories(face_unlock_detector PUBLIC
 target_link_libraries(face_unlock_detector PUBLIC
   ${OPENCV_CORE_LIBRARY}
 )
+
+if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY)
+  target_compile_definitions(face_unlock_detector PUBLIC FACE_UNLOCK_HAVE_OPENCV_OBJDETECT=1)
+  target_link_libraries(face_unlock_detector PUBLIC
+    ${OPENCV_IMGPROC_LIBRARY}
+    ${OPENCV_OBJDETECT_LIBRARY}
+  )
+endif()
 
 add_executable(face-unlockd
   src/main.cpp

@@ -607,3 +607,13 @@ If CMake reports a generator mismatch after switching to Ninja, remove the old b
     rm -rf build-gui
 
 Then rebuild.
+
+## Optional C++ Haar detector backend
+
+The daemon detector scaffold can optionally support Haar when OpenCV objdetect is available.
+
+Example:
+
+    ./build/daemon/face-unlockd --detector haar --serve
+
+Haar is baseline-only and not production quality.

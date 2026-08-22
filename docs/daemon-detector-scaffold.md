@@ -86,3 +86,19 @@ Config:
     "detector_backend": "noop"
 
 Unsupported detector backends fail safely at startup.
+
+## Haar backend scaffold
+
+The daemon can optionally support a Haar detector backend when OpenCV objdetect/imgproc development libraries are available.
+
+CLI:
+
+    ./build/daemon/face-unlockd --detector haar --serve
+
+Current behavior:
+
+- noop is always supported
+- haar is supported only if OpenCV objdetect is available at build time
+- unsupported detector backends fail safely at startup
+
+Haar is a baseline detector only and is not considered production quality.

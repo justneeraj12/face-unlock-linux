@@ -35,6 +35,8 @@ sudo apt install -y \
   pkg-config \
   git \
   libopencv-dev \
+  libopencv-objdetect-dev \
+  libopencv-imgproc-dev \
   python3-opencv \
   libpam0g-dev \
   libsodium-dev \

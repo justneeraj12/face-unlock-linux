@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -33,5 +34,24 @@ public:
   std::string backend_name() const override;
   DetectorResult detect(const cv::Mat& frame) override;
 };
+
+#ifdef FACE_UNLOCK_HAVE_OPENCV_OBJDETECT
+class HaarFaceDetector final : public FaceDetector {
+public:
+  explicit HaarFaceDetector(const std::string& cascade_path = "");
+
+  std::string backend_name() const override;
+  DetectorResult detect(const cv::Mat& frame) override;
+
+private:
+  std::string cascade_path_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
+};
+#endif
+
+std::unique_ptr<FaceDetector> create_detector(const std::string& backend);
+
+std::vector<std::string> supported_detector_backends();
 
 }  // namespace face_unlock

@@ -49,6 +49,8 @@ packages=(
   python3-numpy
   libopencv-core-dev
   libopencv-videoio-dev
+  libopencv-objdetect-dev
+  libopencv-imgproc-dev
   libpam0g-dev
   libsodium-dev
 )

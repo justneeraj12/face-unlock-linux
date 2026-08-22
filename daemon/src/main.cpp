@@ -38,6 +38,7 @@ namespace {
 std::string read_text_file(const std::string& path);
 
 std::atomic<bool> g_running{true};
+std::string g_detector_backend = "noop";
 
 void handle_signal(int signal_number) {
   (void)signal_number;
@@ -880,24 +881,36 @@ bool dev_auth_enabled() {
 }
 
 std::string detector_json_fields(FrameStore* frame_store) {
-  face_unlock::NoopFaceDetector detector;
+  std::unique_ptr<face_unlock::FaceDetector> detector;
+
+  try {
+    detector = face_unlock::create_detector(g_detector_backend);
+  } catch (const std::exception&) {
+    return std::string(",\"detector\":\"") +
+      g_detector_backend +
+      "\",\"detector_status\":\"unavailable\",\"faces_detected\":0";
+  }
 
   if (frame_store == nullptr) {
-    return ",\"detector\":\"noop\",\"faces_detected\":0";
+    return std::string(",\"detector\":\"") +
+      detector->backend_name() +
+      "\",\"detector_status\":\"ready\",\"faces_detected\":0";
   }
 
   cv::Mat snapshot;
   unsigned long long frames_total = 0;
 
   if (!frame_store->snapshot(snapshot, frames_total)) {
-    return ",\"detector\":\"noop\",\"faces_detected\":0";
+    return std::string(",\"detector\":\"") +
+      detector->backend_name() +
+      "\",\"detector_status\":\"ready\",\"faces_detected\":0";
   }
 
-  const face_unlock::DetectorResult result = detector.detect(snapshot);
+  const face_unlock::DetectorResult result = detector->detect(snapshot);
 
   return std::string(",\"detector\":\"") +
     result.backend +
-    "\",\"faces_detected\":" +
+    "\",\"detector_status\":\"ready\",\"faces_detected\":" +
     std::to_string(result.boxes.size());
 }
 
@@ -1280,11 +1293,21 @@ int main(int argc, char** argv) {
   const std::string detector_backend =
     options.detector_backend_set ? options.detector_backend : config.detector_backend;
 
-  if (detector_backend != "noop") {
-    std::cerr << "detector_backend_error: unsupported backend " << detector_backend << '\n';
-    std::cerr << "supported_detector_backends: noop" << '\n';
+  try {
+    (void)face_unlock::create_detector(detector_backend);
+  } catch (const std::exception& e) {
+    std::cerr << "detector_backend_error: " << e.what() << '\n';
+    std::cerr << "supported_detector_backends:";
+
+    for (const std::string& backend : face_unlock::supported_detector_backends()) {
+      std::cerr << " " << backend;
+    }
+
+    std::cerr << '\n';
     return 6;
   }
+
+  g_detector_backend = detector_backend;
 
   const uid_t uid = getuid();
   const std::string runtime_dir = get_runtime_dir();

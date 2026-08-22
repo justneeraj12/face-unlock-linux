@@ -176,3 +176,14 @@ Inspect package:
     dpkg-deb -c build/*.deb
 
 Check installed dependencies before publishing releases.
+
+## Optional detector dependencies
+
+The Haar detector backend requires:
+
+- libopencv-imgproc-dev
+- libopencv-objdetect-dev
+
+These are daemon dependencies only.
+
+They must not be linked into the PAM module.
