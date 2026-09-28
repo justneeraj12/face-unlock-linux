@@ -52,7 +52,8 @@ The development key file is written with mode:
 
     0600
 
-The parent directory is restricted to the owner.
+The parent directory is restricted to the owner. Key writes use a mode-0600
+temporary file, fsync, atomic rename, and parent-directory fsync.
 
 ## Git policy
 

@@ -26,6 +26,8 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 - README, roadmap, project status, documentation index, and component READMEs
   were consolidated around the CPU-first implementation plan.
 - Debian runtime metadata now includes detector and DNN libraries.
+- Encrypted template and development-key writes are atomic and durable; storage
+  reads reject symlinks, non-regular files, and files larger than 1 MiB.
 
 ### Removed
 

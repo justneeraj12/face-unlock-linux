@@ -23,6 +23,7 @@ It exists to test:
 - encrypted-at-rest file creation
 - template file path
 - 0600 file permissions
+- atomic encrypted-file replacement
 - daemon template status metadata
 - safe delete behavior
 
@@ -130,7 +131,8 @@ It records:
 - privacy flags
 - placeholder status
 
-Both files are written with mode 0600.
+Both files are written with mode 0600. The encrypted template uses an atomic
+write-and-rename path; the placeholder manifest writer is not yet atomic.
 
 delete --yes removes both the encrypted placeholder template and the placeholder enrollment manifest.
 

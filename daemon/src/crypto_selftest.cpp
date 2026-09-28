@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
 
@@ -47,7 +48,16 @@ int main() {
       return 1;
     }
 
+    struct stat written_metadata {};
+    if (::stat(test_path.c_str(), &written_metadata) < 0 ||
+        (written_metadata.st_mode & 0777) != 0600) {
+      std::cerr << "write_mode_status: failed\n";
+      fs::remove(test_path);
+      return 1;
+    }
+
     std::cout << "write_status: ok\n";
+    std::cout << "write_mode_status: ok\n";
     std::cout << "test_path: " << test_path.string() << "\n";
 
     std::vector<unsigned char> loaded;
@@ -76,6 +86,56 @@ int main() {
 
     std::cout << "decrypt_status: ok\n";
 
+    const std::vector<unsigned char> replacement = {1, 2, 3, 4};
+    if (!face_unlock::write_file_0600(
+          test_path.string(),
+          replacement,
+          error
+        ) ||
+        !face_unlock::read_file_bytes(
+          test_path.string(),
+          loaded,
+          error
+        ) ||
+        loaded != replacement) {
+      std::cerr << "atomic_replace_status: failed\n";
+      fs::remove(test_path);
+      return 1;
+    }
+    std::cout << "atomic_replace_status: ok\n";
+
+    const fs::path link_path = test_path.string() + ".link";
+    fs::create_symlink(test_path, link_path);
+    if (face_unlock::read_file_bytes(link_path.string(), loaded, error) ||
+        face_unlock::write_file_0600(
+          link_path.string(),
+          replacement,
+          error
+        )) {
+      std::cerr << "symlink_rejection_status: failed\n";
+      fs::remove(link_path);
+      fs::remove(test_path);
+      return 1;
+    }
+    std::cout << "symlink_rejection_status: ok\n";
+
+    const fs::path oversized_path = test_path.string() + ".oversized";
+    const std::vector<unsigned char> oversized(1024 * 1024 + 1, 0);
+    if (face_unlock::write_file_0600(
+          oversized_path.string(),
+          oversized,
+          error
+        ) ||
+        fs::exists(oversized_path)) {
+      std::cerr << "size_limit_status: failed\n";
+      fs::remove(oversized_path);
+      fs::remove(link_path);
+      fs::remove(test_path);
+      return 1;
+    }
+    std::cout << "size_limit_status: ok\n";
+
+    fs::remove(link_path);
     fs::remove(test_path);
 
     std::cout << "cleanup_status: ok\n";

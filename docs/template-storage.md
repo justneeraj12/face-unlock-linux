@@ -11,8 +11,10 @@ Current implementation:
 - initializes libsodium
 - generates a random symmetric key for self-test
 - encrypts placeholder template bytes with crypto_secretbox
-- writes encrypted blob to disk with mode 0600
-- reads encrypted blob back
+- atomically writes and replaces encrypted blobs with mode 0600
+- fsyncs the file and parent directory before reporting success
+- reads encrypted blobs without following symlinks
+- rejects non-regular files and files larger than 1 MiB
 - decrypts and verifies the plaintext
 - removes the temporary self-test file
 
@@ -33,8 +35,12 @@ Expected important output:
     crypto_status: initialized
     encrypt_status: ok
     write_status: ok
+    write_mode_status: ok
     read_status: ok
     decrypt_status: ok
+    atomic_replace_status: ok
+    symlink_rejection_status: ok
+    size_limit_status: ok
     cleanup_status: ok
     status: ok
 
@@ -80,6 +86,8 @@ Template files must:
 - avoid storing raw face images
 - avoid logging embeddings or template contents
 - be removable by the user
+- be committed atomically so interruption cannot expose a partial replacement
+- reject symlinks and unbounded input
 
 ## Privacy
 

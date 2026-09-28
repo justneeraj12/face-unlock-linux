@@ -1,6 +1,8 @@
 #include "template_crypto.h"
 
 #include <array>
+#include <cerrno>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
@@ -22,6 +24,7 @@ constexpr std::size_t kMagicSize = sizeof(kMagic);
 constexpr std::size_t kNonceSize = crypto_secretbox_NONCEBYTES;
 constexpr std::size_t kKeySize = crypto_secretbox_KEYBYTES;
 constexpr std::size_t kMacSize = crypto_secretbox_MACBYTES;
+constexpr std::size_t kMaximumStoredFileSize = 1024 * 1024;
 
 void require_crypto_ready() {
   if (!crypto_init()) {
@@ -41,6 +44,9 @@ bool write_all(int fd, const unsigned char* data, std::size_t size) {
   while (offset < size) {
     const ssize_t written = ::write(fd, data + offset, size - offset);
 
+    if (written < 0 && errno == EINTR) {
+      continue;
+    }
     if (written <= 0) {
       return false;
     }
@@ -49,6 +55,17 @@ bool write_all(int fd, const unsigned char* data, std::size_t size) {
   }
 
   return true;
+}
+
+std::string parent_directory(const std::string& path) {
+  const std::size_t separator = path.find_last_of('/');
+  if (separator == std::string::npos) {
+    return ".";
+  }
+  if (separator == 0) {
+    return "/";
+  }
+  return path.substr(0, separator);
 }
 
 }  // namespace
@@ -138,32 +155,88 @@ bool write_file_0600(
   const std::vector<unsigned char>& bytes,
   std::string& error
 ) {
-  const int fd = ::open(
-    path.c_str(),
-    O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,
-    S_IRUSR | S_IWUSR
-  );
+  error.clear();
 
+  if (path.empty() || path.back() == '/') {
+    error = "invalid destination path";
+    return false;
+  }
+  if (bytes.size() > kMaximumStoredFileSize) {
+    error = "file exceeds maximum supported size";
+    return false;
+  }
+
+  struct stat existing {};
+  if (::lstat(path.c_str(), &existing) == 0) {
+    if (!S_ISREG(existing.st_mode)) {
+      error = "refusing to replace non-regular file";
+      return false;
+    }
+  } else if (errno != ENOENT) {
+    error = std::strerror(errno);
+    return false;
+  }
+
+  std::string temporary_path = path + ".tmp.XXXXXX";
+  std::vector<char> temporary_name(
+    temporary_path.begin(),
+    temporary_path.end()
+  );
+  temporary_name.push_back('\0');
+
+  const int fd = ::mkstemp(temporary_name.data());
   if (fd < 0) {
     error = std::strerror(errno);
     return false;
   }
+  temporary_path = temporary_name.data();
 
-  const bool ok = write_all(fd, bytes.data(), bytes.size());
-
-  if (!ok) {
-    error = std::strerror(errno);
+  const auto fail_before_rename = [&](const std::string& message) {
+    error = message;
     ::close(fd);
+    ::unlink(temporary_path.c_str());
     return false;
-  }
+  };
 
+  if (::fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
+    return fail_before_rename(std::strerror(errno));
+  }
+  if (::fchmod(fd, S_IRUSR | S_IWUSR) < 0) {
+    return fail_before_rename(std::strerror(errno));
+  }
+  if (!write_all(fd, bytes.data(), bytes.size())) {
+    return fail_before_rename(std::strerror(errno));
+  }
   if (::fsync(fd) < 0) {
+    return fail_before_rename(std::strerror(errno));
+  }
+  if (::close(fd) < 0) {
     error = std::strerror(errno);
-    ::close(fd);
+    ::unlink(temporary_path.c_str());
     return false;
   }
 
-  if (::close(fd) < 0) {
+  if (::rename(temporary_path.c_str(), path.c_str()) < 0) {
+    error = std::strerror(errno);
+    ::unlink(temporary_path.c_str());
+    return false;
+  }
+
+  const std::string directory = parent_directory(path);
+  const int directory_fd = ::open(
+    directory.c_str(),
+    O_RDONLY | O_DIRECTORY | O_CLOEXEC
+  );
+  if (directory_fd < 0) {
+    error = std::strerror(errno);
+    return false;
+  }
+  if (::fsync(directory_fd) < 0) {
+    error = std::strerror(errno);
+    ::close(directory_fd);
+    return false;
+  }
+  if (::close(directory_fd) < 0) {
     error = std::strerror(errno);
     return false;
   }
@@ -176,35 +249,67 @@ bool read_file_bytes(
   std::vector<unsigned char>& bytes,
   std::string& error
 ) {
-  const int fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC);
+  error.clear();
 
+  const int fd = ::open(
+    path.c_str(),
+    O_RDONLY | O_CLOEXEC | O_NOFOLLOW
+  );
   if (fd < 0) {
     error = std::strerror(errno);
     return false;
   }
 
-  bytes.clear();
+  struct stat metadata {};
+  if (::fstat(fd, &metadata) < 0) {
+    error = std::strerror(errno);
+    ::close(fd);
+    return false;
+  }
+  if (!S_ISREG(metadata.st_mode)) {
+    error = "refusing to read non-regular file";
+    ::close(fd);
+    return false;
+  }
+  if (metadata.st_size < 0 ||
+      static_cast<std::uintmax_t>(metadata.st_size) > kMaximumStoredFileSize) {
+    error = "file exceeds maximum supported size";
+    ::close(fd);
+    return false;
+  }
 
+  bytes.clear();
+  bytes.reserve(static_cast<std::size_t>(metadata.st_size));
   std::array<unsigned char, 4096> buffer {};
 
   while (true) {
-    const ssize_t n = ::read(fd, buffer.data(), buffer.size());
+    const ssize_t count = ::read(fd, buffer.data(), buffer.size());
 
-    if (n < 0) {
+    if (count < 0 && errno == EINTR) {
+      continue;
+    }
+    if (count < 0) {
       error = std::strerror(errno);
       ::close(fd);
       return false;
     }
-
-    if (n == 0) {
+    if (count == 0) {
       break;
     }
+    if (static_cast<std::size_t>(count) >
+        kMaximumStoredFileSize - bytes.size()) {
+      error = "file exceeds maximum supported size";
+      ::close(fd);
+      bytes.clear();
+      return false;
+    }
 
-    bytes.insert(bytes.end(), buffer.begin(), buffer.begin() + n);
+    bytes.insert(bytes.end(), buffer.begin(), buffer.begin() + count);
   }
 
   if (::close(fd) < 0) {
     error = std::strerror(errno);
+    bytes.clear();
     return false;
   }
 
