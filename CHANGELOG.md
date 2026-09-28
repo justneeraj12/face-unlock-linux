@@ -15,6 +15,8 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 - YuNet daemon configuration and camera-free integration tests.
 - C++ CPU SFace alignment, normalized embeddings, cosine similarity, and a
   camera-free benchmark self-test.
+- Versioned C++ five-pose face profiles, strict bounded parsing, score-only
+  matching, and libsodium encrypted round-trip tests.
 
 ### Changed
 

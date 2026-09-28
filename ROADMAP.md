@@ -16,7 +16,7 @@ This roadmap describes direction rather than a release promise.
 - optional Qt6 enrollment GUI scaffold
 - CPU YuNet detector in Python and C++
 - CPU SFace embedding in Python and C++
-- multi-pose profile builder prototype
+- multi-pose profile builders in Python and C++
 - pinned model downloader with checksum verification
 - synthetic CPU benchmark harness
 - CI, CTest, Debian package skeleton, and release workflows
@@ -30,7 +30,7 @@ The immediate goal is a complete non-PAM enrollment and verification pipeline.
 - [x] Prototype SFace alignment and embeddings on CPU
 - [x] Prototype guided multi-pose profile construction
 - [x] Port SFace alignment and embedding to C++
-- [ ] Define and validate a versioned encrypted face-profile payload
+- [x] Define and validate a versioned encrypted face-profile payload
 - [ ] Add daemon enrollment start, status, cancel, and commit operations
 - [ ] Add quality gates for lighting, blur, face size, occlusion, and pose
 - [ ] Add held-out enrollment validation before committing a profile

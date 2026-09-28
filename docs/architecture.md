@@ -41,7 +41,8 @@ Implemented today:
 - encrypted template storage scaffold
 - optional TorchScript loader scaffold
 - C++ CPU YuNet detector
-- Python CPU SFace and multi-pose profile prototype
+- C++ CPU SFace and multi-pose profile libraries
+- Python guided enrollment prototype
 - optional Qt enrollment GUI scaffold
 
 Not implemented yet:
@@ -401,18 +402,16 @@ Current detector pipeline:
 
     camera frame -> C++ YuNet on OpenCV CPU -> box + confidence + landmarks
 
-Current prototype recognition pipeline:
+Current native recognition library pipeline:
 
     detected face -> SFace alignment -> normalized embedding -> pose profile
 
-YuNet is loaded once when the daemon starts. The Python prototype already
-builds center, left, right, up, and down pose centroids, but SFace and profile
-matching have not yet moved into the daemon.
+YuNet is loaded once when the daemon starts. Native SFace, five-pose profile
+construction, strict serialization, and score-only matching are implemented as
+C++ libraries but are not yet connected to daemon authentication.
 
 Not implemented yet:
 
-- C++ SFace alignment and embedding
-- versioned encrypted profile payload
 - calibrated template comparison
 - held-out enrollment validation
 - liveness and presentation-attack checks

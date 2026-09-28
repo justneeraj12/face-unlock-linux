@@ -10,10 +10,10 @@ Implemented across the Python prototype and C++ runtime libraries:
 - five-landmark detector output
 - CPU-only SFace alignment and embedding wrapper
 - C++ CPU SFace alignment, normalized embeddings, and cosine similarity
-- pose-aware in-memory face profile builder
+- pose-aware in-memory face profile builders in Python and C++
 - guided live enrollment prototype
 - pinned model downloader with SHA-256 verification
-- camera-free profile builder tests
+- camera-free profile builder and encrypted round-trip tests
 - optional local CPU model smoke test
 
 This does not enable authentication or write a biometric profile yet.
@@ -74,9 +74,10 @@ The in-memory builder:
 - removes low-similarity outliers within a pose
 - creates one normalized centroid per pose
 
-A future daemon implementation will serialize this profile into the existing
-libsodium encrypted template container. Plaintext embeddings must never be
-written to the enrollment manifest.
+The C++ library serializes a strict version-1 binary payload and verifies an
+encrypt/decrypt round trip through the existing libsodium container. The daemon
+does not persist real profiles yet. Plaintext embeddings must never be written
+to the enrollment manifest.
 
 ## Test
 
@@ -99,13 +100,13 @@ latency.
 
 YuNet detection now runs in the C++ daemon on OpenCV's CPU target. The model is
 loaded once at startup, and detector status includes boxes and five landmarks.
-SFace embedding now also runs in C++ on OpenCV's CPU target. Encrypted profile
-storage and matching remain prototype-only.
+SFace embedding, five-pose centroid construction, bounded profile parsing, and
+score-only matching now run in C++. Daemon enrollment and persistence remain
+unimplemented.
 
 ## Next slice
 
 - benchmark real-camera end-to-end latency and thermal behavior
-- build the versioned multi-pose profile and matcher in C++
 - calibrate pose, quality, and match thresholds
 - add held-out enrollment validation
 - expose enrollment start/status/cancel operations

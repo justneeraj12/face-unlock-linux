@@ -10,13 +10,14 @@ It should not contain raw face images.
 
 The project currently has:
 
-- encrypted placeholder template CLI
-- encrypted template storage scaffold
-- Python capture prototype
-- Python embedding prototype
-- TorchScript model export stub
+- encrypted placeholder template CLI and storage scaffold
+- native CPU detection and embedding
+- native five-pose profile construction and score-only matching
+- a strict version-1 binary profile payload
+- libsodium encrypted profile round-trip tests
+- a guided Python enrollment prototype
 
-Real enrollment is not implemented yet.
+The daemon does not create or persist a real biometric profile yet.
 
 ## Files
 
@@ -35,6 +36,32 @@ Future per-user manifest path:
 Future encrypted template path:
 
     ~/.local/share/face-unlock/template.enc
+
+## Encrypted profile payload version 1
+
+The plaintext payload is an internal binary format. It is passed directly to
+libsodium secretbox encryption and must never be written separately.
+
+All integers and IEEE-754 float32 values use little-endian byte order.
+
+| Field | Constraint |
+|---|---|
+| Magic | 8 bytes: `FULPRF1\0` |
+| Version | unsigned 16-bit value `1` |
+| Flags | zero in version 1 |
+| Model ID | 1-128 ASCII letters, digits, dot, underscore, or hyphen |
+| Embedding dimension | 1-4096 |
+| Pose templates | exactly center, left, right, up, down in that order |
+| Sample count | 1-64 per pose |
+| Centroid | finite, L2-normalized float32 vector |
+
+The parser rejects unknown versions or flags, invalid dimensions, missing or
+reordered poses, non-finite or non-normalized centroids, truncation, and
+trailing data. The format contains no raw images, crops, threshold, username,
+UID, or encryption key.
+
+An acceptance threshold is intentionally not stored in version 1. Thresholds
+are policy derived from evaluation data, not biometric template content.
 
 ## Design goals
 

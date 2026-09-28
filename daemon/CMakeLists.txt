@@ -122,6 +122,32 @@ if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY AND OPENCV_DNN_LIBRARY)
   target_link_libraries(face-unlock-recognizer-selftest PRIVATE
     face_unlock_recognizer
   )
+
+  add_library(face_unlock_profile STATIC src/face_profile.cpp)
+  target_compile_options(face_unlock_profile PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+  )
+  target_include_directories(face_unlock_profile PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+  target_link_libraries(face_unlock_profile PUBLIC
+    face_unlock_recognizer
+  )
+
+  add_executable(face-unlock-profile-selftest
+    src/face_profile_selftest.cpp
+  )
+  target_compile_options(face-unlock-profile-selftest PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+  )
+  target_link_libraries(face-unlock-profile-selftest PRIVATE
+    face_unlock_profile
+    face_unlock_crypto
+  )
 endif()
 
 add_executable(face-unlockd
@@ -292,6 +318,14 @@ if(BUILD_TESTING)
     set_tests_properties(cpu_recognizer PROPERTIES TIMEOUT 30)
   endif()
 
+  if(TARGET face-unlock-profile-selftest)
+    add_test(
+      NAME face_profile_cpp
+      COMMAND $<TARGET_FILE:face-unlock-profile-selftest>
+    )
+    set_tests_properties(face_profile_cpp PROPERTIES TIMEOUT 30)
+  endif()
+
   add_test(
     NAME cpu_face_profile
     COMMAND bash
@@ -307,6 +341,10 @@ install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-to
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 if(TARGET face-unlock-recognizer-selftest)
-  install(TARGETS face-unlock-recognizer-selftest
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  install(
+    TARGETS
+      face-unlock-recognizer-selftest
+      face-unlock-profile-selftest
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
 endif()

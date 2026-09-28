@@ -79,8 +79,8 @@ mindmap
 | Detection | CPU YuNet in C++; noop and Haar fallbacks |
 | Detection output | boxes, confidence, five landmarks, latency |
 | Recognition | CPU SFace in C++ and Python; matcher not connected |
-| Enrollment | guided, multi-pose, memory-only Python prototype |
-| Profile builder | pose coverage, duplicate rejection, normalized centroids |
+| Enrollment | guided Python prototype; native five-pose builder library |
+| Profile builder | C++ and Python; versioned encrypted round-trip tested |
 | IPC | UNIX socket with mode 0600 and peer credential checks |
 | PAM | minimal C IPC client with bounded timeout |
 | Templates | libsodium placeholder encryption and development key tooling |
@@ -89,8 +89,8 @@ mindmap
 | Liveness | not implemented |
 | Packaging | development Debian/CPack skeleton |
 
-The current development phase is moving SFace embedding, profile construction,
-and enrollment control into the daemon. See [project status](docs/project-status.md)
+The current development phase is connecting the native profile builder and
+enrollment control to the daemon. See [project status](docs/project-status.md)
 and the [roadmap](ROADMAP.md).
 
 ## Delivery path

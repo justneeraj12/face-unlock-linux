@@ -9,12 +9,12 @@ The current phase is connecting the proven CPU pipeline to the C++ daemon:
 
 - YuNet detection is already implemented in C++
 - SFace alignment and embedding are implemented in C++ and Python
-- multi-pose profile construction remains in Python
+- multi-pose profile construction and score-only matching exist in C++ and Python
 - daemon enrollment operations are not implemented
 - real authentication matching remains disabled
 
-The next bounded implementation slice is a benchmarked, versioned C++
-face-profile representation.
+The next bounded implementation slice is daemon-owned enrollment sessions and
+atomic encrypted profile persistence.
 
 ## Implemented
 
@@ -40,7 +40,9 @@ face-profile representation.
 - C++ and Python SFace alignment and normalized embeddings
 - guided center/left/right/up/down enrollment prototype
 - duplicate sample rejection and pose coverage
-- pose centroids and synthetic matching tests
+- C++ and Python pose centroids and score-only matching tests
+- strict versioned profile payload with bounded parsing
+- libsodium encrypted profile round-trip test
 - camera-free latency benchmark
 
 ### PAM and safety
@@ -64,9 +66,8 @@ face-profile representation.
 
 ## Not implemented
 
-- C++ multi-pose profile construction and matching
-- real encrypted biometric profile creation
-- real template matching
+- daemon-owned encrypted biometric profile creation
+- thresholded authentication decisions
 - calibrated acceptance thresholds
 - held-out enrollment validation
 - liveness or presentation-attack defense

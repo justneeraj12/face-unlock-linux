@@ -276,3 +276,14 @@ local SFace model is present, it also verifies CPU model loading, 128-value
 L2-normalized embeddings, landmark alignment, cosine self-similarity, and
 reports camera-free p50 and p95 inference latency. A missing ignored model is a
 safe skip so CI remains network-independent.
+
+## C++ face-profile test
+
+CTest includes:
+
+    face_profile_cpp
+
+The native test covers all five pose classifications, sample quality and model
+rejection, duplicate rejection, progress, normalized centroids, score-only
+matching, binary serialization, libsodium encryption, and rejection of every
+truncated payload prefix. It does not choose an authentication threshold.
