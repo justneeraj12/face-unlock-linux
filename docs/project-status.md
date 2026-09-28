@@ -1,119 +1,136 @@
 # Project Status
 
-This document summarizes the current implementation status.
+face-unlock-linux is in v0.2 development. It is a working infrastructure and
+CPU-model prototype, not production-ready biometric authentication.
 
-## Current phase
+## Current focus
 
-The project is currently in pre-release prototype development.
+The current phase is connecting the proven CPU pipeline to the C++ daemon:
 
-Current target milestone:
+- YuNet detection is already implemented in C++
+- SFace alignment and embedding remain in Python
+- multi-pose profile construction remains in Python
+- daemon enrollment operations are not implemented
+- real authentication matching remains disabled
 
-    v0.1.0-alpha
+The next bounded implementation slice is C++ SFace embedding plus a benchmarked,
+versioned face-profile representation.
 
-## What works today
+## Implemented
 
-Implemented:
+### Runtime and IPC
 
-- documentation-first open-source repository
-- CMake build
-- GitHub Actions CI on Ubuntu 24.04
-- CTest support
-- Debian package skeleton with CPack
-- C++ user daemon
-- OpenCV camera one-shot probe
-- OpenCV camera loop mode
-- camera worker thread
-- UNIX domain socket server
-- socket permissions set to 0600
-- SO_PEERCRED peer credential logging
-- same-UID socket peer policy
-- JSON-ish socket operations
-- default fail-closed auth operation
-- development-only auth gate
-- max auth attempt enforcement
-- minimal PAM IPC module
-- fake PAM service test flow
-- fake PAM install/remove scripts
-- systemd user service install/remove scripts
-- sudo PAM inspection script
-- libsodium encrypted template storage scaffold
-- crypto self-test
-- Python safe capture prototype
-- TorchScript export stub
-- optional LibTorch loader scaffold
+- C++17 per-user daemon
+- OpenCV camera probe, loop, and worker thread
+- latest-frame memory store
+- UNIX socket under the user runtime directory
+- socket mode 0600
+- SO_PEERCRED peer checks
+- same-user policy
+- explicit development-only root auth peer policy
+- bounded failed-attempt state
+- clean signal handling
 
-## What does not work yet
+### CPU face pipeline
 
-Not implemented yet:
+- pinned, checksum-verified YuNet and SFace models
+- OpenCV CPU target with no required CUDA runtime
+- C++ YuNet detector loaded once at daemon startup
+- bounding boxes, confidence, five landmarks, and detector latency
+- Python SFace alignment and normalized embeddings
+- guided center/left/right/up/down enrollment prototype
+- duplicate sample rejection and pose coverage
+- pose centroids and synthetic matching tests
+- camera-free latency benchmark
 
-- real face recognition authentication
-- real face detector in daemon
-- face alignment
-- encrypted template enrollment
-- encrypted template matching
-- threshold calibration
-- liveness/spoof resistance
-- Qt enrollment GUI
-- production sudo installer
-- lock-screen integration
-- greeter/login integration
-- release-grade Debian maintainer scripts
+### PAM and safety
 
-## Safety status
+- minimal C PAM socket client
+- bounded timeout
+- success only on explicit daemon auth success
+- fail-closed missing socket, timeout, and error behavior
+- heavy dependency audit
+- fake PAM test flow
+- guarded sudo planning, backup, apply, and rollback scripts
 
-Safe development flows exist for:
+### Storage and GUI
 
-- building locally
-- running daemon manually
-- running daemon as user service
-- testing IPC
-- testing PAM with fake PAM service
-- rolling back fake PAM test artifacts
-- building Debian package
+- libsodium encryption scaffold
+- development key and placeholder template tools
+- decryptability metadata without plaintext output
+- Qt6 consent, privacy, daemon status, pose, and quality scaffold
+- placeholder Forget Me flow
+- CPack Debian package skeleton and systemd user service assets
 
-Unsafe or not-yet-supported flows:
+## Not implemented
 
-- modifying /etc/pam.d/sudo automatically
-- modifying GDM, SDDM, LightDM, or common-auth
-- using development auth as real authentication
-- using the project as the only authentication factor
+- C++ SFace recognition pipeline
+- real encrypted biometric profile creation
+- real template matching
+- calibrated acceptance thresholds
+- held-out enrollment validation
+- liveness or presentation-attack defense
+- production key management
+- production sudo authentication
+- lock-screen or display-manager integration
+- one-command end-user installation
+- automatic, production-safe PAM configuration
 
-## Current authentication behavior
+## Authentication behavior
 
-Default auth behavior:
+Normal authentication remains fail-closed. With a valid placeholder template,
+the daemon reports matcher_not_implemented rather than approving authentication.
 
-    status fail
-    reason auth_not_implemented
-
-Development-only auth can be enabled manually with:
+The following flags exist only for controlled development:
 
     FACE_UNLOCK_DEV_ALLOW=1
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1
 
-This is for testing only.
+They are not production features.
 
-It must never be used as real authentication.
+## Performance baseline
 
-## Current package behavior
+On the current Intel i5-12500H development laptop with synthetic inputs:
 
-The Debian package skeleton installs project files but does not automatically enable authentication integration.
+- Python YuNet 320x320 p50 is about 3.8 ms
+- Python SFace 112x112 p50 is about 9.9 ms
+- C++ YuNet blank-frame smoke inference is about 6.6 ms
+- Python benchmark peak RSS is about 277 MB
 
-Installing the package does not modify real PAM service files.
+These values are implementation baselines, not authentication or accuracy
+claims. Real-camera latency, thermal behavior, false accepts, false rejects, and
+spoof resistance still require measurement.
 
-## First alpha release
+## Supported development environment
 
-The first alpha release has been tagged as:
+Primary CI and development target:
 
-    v0.1.0-alpha
+- Ubuntu 24.04 LTS
+- x86_64
+- GCC or Clang with C++17
+- OpenCV 4.6-compatible APIs
+- Intel and AMD laptop CPUs
+- no required discrete GPU
 
-This release is an infrastructure prototype.
+Other Linux distributions and architectures are not yet validated.
 
-It is not real biometric authentication yet.
+## Safe usage boundary
 
-## Template-aware auth status
+Safe today:
 
-The daemon now reports template-aware auth failure reasons:
+- building and testing locally
+- running camera and detector diagnostics
+- running the non-persistent enrollment prototype
+- querying daemon metadata
+- testing the PAM module with the fake PAM service
+- building and inspecting packages
 
-- template_missing
-- matcher_not_implemented
+Not safe as a daily authentication replacement:
 
-Real biometric matching is still not implemented.
+- removing password fallback
+- enabling development auth as a real factor
+- treating RGB face detection as liveness
+- manually editing production PAM files
+- enabling login or lock-screen integration
+
+See the [roadmap](../ROADMAP.md) for the remaining implementation gates.

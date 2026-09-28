@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(face-unlock-linux
-  VERSION 0.1.0
+  VERSION 0.2.0
   DESCRIPTION "Experimental face unlock utility for Ubuntu Linux"
   LANGUAGES C CXX
 )
@@ -64,7 +64,7 @@ set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 
 set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "libc6, libpam0g, libsodium23, libopencv-core406t64 | libopencv-core406, libopencv-videoio406t64 | libopencv-videoio406"
+  "libc6, libpam0g, libsodium23, libopencv-core406t64 | libopencv-core406, libopencv-videoio406t64 | libopencv-videoio406, libopencv-imgproc406t64 | libopencv-imgproc406, libopencv-objdetect406t64 | libopencv-objdetect406, libopencv-dnn406t64 | libopencv-dnn406"
 )
 
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION

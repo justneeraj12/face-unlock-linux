@@ -6,7 +6,27 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 
 ## Unreleased
 
-_No unreleased changes yet._
+### Added
+
+- CPU-only YuNet and SFace Python prototypes.
+- Guided multi-pose face-profile builder and synthetic benchmark.
+- Pinned model downloader with SHA-256 verification.
+- C++ YuNet detector with boxes, confidence, five landmarks, and latency.
+- YuNet daemon configuration and camera-free integration tests.
+
+### Changed
+
+- YuNet now loads once at daemon startup and runs only on detector requests.
+- OpenCV DNN is explicitly built and targeted for CPU inference.
+- Project version advanced to 0.2.0 development.
+- README, roadmap, project status, documentation index, and component READMEs
+  were consolidated around the CPU-first implementation plan.
+- Debian runtime metadata now includes detector and DNN libraries.
+
+### Removed
+
+- Obsolete repository-skeleton project log.
+- Empty placeholder tests directory; active tests are CTest and scripts.
 
 ## v0.1.1-alpha
 

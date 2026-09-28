@@ -35,6 +35,7 @@ sudo apt install -y \
   pkg-config \
   git \
   libopencv-dev \
+  libopencv-dnn-dev \
   libopencv-objdetect-dev \
   libopencv-imgproc-dev \
   python3-opencv \

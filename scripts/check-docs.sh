@@ -41,4 +41,43 @@ if bad:
 print("[OK] All Markdown files have balanced triple-backtick fences.")
 PY
 
+
+echo "[check-docs] Checking local Markdown links..."
+
+python3 - <<'PY'
+from pathlib import Path
+import re
+
+ignored_parts = {".git", ".venv", "build", "build-gui"}
+broken = []
+
+for path in sorted(Path(".").rglob("*.md")):
+    if any(part in ignored_parts for part in path.parts):
+        continue
+
+    text = path.read_text(errors="replace")
+
+    for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
+        if target.startswith(("http://", "https://", "mailto:", "#")):
+            continue
+
+        target = target.split("#", 1)[0]
+
+        if not target:
+            continue
+
+        resolved = (path.parent / target).resolve()
+
+        if not resolved.exists():
+            broken.append((path, target))
+
+for path, target in broken:
+    print(f"[BAD] {path}: missing link target: {target}")
+
+if broken:
+    raise SystemExit(1)
+
+print("[OK] All local Markdown links resolve.")
+PY
+
 echo "[check-docs] OK"

@@ -78,16 +78,17 @@ Before submitting a PR:
 
 ## Running checks
 
-Early repo stage:
+Before submitting a change:
 
     git status
+    ./scripts/check-scripts.sh
     ./scripts/check-docs.sh
+    ./scripts/check-json.sh
     ./scripts/build.sh
+    ./scripts/test.sh
+    ./scripts/audit-dependencies.sh
 
-Later stages will add:
-
-    cmake --build build
-    ctest --test-dir build
+Use ./scripts/verify-local.sh for the full package and artifact inspection flow.
 
 ## License
 

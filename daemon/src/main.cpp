@@ -33,6 +33,10 @@
 #include <torch/torch.h>
 #endif
 
+#ifndef FACE_UNLOCK_VERSION
+#define FACE_UNLOCK_VERSION "development"
+#endif
+
 namespace {
 
 std::string read_text_file(const std::string& path);
@@ -550,6 +554,7 @@ void print_usage(const char* program_name) {
   std::cout << "  --model PATH         TorchScript model path. Default: models/embedding_stub.pt\n";
   std::cout << "  --detector NAME      Detector backend: noop, haar, or yunet when compiled\n";
   std::cout << "  --detector-model PATH  YuNet ONNX model path\n";
+  std::cout << "  --version            Show the program version\n";
   std::cout << "  --help, -h           Show this help text\n";
 }
 
@@ -582,6 +587,9 @@ Options parse_options(int argc, char** argv) {
       options.detector_model_path = argv[i + 1];
       options.detector_model_path_set = true;
       ++i;
+    } else if (arg == "--version") {
+      std::cout << FACE_UNLOCK_VERSION << '\n';
+      std::exit(0);
     } else if (arg == "--help" || arg == "-h") {
       print_usage(argv[0]);
       std::exit(0);
@@ -1416,7 +1424,7 @@ int main(int argc, char** argv) {
   const std::string socket_path = get_socket_path();
 
   std::cout << "face-unlockd prototype" << '\n';
-  std::cout << "version: 0.1.0" << '\n';
+  std::cout << "version: " << FACE_UNLOCK_VERSION << '\n';
   std::cout << "uid: " << uid << '\n';
   std::cout << "runtime_dir: " << runtime_dir << '\n';
   std::cout << "planned_socket: " << socket_path << '\n';

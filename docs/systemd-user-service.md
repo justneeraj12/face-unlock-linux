@@ -81,7 +81,7 @@ Test auth default fail-closed behavior:
 Expected auth behavior:
 
     status fail
-    reason auth_not_implemented
+    reason template_missing
 
 ## Stop service
 

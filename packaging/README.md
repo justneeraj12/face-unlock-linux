@@ -1,14 +1,35 @@
 # Packaging
 
-This directory will contain packaging assets.
+packaging/ contains assets for development Debian packages and the per-user
+systemd service.
 
-Planned contents:
+## Current behavior
 
-- Debian packaging files
-- CPack configuration
-- systemd user service
-- installer scripts
-- rollback scripts
-- udev rule examples
+The CPack package installs binaries, documentation, helper scripts, and service
+assets. It does not automatically:
 
-Installers must not modify PAM files without explicit user consent.
+- edit PAM files
+- enable sudo or login face authentication
+- start a system service
+- remove password fallback
+- download model weights
+
+Build and inspect a package:
+
+    ./scripts/package-deb.sh
+    dpkg-deb -I build/*.deb
+    dpkg-deb -c build/*.deb
+
+## Production requirements
+
+A daily-use package still needs:
+
+- reviewed model redistribution rights
+- complete runtime dependencies
+- versioned model placement
+- first-run GUI enrollment
+- explicit per-user service setup
+- explicit and reversible PAM opt-in
+- tested upgrade, uninstall, and rollback
+
+See [packaging design](../docs/packaging.md).

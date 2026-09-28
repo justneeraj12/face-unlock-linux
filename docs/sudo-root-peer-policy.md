@@ -72,7 +72,7 @@ In another terminal:
 Default expected response:
 
     status fail
-    reason auth_not_implemented
+    reason template_missing
 
 This means root was allowed to ask for auth, but auth still failed closed.
 

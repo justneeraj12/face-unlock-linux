@@ -1,49 +1,47 @@
 # Models
 
-This directory documents local model artifacts.
+Model weights are local build/runtime inputs and are not committed to Git.
 
-Large model files are intentionally not committed to Git.
+## Development baseline
 
-Ignored examples:
+The pinned CPU baseline is:
 
-- .pt
-- .onnx
-- .engine
-- TensorRT engines
+| Purpose | Model |
+|---|---|
+| Detection | YuNet 2022mar |
+| Alignment and embedding | SFace 2021dec |
 
-## Current stub model
+Download and verify both files:
 
-A tiny TorchScript embedding stub can be generated with:
+    ./scripts/download-cpu-models.sh
 
-    python3 python/export_torchscript_stub.py
+Verify existing files without downloading:
 
-Default output:
+    ./scripts/download-cpu-models.sh --check
 
+The downloader pins upstream revisions and SHA-256 checksums. YuNet 2022mar is
+used because it is compatible with Ubuntu 24.04's stock OpenCV 4.6.
+
+## Local files
+
+Expected ignored paths:
+
+    models/face_detection_yunet_2022mar.onnx
+    models/face_recognition_sface_2021dec.onnx
     models/embedding_stub.pt
 
-This is not a real face recognition model.
+The TorchScript file is only a loader stub and is not a recognition model.
 
-It is only used to test model export and future TorchScript loading.
+## Release requirement
 
-## Git policy
+Before a package redistributes model weights, maintainers must document:
 
-Model artifacts must not be committed by default.
+- source and exact revision
+- license and redistribution rights
+- training-data and provenance concerns
+- input, output, and preprocessing
+- measured CPU performance
+- threshold calibration
+- accuracy and spoofing limitations
 
-The repository ignores:
-
-    models/*.pt
-    models/*.onnx
-    models/*.engine
-
-## Future model requirements
-
-Future real models should document:
-
-- source
-- license
-- expected input size
-- preprocessing
-- embedding dimension
-- threshold calibration method
-- CPU/GPU performance
-- privacy/security considerations
+Never commit private biometric data with a model evaluation.

@@ -1,137 +1,62 @@
 # Milestones
 
-This document describes planned project milestones.
+The [roadmap](../ROADMAP.md) is the canonical development sequence. This file
+summarizes release-shaped checkpoints.
 
-## v0.1.0-alpha
+## Released
 
-Status:
+### v0.1.0-alpha
 
-    released
+Initial daemon, camera, socket, PAM client, crypto scaffold, packaging, and CI.
 
-Purpose:
+### v0.1.1-alpha
 
-Infrastructure prototype.
+Guarded sudo development tooling, key/template metadata, GUI scaffolds, model
+planning, and expanded safety tests.
 
-Included:
+## Active v0.2 development
 
-- daemon camera and IPC prototype
-- minimal PAM IPC module
-- fake PAM testing
-- systemd user service helpers
-- Debian package skeleton
-- encrypted placeholder template scaffold
-- Python prototypes
-- optional Qt GUI scaffold
-- CI and local verification
+CPU recognition and enrollment infrastructure:
 
-Not included:
+- C++ YuNet detector
+- C++ SFace embedding
+- versioned encrypted face profile
+- daemon enrollment operations
+- quality and held-out validation
+- CPU latency, memory, and thermal benchmarks
 
-- real biometric authentication
-- production sudo integration
-- lock-screen integration
+Real authentication remains fail-closed until matching and security gates are
+complete.
 
-## v0.2.0-dev-auth-sudo
+## Future checkpoints
 
-Purpose:
+### Enrollment GUI preview
 
-Make the development-only sudo prototype safer and better documented.
+- live camera preview
+- guided head movement
+- real pose and quality progress
+- encrypted profile commit
+- complete Forget Me flow
 
-Goals:
+### Authentication hardening preview
 
-- improve guarded sudo apply/rollback
-- validate root peer auth behavior
-- improve sudo test docs
-- add automated checks where safe
-- keep dev auth clearly marked as non-production
+- calibrated thresholds
+- presentation-attack evaluation
+- bounded retries and cooldown
+- corrupted-profile and model handling
+- reviewed key storage
 
-Non-goal:
+### Daily-use packaging preview
 
-- real biometric auth
+- reviewed model redistribution
+- one-command package installation
+- first-run GUI
+- user service setup
+- explicit reversible PAM opt-in
+- Intel and AMD compatibility matrix
 
-## v0.3.0-enrollment-cli
+### v1.0 security review
 
-Purpose:
-
-Create a CLI-based placeholder-to-real enrollment path.
-
-Goals:
-
-- enrollment manifest writer
-- encrypted template writer
-- local-only embedding prototype
-- template delete/forget-me CLI
-- manifest validation
-- no raw images by default
-
-## v0.4.0-real-model-prototype
-
-Purpose:
-
-Integrate first real detector/embedding prototype outside production auth.
-
-Goals:
-
-- select model candidates
-- document licenses
-- export TorchScript/ONNX
-- run Python evaluation harness
-- calibrate initial thresholds
-- prototype matching outside PAM
-
-## v0.5.0-qt-enrollment
-
-Purpose:
-
-Build the first usable Qt enrollment flow.
-
-Goals:
-
-- camera preview
-- guided pose slots
-- low-light warnings
-- quality checks
-- encrypted template creation
-- forget-me flow
-- consent screens
-
-## v0.6.0-lock-screen-prototype
-
-Purpose:
-
-Prototype lock-screen integration in a logged-in session.
-
-Goals:
-
-- validate GNOME/KDE lock-screen behavior
-- document Wayland/X11 caveats
-- ensure password fallback
-- keep rollback simple
-
-## v1.0.0-security-review
-
-Purpose:
-
-Production readiness review.
-
-Required before 1.0:
-
-- real biometric matching implemented
-- threshold calibration documented
-- liveness/spoofing limitations documented
-- PAM behavior audited
-- installer rollback audited
-- template encryption reviewed
-- no raw image telemetry
-- external security review preferred
-
-## Current active development
-
-Current active target after v0.1.1-alpha:
-
-    v0.2.0-dev-auth-sudo
-
-Primary focus:
-
-- harden development-only sudo integration
-- improve rollback/testing
-- keep real biometric auth out of scope until model/enrollment work is ready
+Requires measured accuracy limits, liveness disclosure, reproducible packages,
+safe fallback and rollback, audited IPC/PAM/crypto boundaries, and external
+security review.

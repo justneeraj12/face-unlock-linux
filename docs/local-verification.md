@@ -75,11 +75,11 @@ Review package contents before installing any .deb.
 
 ## Release usage
 
-Before v0.1.0-alpha, run:
+Before every release candidate, run:
 
     ./scripts/verify-local.sh
 
-A clean release candidate should pass this script and GitHub Actions.
+A clean release candidate must pass this script and GitHub Actions.
 
 ## Optional sudo dry-run verification
 

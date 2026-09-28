@@ -29,6 +29,7 @@ Core mode installs:
 - python3-numpy
 - python3-opencv
 - libopencv-core-dev
+- libopencv-dnn-dev
 - libopencv-videoio-dev
 - libopencv-objdetect-dev
 - libopencv-imgproc-dev

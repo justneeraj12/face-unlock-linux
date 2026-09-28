@@ -1,257 +1,99 @@
 # Daemon
 
-This directory contains the user-level face unlock daemon.
+daemon/ contains the C++17 per-user runtime and supporting command-line tools.
 
-## Current status
+## Responsibilities
 
-- minimal C++17 executable
-- links OpenCV
-- prints startup/runtime information
-- opens webcam
-- reads one frame by default
-- can run continuously with --loop
-- can run a local UNIX socket server with --serve
-- can run camera worker plus socket server with --daemon
-- socket path is /run/user/$UID/face-unlock.sock
-- socket permissions are set to 0600
-- logs UNIX socket peer credentials with SO_PEERCRED
-- currently allows same-UID socket clients only
-- supports simple socket operations: ping, camera_status, auth
-- auth operation fails closed by default
-- repeated failed auth attempts are limited by max_auth_attempts
-- development-only auth can be enabled with FACE_UNLOCK_DEV_ALLOW=1
-- stops cleanly with Ctrl+C
-- does not save images
+face-unlockd owns:
 
-## Planned responsibilities
+- camera access and the latest in-memory frame
+- CPU detector model loading and inference
+- local UNIX socket IPC
+- peer credential checks
+- authentication retry state
+- encrypted template metadata
+- future face embedding and profile matching
 
-The daemon is planned to be responsible for:
+It runs as the desktop user, not as root.
 
-- opening the camera
-- maintaining a recent frame buffer
-- loading the face recognition model
-- reading encrypted templates
-- performing face matching
-- exposing a local UNIX domain socket
-- enforcing authentication rate limits
+## Detector backends
 
-The daemon should run as the normal desktop user, not as root.
+- noop is always available
+- Haar is an optional compatibility baseline
+- YuNet is the CPU real-detector candidate
 
-## Fail-closed behavior
+YuNet uses OpenCV DNN with the OpenCV CPU target. The ONNX model is validated
+and loaded once at startup.
 
-The daemon must fail closed if:
-
-- the camera is unavailable
-- no template exists
-- the model is unavailable
-- the IPC peer is not trusted
-- authentication times out
-- auth is not implemented
-- development auth is not explicitly enabled
-- max_auth_attempts is exceeded
-
-## Build
-
-From the repository root, build with:
+Build and run the camera-free model smoke test:
 
     ./scripts/build.sh
+    ./scripts/download-cpu-models.sh
+    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet_2022mar.onnx
 
-Run daemon mode with camera worker and socket server:
+Run camera plus socket mode:
 
-    ./build/daemon/face-unlockd --camera 0 --daemon
+    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --daemon
 
-Test auth fail-closed behavior in another terminal:
+## Socket
 
-    ./scripts/test-socket-client.sh auth
+Default path:
 
-Expected default auth response:
+    /run/user/$UID/face-unlock.sock
 
-    status fail
-    reason auth_not_implemented
+Properties:
 
-After max_auth_attempts failures, expected response:
+- UNIX stream socket
+- mode 0600
+- SO_PEERCRED peer inspection
+- same-user access by default
+- root auth peers require explicit development opt-in
 
-    status fail
-    reason too_many_attempts
+Operations:
 
-Run daemon mode with development-only auth enabled:
+- ping
+- camera_status
+- detector_status
+- template_status
+- auth
 
-    FACE_UNLOCK_DEV_ALLOW=1 ./build/daemon/face-unlockd --camera 0 --daemon
-
-Then test auth:
-
-    ./scripts/test-socket-client.sh auth
-
-Expected development-only auth response:
-
-    status ok
-    reason dev_allow_camera_ready
-
-Stop daemon mode with Ctrl+C.
-
-## Socket operations
-
-Test ping:
-
-    ./scripts/test-socket-client.sh ping
-
-Test camera status:
-
-    ./scripts/test-socket-client.sh camera_status
-
-Test auth:
-
-    ./scripts/test-socket-client.sh auth
-
-## Security notes
-
-The socket server currently uses SO_PEERCRED to inspect the connected peer process.
-
-Current prototype policy:
-
-- same UID is allowed
-- other users are rejected
-
-Auth behavior:
-
-- default auth fails closed
-- failed auth attempts are counted in memory
-- too many failures return too_many_attempts
-- restarting the daemon resets the in-memory attempt counter
-- FACE_UNLOCK_DEV_ALLOW=1 is for development testing only
-- FACE_UNLOCK_DEV_ALLOW=1 must never be used as real authentication
-
-Future PAM integration may require carefully reviewed handling for privileged PAM clients.
-
-## Privacy
-
-The current daemon reads frames into memory only.
-
-Socket mode currently replies with operation status and frame readiness metadata.
-
-It does not save images, face crops, embeddings, templates, or logs containing biometric data.
-
-## Root peer policy for sudo
-
-The daemon allows root-owned socket peers only for auth requests.
-
-This supports future sudo PAM integration, where pam_face_unlock.so may connect as UID 0.
-
-Policy:
-
-- same UID: allowed
-- root UID 0 with auth operation: allowed
-- root UID 0 with non-auth operation: rejected
-- other users: rejected
-
-See:
-
-    docs/sudo-root-peer-policy.md
-
-## Template-aware auth reasons
-
-Default auth now distinguishes:
-
-- template_missing when no encrypted template file exists
-- matcher_not_implemented when a placeholder template exists but no real matcher is implemented
-- too_many_attempts when max_auth_attempts is exceeded
-
-Auth still fails closed unless development auth is explicitly enabled.
-
-## Enrollment manifest status
-
-Daemon socket responses include enrollment manifest status.
-
-Possible values:
-
-- missing
-- placeholder
-- real
-- present_unknown
-- unreadable
-
-Current placeholder enrollment reports:
-
-    enrollment placeholder
-
-Real biometric enrollment is still not implemented.
-
-## Root auth peer opt-in
-
-Root-owned auth peers are allowed only when:
-
-    FACE_UNLOCK_ALLOW_ROOT_AUTH=1
-
-Default is disabled.
-
-This keeps sudo PAM behavior opt-in.
-
-## Key and decryptability metadata
-
-Daemon socket responses include key/decryptability metadata.
-
-Possible fields:
-
-    key present
-    key missing
-    decryptability possible_with_dev_key
-    decryptability key_missing
-    decryptability not_possible_discarded_key
-    decryptability template_missing
-
-The daemon does not decrypt templates yet.
-
-## template_status operation
-
-The daemon supports an explicit socket operation:
-
-    template_status
-
-Example:
-
-    ./scripts/test-socket-client.sh template_status
-
-This reports template, enrollment, key, decryptability, and template_decrypt metadata.
-
-The daemon does not return plaintext or key material.
-
-## template_status operation
-
-The daemon supports an explicit socket operation:
-
-    template_status
-
-Example:
-
-    ./scripts/test-socket-client.sh template_status
-
-This reports template, enrollment, key, decryptability, and template_decrypt metadata.
-
-The daemon does not return plaintext or key material.
-
-## Key-aware auth failure reasons
-
-Auth failure reasons now distinguish:
-
-- template_missing
-- template_not_decryptable
-- key_missing
-- template_decrypt_failed
-- matcher_not_implemented
-
-Auth still fails closed because real matching is not implemented.
-
-## detector_status operation
-
-The daemon supports:
-
-    detector_status
-
-Example:
+Query from another terminal:
 
     ./scripts/test-socket-client.sh detector_status
 
-Current response reports:
+detector_status returns backend, status, face count, latency, and detections.
+YuNet detections include a box, confidence, and five landmarks.
 
-    detector noop
-    faces_detected 0
+## Authentication state
+
+Real matching is not implemented. Authentication therefore fails closed with
+reasons such as template_missing, key_missing, template_decrypt_failed,
+matcher_not_implemented, or too_many_attempts.
+
+Development-only success requires:
+
+    FACE_UNLOCK_DEV_ALLOW=1
+
+Root-owned auth requests additionally require:
+
+    FACE_UNLOCK_ALLOW_ROOT_AUTH=1
+
+Neither flag is suitable for production.
+
+## Tools
+
+The build also creates:
+
+- face-unlock-detector-selftest
+- face-unlock-crypto-selftest
+- face-unlock-key-tool
+- face-unlock-template-tool
+
+See [configuration](../docs/configuration.md),
+[detector backends](../docs/daemon-detector-scaffold.md), and
+[key management](../docs/key-management.md).
+
+## Privacy
+
+Camera frames stay in memory. The daemon must never log or persist raw frames,
+face crops, embeddings, encryption keys, or plaintext templates.

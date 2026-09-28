@@ -1,106 +1,107 @@
-# Code of Conduct
+# Roadmap
 
-This project follows the Contributor Covenant Code of Conduct.
+face-unlock-linux is working toward a lightweight, CPU-first face recognition
+add-on for Linux. Every milestone must preserve password fallback, local-only
+processing, and fail-closed authentication.
 
-## Our pledge
+This roadmap describes direction rather than a release promise.
 
-We pledge to make participation in this project a harassment-free experience for everyone.
+## Completed foundation
 
-We welcome contributors regardless of background, identity, experience level, or viewpoint.
+- C++ per-user daemon and OpenCV camera worker
+- mode-0600 UNIX socket with SO_PEERCRED policy
+- minimal C PAM IPC client and dependency audit
+- guarded fake PAM and sudo rollback tooling
+- libsodium template encryption scaffold
+- optional Qt6 enrollment GUI scaffold
+- CPU YuNet detector in Python and C++
+- CPU SFace embedding prototype
+- multi-pose profile builder prototype
+- pinned model downloader with checksum verification
+- synthetic CPU benchmark harness
+- CI, CTest, Debian package skeleton, and release workflows
 
-## Expected behavior
+## Current phase: CPU recognition and enrollment
 
-Examples of positive behavior:
+The immediate goal is a complete non-PAM enrollment and verification pipeline.
 
-- being respectful
-- giving constructive feedback
-- assuming good intent
-- focusing on technical merit
-- documenting concerns clearly
-- prioritizing user safety
+- [x] Run YuNet detection in the C++ daemon
+- [x] Return bounding boxes, confidence, landmarks, and latency
+- [x] Prototype SFace alignment and embeddings on CPU
+- [x] Prototype guided multi-pose profile construction
+- [ ] Port SFace alignment and embedding to C++
+- [ ] Define and validate a versioned encrypted face-profile payload
+- [ ] Add daemon enrollment start, status, cancel, and commit operations
+- [ ] Add quality gates for lighting, blur, face size, occlusion, and pose
+- [ ] Add held-out enrollment validation before committing a profile
+- [ ] Benchmark end-to-end latency, memory, and thermal behavior
+- [ ] Evaluate false accept and false reject behavior on consented local data
 
-## Unacceptable behavior
+Authentication remains fail-closed throughout this phase.
 
-Examples of unacceptable behavior:
+## Next phase: seamless GUI enrollment
 
-- harassment
-- insults or personal attacks
-- publishing private information
-- discriminatory language
-- deliberately unsafe advice
-- encouraging users to bypass security protections
+- live camera preview
+- guided head-turn instructions
+- real pose and quality progress
+- enrollment processing indicator
+- clear retry and recovery messages
+- encrypted profile commit only after validation
+- complete Forget Me deletion and verification
+- accessible laptop-sized interface
 
-## Scope
+## Security hardening phase
 
-This code applies in:
+- presentation-attack and liveness evaluation
+- calibrated match thresholds with conservative defaults
+- bounded retries and cooldown behavior
+- corrupted-model and corrupted-template tests
+- daemon lifecycle and crash recovery
+- key storage design beyond raw development keys
+- independent review of IPC, crypto, and PAM boundaries
 
-- GitHub issues
-- pull requests
-- discussions
-- documentation
-- project communication channels
+Face recognition must remain an optional convenience factor with password or
+PIN fallback.
 
-## Enforcement
+## Packaging and daily-use phase
 
-Maintainers may remove, edit, or reject comments and contributions that violate this code.
+- reviewed redistribution rights for model weights
+- versioned Debian packaging with runtime dependencies
+- one-command package installation
+- first-run GUI setup
+- user service configuration
+- explicit, reversible PAM opt-in
+- tested uninstall and rollback
+- Intel and AMD laptop compatibility matrix
 
-Serious or repeated violations may result in a ban from project spaces.
+No installer may silently edit PAM configuration.
 
-## v0.1.0-alpha target
+## Desktop integration phase
 
-The v0.1.0-alpha milestone is an infrastructure prototype.
+Integrations are considered separately because their runtime and trust models
+differ:
 
-Target contents:
+- sudo
+- lock screen
+- desktop login
+- display manager or greeter
+- encrypted-home and pre-login environments
 
-- daemon camera and IPC prototype
-- minimal PAM IPC module
-- fake PAM service testing
-- systemd user service helpers
-- encrypted template storage scaffold
-- Python capture prototype
-- TorchScript export/load scaffold
-- Debian package skeleton
-- CI artifacts
+Each integration requires its own threat review, fallback path, and rollback
+test before it can be enabled.
 
-Non-goals for v0.1.0-alpha:
+## v1.0 readiness gates
 
-- real biometric authentication
-- production sudo integration
-- lock-screen integration
-- greeter/login integration
-- Qt enrollment GUI
+A stable release requires:
 
-## Phase 6: Real model evaluation
-
-Goals:
-
-- select candidate detector models
-- select candidate embedding models
-- document model licenses
-- prototype Python evaluation
-- export TorchScript/ONNX artifacts
-- calibrate matching thresholds
-- document liveness limitations
-
-Deliverables:
-
-- [ ] model evaluation plan
-- [ ] threshold calibration document
-- [ ] Python model evaluation script
-- [ ] sample local-only evaluation workflow
-- [ ] documented candidate model shortlist
-
-## Milestone plan
-
-Detailed milestone definitions are maintained in:
-
-    docs/milestones.md
-
-Planned milestones:
-
-- v0.2.0-dev-auth-sudo
-- v0.3.0-enrollment-cli
-- v0.4.0-real-model-prototype
-- v0.5.0-qt-enrollment
-- v0.6.0-lock-screen-prototype
-- v1.0.0-security-review
+- documented model licenses and provenance
+- reproducible builds and packages
+- measured accuracy and spoof-resistance limits
+- safe enrollment and deletion
+- encrypted, versioned profiles
+- minimal audited PAM module
+- reliable password fallback
+- tested upgrade, uninstall, and rollback
+- external security review
+- clear disclosure that ordinary RGB cameras are not equivalent to dedicated
+  depth or infrared face-authentication hardware

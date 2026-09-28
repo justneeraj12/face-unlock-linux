@@ -37,11 +37,17 @@ The script installs:
 
     build-essential
     cmake
+    ninja-build
+    ccache
     pkg-config
     git
     libopencv-dev
+    libopencv-dnn-dev
+    libopencv-objdetect-dev
+    libopencv-imgproc-dev
     python3-opencv
     libpam0g-dev
+    libsodium-dev
     pamtester
     v4l-utils
 
@@ -95,10 +101,9 @@ In another terminal:
     ./scripts/test-socket-client.sh camera_status
     ./scripts/test-socket-client.sh auth
 
-Default auth should fail closed:
-
-    status fail
-    reason auth_not_implemented
+Default auth should fail closed. Depending on local template state, the reason
+will be template_missing, key_missing, template_decrypt_failed, or
+matcher_not_implemented.
 
 ## PAM fake service test
 

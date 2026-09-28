@@ -1,131 +1,79 @@
 # Release Process
 
-This document describes the manual release process.
+Releases are manual, reviewable, and must not modify PAM configuration.
 
-## Current target
+## Choose a release tag
 
-Current planned release:
+Use a semantic tag such as:
 
-    v0.1.0-alpha
+    v0.2.0-alpha
 
-Checklist:
+Create matching notes under docs/releases/ and move completed entries from the
+Unreleased section of CHANGELOG.md into the release section.
 
-    docs/releases/v0.1.0-alpha.md
+## Prepare
 
-## Safety
+Run the full local verification:
 
-Release scripts do not modify PAM configuration.
+    ./scripts/verify-local.sh
 
-They do not modify:
+Then run the release preparation helper:
+
+    ./scripts/prepare-release.sh v0.2.0-alpha
+
+The helper checks the working tree, builds, tests, audits PAM dependencies, and
+builds the development package. It does not create or push a tag.
+
+Before continuing, inspect:
+
+    git status
+    git diff
+    dpkg-deb -I build/*.deb
+    dpkg-deb -c build/*.deb
+
+## Tag and publish
+
+After local verification and GitHub Actions pass:
+
+    git tag -a v0.2.0-alpha -m "v0.2.0-alpha"
+    git push origin v0.2.0-alpha
+
+The tag-triggered release workflow builds the package and uploads it to the
+GitHub release. A release can also be created with:
+
+    gh release create v0.2.0-alpha --title "v0.2.0-alpha" --notes-file docs/releases/v0.2.0-alpha.md
+
+Use the actual reviewed tag and notes filename for each release.
+
+## Required release notes
+
+Every pre-1.0 release must state:
+
+- whether real biometric matching is enabled
+- that password or PIN fallback is required
+- known accuracy and liveness limitations
+- model sources, licenses, and redistribution status
+- whether any PAM integration is supported
+- upgrade, uninstall, and rollback instructions
+
+## PAM safety
+
+Release scripts and packages must not silently modify:
 
     /etc/pam.d/sudo
+    /etc/pam.d/common-auth
     /etc/pam.d/gdm-password
     /etc/pam.d/sddm
     /etc/pam.d/lightdm
-    /etc/pam.d/common-auth
 
-## Prepare release
+Any future PAM opt-in must show the exact diff, back up the target, require
+explicit confirmation, and print a tested rollback command.
 
-Run:
+## Correcting a tag
 
-    ./scripts/prepare-release.sh v0.1.0-alpha
+Avoid rewriting public tags. If an unpublished tag was created by mistake:
 
-The script verifies:
+    git tag -d v0.2.0-alpha
+    git push origin :refs/tags/v0.2.0-alpha
 
-- working tree is clean
-- local verification passes
-- package builds
-- tests pass
-- PAM dependency audit passes
-
-The script does not create or push tags automatically.
-
-## Manual tag
-
-After prepare-release succeeds, create an annotated tag:
-
-    git tag -a v0.1.0-alpha -m "v0.1.0-alpha"
-
-Push the tag:
-
-    git push origin v0.1.0-alpha
-
-## GitHub release
-
-Create a GitHub release manually from the web UI, or with GitHub CLI:
-
-    gh release create v0.1.0-alpha --title "v0.1.0-alpha" --notes-file docs/releases/v0.1.0-alpha.md
-
-## Artifacts
-
-GitHub Actions uploads development artifacts for each workflow run.
-
-Expected artifacts:
-
-- face-unlockd-ubuntu-24.04
-- pam-face-unlock-ubuntu-24.04
-- face-unlock-linux-deb-ubuntu-24.04
-
-For release-quality packaging, inspect the .deb before publishing.
-
-## Release notes
-
-The v0.1.0-alpha release notes must clearly state:
-
-- this is not real biometric authentication
-- default auth fails closed
-- development auth is only for testing
-- no real PAM service files are modified automatically
-- sudo/login/lock-screen integration is not production-ready
-
-## Rollback
-
-If a release tag is created by mistake and has not been used by others, delete locally:
-
-    git tag -d v0.1.0-alpha
-
-Delete remote tag:
-
-    git push origin :refs/tags/v0.1.0-alpha
-
-Use caution when deleting public release tags.
-
-## Automated release artifacts
-
-Release artifacts are published by:
-
-    .github/workflows/release.yml
-
-The workflow runs on tags matching:
-
-    v*
-
-It builds the Debian package and uploads the .deb to the GitHub Release.
-
-See:
-
-    docs/release-artifacts.md
-
-## Changelog
-
-Before each release, update:
-
-    CHANGELOG.md
-
-Move relevant items from Unreleased into the release section.
-
-## Changelog
-
-Before each release, update:
-
-    CHANGELOG.md
-
-Move relevant items from Unreleased into the release section.
-
-## Changelog
-
-Before each release, update:
-
-    CHANGELOG.md
-
-Move relevant items from Unreleased into the release section.
+Only do this when no user or release depends on that tag.

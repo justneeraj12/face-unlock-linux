@@ -1,232 +1,80 @@
-# Documentation Index
+# Documentation
 
-This directory contains project documentation for face-unlock-linux.
+The root [README](../README.md) is the project overview. This index routes
+developers to the detailed design and safety documents.
 
 ## Start here
 
-| Document | Purpose |
+| Topic | Document |
 |---|---|
-| project-status.md | Current implementation status |
-| architecture.md | Detailed technical architecture |
-| development-setup.md | Ubuntu development setup |
-| local-verification.md | One-command local verification |
-| roadmap | See ../ROADMAP.md |
+| Current implementation | [Project status](project-status.md) |
+| Planned work | [Roadmap](../ROADMAP.md) |
+| System design | [Architecture](architecture.md) |
+| Local development | [Development setup](development-setup.md) |
+| Build and tests | [Testing](testing.md) |
+| Full verification | [Local verification](local-verification.md) |
 
-## Safety and security
+## CPU models and enrollment
 
-| Document | Purpose |
+| Topic | Document |
 |---|---|
-| ../SECURITY.md | Security policy |
-| threat-model.md | Threat model and mitigations |
-| pam-safety.md | PAM safety rules |
-| sudo-root-peer-policy.md | Root peer policy for sudo PAM clients |
+| CPU YuNet/SFace profile | [CPU face profile](cpu-face-profile.md) |
+| C++ detector runtime | [Daemon detector backends](daemon-detector-scaffold.md) |
+| Python detector prototype | [Detector prototype](detector-prototype.md) |
+| Model candidates and licenses | [Model candidates](model-candidates.md) |
+| Evaluation plan | [Model evaluation plan](model-evaluation-plan.md) |
+| Threshold calibration | [Threshold calibration](threshold-calibration.md) |
+| Enrollment metadata | [Enrollment format](enrollment-format.md) |
+| Detector metadata | [Detector output format](detector-output-format.md) |
 
-## PAM and sudo
+## Security, PAM, and sudo
 
-| Document | Purpose |
+| Topic | Document |
 |---|---|
-| pam-fake-service-test.md | Safe fake PAM test flow |
-| sudo-integration-plan.md | sudo integration plan |
-| sudo-safe-installer.md | sudo dry-run installer plan |
-| sudo-apply-and-rollback.md | Guarded sudo apply and rollback |
-| sudo-test-results.md | Manual sudo test results |
+| Security policy | [SECURITY.md](../SECURITY.md) |
+| Threat model | [Threat model](threat-model.md) |
+| PAM rules | [PAM safety](pam-safety.md) |
+| Fake PAM test | [Fake service test](pam-fake-service-test.md) |
+| Root peer policy | [sudo root peer policy](sudo-root-peer-policy.md) |
+| Guarded apply and recovery | [sudo apply and rollback](sudo-apply-and-rollback.md) |
+| Dependency boundary | [Dependency audit](dependency-audit.md) |
 
-## Daemon
+Real PAM service files must not be modified casually. Development auth is not
+real biometric authentication.
 
-| Document | Purpose |
+## Daemon, storage, and GUI
+
+| Topic | Document |
 |---|---|
-| architecture.md | Daemon architecture and IPC |
-| configuration.md | User config file |
-| systemd-user-service.md | systemd user service |
-| template-storage.md | Encrypted template storage scaffold |
-| template-cli.md | Placeholder template CLI |
+| Per-user configuration | [Configuration](configuration.md) |
+| User service | [systemd user service](systemd-user-service.md) |
+| Template storage | [Template storage](template-storage.md) |
+| Development key handling | [Key management](key-management.md) |
+| Template CLI | [Template CLI](template-cli.md) |
+| Qt GUI | [GUI](gui.md) |
+| Camera preview design | [GUI camera preview](gui-camera-preview.md) |
+| Brightness assistance | [Brightness assist](brightness-assist.md) |
 
-## Enrollment and templates
+## Build, CI, packaging, and releases
 
-| Document | Purpose |
+| Topic | Document |
 |---|---|
-| enrollment-format.md | Enrollment manifest format |
-| manifest-validation.md | Manifest validation |
-| template-storage.md | Template crypto scaffold |
-| template-cli.md | Template CLI scaffold |
+| Build performance | [Fast builds](fast-builds.md) |
+| CI design | [CI](ci.md) |
+| CI packages | [CI dependencies](ci-dependencies.md) |
+| Packaging | [Packaging](packaging.md) |
+| Release process | [Release process](release-process.md) |
+| Release artifacts | [Release artifacts](release-artifacts.md) |
+| Changelog | [CHANGELOG.md](../CHANGELOG.md) |
 
-## GUI
+Historical release notes live under releases/.
 
-| Document | Purpose |
+## Contribution workflow
+
+| Topic | Document |
 |---|---|
-| gui.md | Qt GUI scaffold |
-| gui-camera-preview.md | Camera preview design |
-| brightness-assist.md | Brightness assist design |
-
-## Python and models
-
-| Document | Purpose |
-|---|---|
-| python-prototypes.md | Python capture prototype |
-| python-embedding-prototype.md | Python embedding prototype |
-| model-export.md | TorchScript export stub |
-| libtorch-loader.md | Optional LibTorch daemon loader |
-| cpu-face-profile.md | CPU-only YuNet/SFace enrollment profile prototype |
-
-## Testing and CI
-
-| Document | Purpose |
-|---|---|
-| testing.md | CTest and manual tests |
-| ci.md | GitHub Actions workflows |
-| local-verification.md | Local verification script |
-
-## Packaging and releases
-
-| Document | Purpose |
-|---|---|
-| packaging.md | Debian package skeleton |
-| release-process.md | Release process |
-| releases/v0.1.0-alpha.md | v0.1.0-alpha checklist and notes |
-
-## Important warnings
-
-This project is not real biometric authentication yet.
-
-Do not use it as your only authentication method.
-
-Do not manually edit real PAM service files unless you understand the rollback process.
-
-Development auth requires:
-
-    FACE_UNLOCK_DEV_ALLOW=1
-
-and must never be used as production authentication.
-
-## Model evaluation and matching
-
-| Document | Purpose |
-|---|---|
-| model-evaluation-plan.md | Plan for selecting and evaluating real models |
-| threshold-calibration.md | Matching threshold calibration plan |
-
-## Candidate models
-
-| Document | Purpose |
-|---|---|
-| model-candidates.md | Candidate detector, alignment, and embedding models |
-
-## Model evaluation harness
-
-| Document | Purpose |
-|---|---|
-| model-evaluation-harness.md | Python scaffold for model evaluation metrics |
-
-## Evaluation metrics
-
-| Document | Purpose |
-|---|---|
-| model-evaluation-metrics.md | JSON format for model evaluation metrics |
-
-## Metrics validation
-
-| Document | Purpose |
-|---|---|
-| model-evaluation-metrics.md | Metrics format and validator details |
-
-## Contribution review
-
-| Document | Purpose |
-|---|---|
-| pull-request-review.md | Review expectations for security-sensitive PRs |
-
-## Ownership and review routing
-
-| Document | Purpose |
-|---|---|
-| codeowners.md | CODEOWNERS and review routing |
-
-## GitHub project management
-
-| Document | Purpose |
-|---|---|
-| github-labels.md | GitHub issue label setup |
-
-## Milestones
-
-| Document | Purpose |
-|---|---|
-| milestones.md | Planned project milestone definitions |
-
-## GitHub issues
-
-| Document | Purpose |
-|---|---|
-| github-issues.md | Starter issue bootstrap script |
-
-## sudo dry-run testing
-
-| Document | Purpose |
-|---|---|
-| sudo-dry-run-test.md | Verifies sudo dry-run scripts do not modify PAM |
-
-## Dependency audit
-
-| Document | Purpose |
-|---|---|
-| dependency-audit.md | Dependency policy and audit commands |
-
-## Release artifacts
-
-| Document | Purpose |
-|---|---|
-| release-artifacts.md | Automated GitHub Release artifact publishing |
-
-## Script inventory
-
-| Document | Purpose |
-|---|---|
-| script-inventory.md | Required scripts and executable checks |
-
-## Changelog
-
-| Document | Purpose |
-|---|---|
-| ../CHANGELOG.md | Project changelog |
-
-## Key management
-
-| Document | Purpose |
-|---|---|
-| key-management.md | Development key scaffold and production key management plan |
-
-## v0.1.1-alpha
-
-| Document | Purpose |
-|---|---|
-| releases/v0.1.1-alpha.md | v0.1.1-alpha release notes |
-
-## Build performance
-
-| Document | Purpose |
-|---|---|
-| fast-builds.md | Ninja, ccache, and faster build configuration |
-
-## CI dependencies
-
-| Document | Purpose |
-|---|---|
-| ci-dependencies.md | Shared CI dependency installer |
-
-## Detector prototype
-
-| Document | Purpose |
-|---|---|
-| detector-prototype.md | Python face detector backend scaffold |
-
-## Detector output
-
-| Document | Purpose |
-|---|---|
-| detector-output-format.md | Detector output JSON format |
-
-## Daemon detector scaffold
-
-| Document | Purpose |
-|---|---|
-| daemon-detector-scaffold.md | C++ daemon detector abstraction scaffold |
+| Contribution rules | [CONTRIBUTING.md](../CONTRIBUTING.md) |
+| Security review checklist | [Pull request review](pull-request-review.md) |
+| Code ownership | [CODEOWNERS](codeowners.md) |
+| Issue labels | [GitHub labels](github-labels.md) |
+| Milestones | [Milestones](milestones.md) |

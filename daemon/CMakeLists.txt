@@ -105,7 +105,10 @@ target_compile_options(face-unlockd PRIVATE
   -Wpedantic
 )
 
-target_compile_definitions(face-unlockd PRIVATE _GNU_SOURCE)
+target_compile_definitions(face-unlockd PRIVATE
+  _GNU_SOURCE
+  FACE_UNLOCK_VERSION="${PROJECT_VERSION}"
+)
 
 target_include_directories(face-unlockd PRIVATE
   ${OPENCV_INCLUDE_DIR}

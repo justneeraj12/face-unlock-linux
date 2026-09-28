@@ -40,13 +40,15 @@ Implemented today:
 - systemd user service helpers
 - encrypted template storage scaffold
 - optional TorchScript loader scaffold
+- C++ CPU YuNet detector
+- Python CPU SFace and multi-pose profile prototype
+- optional Qt enrollment GUI scaffold
 
 Not implemented yet:
 
-- real face recognition
-- real enrollment
+- real face matching
+- persistent biometric enrollment
 - template matching
-- Qt enrollment GUI
 - production sudo integration
 - lock-screen integration
 - greeter/login integration
@@ -93,8 +95,9 @@ flowchart TD
 |---|---|---:|---|---|
 | User daemon | daemon/ | user | working prototype | camera, IPC, auth state |
 | PAM module | pam/ | loaded by PAM | working fake-test prototype | tiny IPC client |
-| Python prototypes | python/ | user | working prototype | capture and model export experiments |
-| Config file | ~/.config/face-unlock/config.json | user | scaffold | camera index and auth attempt config |
+| Python prototypes | python/ | user | working prototype | YuNet, SFace, enrollment, and benchmarks |
+| Qt GUI | gui/ | user | working scaffold | consent, status, pose, quality, and privacy UI |
+| Config file | ~/.config/face-unlock/config.json | user | implemented | camera, detector, model path, and auth attempts |
 | Template storage | ~/.local/share/face-unlock/template.enc | user | crypto scaffold | encrypted future template |
 | systemd user service | packaging/systemd | user | working helper | starts daemon as user |
 | Debian package | CPack | system install | skeleton | packages binaries/docs |
@@ -154,7 +157,8 @@ Threaded state:
 Current limitation:
 
 - the latest frame is copied into memory
-- no detector or matcher runs yet
+- detector inference runs only for detector_status requests
+- face embedding and matching are not connected
 - no images are saved by daemon
 
 ## IPC socket
@@ -211,7 +215,7 @@ Auth request:
 
 Default auth response:
 
-    {"status":"fail","op":"auth","reason":"auth_not_implemented"}
+    {"status":"fail","op":"auth","reason":"template_missing"}
 
 Development-only auth response when FACE_UNLOCK_DEV_ALLOW=1:
 
@@ -393,45 +397,27 @@ Future key options:
 
 ## Model pipeline
 
-Current model state:
+Current detector pipeline:
 
-- Python can export a dummy TorchScript embedding model
-- daemon can optionally build with LibTorch
-- daemon can run a model-test dummy forward pass
-- default builds do not require LibTorch
+    camera frame -> C++ YuNet on OpenCV CPU -> box + confidence + landmarks
 
-Current pipeline:
+Current prototype recognition pipeline:
 
-    dummy tensor -> TorchScript stub -> embedding-shaped tensor
+    detected face -> SFace alignment -> normalized embedding -> pose profile
 
-Future pipeline:
-
-```mermaid
-flowchart LR
-    Frame[Camera frame]
-    Detect[Face detection]
-    Align[Face alignment]
-    Normalize[Preprocess]
-    Embed[Embedding model]
-    Match[Compare to encrypted template]
-    Decision[Auth decision]
-
-    Frame --> Detect
-    Detect --> Align
-    Align --> Normalize
-    Normalize --> Embed
-    Embed --> Match
-    Match --> Decision
-```
+YuNet is loaded once when the daemon starts. The Python prototype already
+builds center, left, right, up, and down pose centroids, but SFace and profile
+matching have not yet moved into the daemon.
 
 Not implemented yet:
 
-- detector in daemon
-- alignment
-- real embedding model
-- threshold calibration
-- template comparison
-- liveness checks
+- C++ SFace alignment and embedding
+- versioned encrypted profile payload
+- calibrated template comparison
+- held-out enrollment validation
+- liveness and presentation-attack checks
+
+See docs/cpu-face-profile.md and docs/daemon-detector-scaffold.md.
 
 ## Trust boundaries
 
@@ -453,7 +439,7 @@ Not implemented yet:
 | too many attempts | auth returns too_many_attempts |
 | unknown socket op | failure response |
 | peer UID mismatch | peer rejected |
-| model missing | model-test fails, normal daemon still works |
+| configured detector model missing | daemon startup fails |
 | template missing | real auth not implemented yet |
 | PAM timeout | PAM returns auth error |
 | package installed | does not enable PAM automatically |
@@ -538,19 +524,17 @@ Planned future documents or sections:
 - lock-screen integration notes
 - greeter/system-helper threat model
 
-## Daemon detector scaffold
+## Daemon CPU detector
 
-The daemon includes a C++ detector abstraction scaffold.
+The daemon supports noop, optional Haar, and CPU YuNet backends.
 
-Current backend:
+YuNet detector_status responses include:
 
-    noop
+- detector latency
+- face count
+- bounding boxes
+- confidence values
+- five facial landmarks
 
-Socket responses include:
-
-    detector noop
-    faces_detected 0
-
-Details:
-
-    docs/daemon-detector-scaffold.md
+The model path is explicit, missing models fail startup, and inference errors do
+not approve authentication. Details are in docs/daemon-detector-scaffold.md.
