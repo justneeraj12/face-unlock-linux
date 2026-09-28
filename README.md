@@ -34,6 +34,41 @@ from normalized embeddings.
 The project is being built in small, testable stages. A one-command production
 installer is a goal, not a capability of the current release.
 
+## Project map
+
+```mermaid
+mindmap
+  root((face-unlock-linux))
+    User experience
+      One-command install goal
+      Guided Qt enrollment
+      Password or PIN fallback
+      Forget Me deletion
+    CPU face pipeline
+      YuNet detection
+      Five facial landmarks
+      SFace embeddings
+      Multi-pose profile
+      Intel and AMD laptops
+    Security boundary
+      Tiny PAM client
+      Per-user daemon
+      UNIX socket peer checks
+      Fail closed
+      Encrypted templates
+    Privacy
+      Local-only processing
+      No telemetry
+      No raw image logs
+      Explicit biometric consent
+    Engineering
+      C++17 runtime
+      Python prototypes
+      Qt6 GUI
+      CTest and CI
+      Debian packaging
+```
+
 ## Current status
 
 | Area | Current implementation |
@@ -58,26 +93,80 @@ The current development phase is moving SFace embedding, profile construction,
 and enrollment control into the daemon. See [project status](docs/project-status.md)
 and the [roadmap](ROADMAP.md).
 
+## Delivery path
+
+```mermaid
+flowchart LR
+    Foundation["Foundation<br/>daemon, IPC, PAM boundary, crypto"] --> Runtime["Current phase<br/>C++ CPU recognition and profiles"]
+    Runtime --> Enrollment["Guided enrollment<br/>daemon operations and Qt progress"]
+    Enrollment --> Hardening["Security hardening<br/>thresholds, liveness, recovery"]
+    Hardening --> Packaging["Daily-use packaging<br/>models, service, reversible opt-in"]
+    Packaging --> Integration["Desktop integration<br/>sudo, lock screen, login"]
+    Integration --> Stable["v1.0 review<br/>accuracy, rollback, external audit"]
+
+    classDef complete fill:#d5f5e3,stroke:#1e8449,color:#111
+    classDef active fill:#fff3cd,stroke:#b7950b,color:#111
+    classDef planned fill:#eaecee,stroke:#626567,color:#111
+
+    class Foundation complete
+    class Runtime active
+    class Enrollment,Hardening,Packaging,Integration,Stable planned
+```
+
+Green is implemented foundation, yellow is active work, and gray is planned.
+
 ## Architecture
 
-The security boundary is intentionally small:
+```mermaid
+flowchart LR
+    User((Desktop user))
+    Password["Password or PIN fallback"]
 
-    PAM service
-        |
-        v
-    pam_face_unlock.so       tiny C client; no OpenCV, Qt, Torch, or sodium
-        |
-        | UNIX socket /run/user/$UID/face-unlock.sock
-        v
-    face-unlockd             normal desktop user
-        |
-        +-- camera worker
-        +-- CPU YuNet detector
-        +-- future CPU SFace matcher
-        +-- encrypted per-user profile
-        |
-        v
-    explicit success or fail-closed response
+    subgraph Clients["User-facing clients"]
+        GUI["Qt enrollment GUI"]
+        PAMService["sudo, lock screen, or login"]
+        PAM["pam_face_unlock.so<br/>tiny C IPC client"]
+    end
+
+    subgraph Daemon["face-unlockd - normal user process"]
+        IPC["UNIX socket<br/>mode 0600"]
+        Peer["SO_PEERCRED policy"]
+        Camera["Camera worker"]
+        Frame["Latest frame<br/>memory only"]
+        YuNet["YuNet CPU detector"]
+        SFace["SFace CPU embedding<br/>planned in C++"]
+        Matcher["Profile matcher and quality gates<br/>planned"]
+        Decision["Explicit auth decision<br/>fail closed"]
+        Crypto["Encrypted per-user profile<br/>placeholder scaffold"]
+    end
+
+    User --> GUI
+    User --> PAMService
+    PAMService --> PAM
+    PAM -->|"bounded local request"| IPC
+    GUI -->|"status; enrollment planned"| IPC
+    IPC --> Peer
+    Peer --> Decision
+
+    Camera --> Frame
+    Frame --> YuNet
+    YuNet -.->|"landmarks"| SFace
+    SFace -.-> Matcher
+    Crypto -.-> Matcher
+    Matcher -.-> Decision
+
+    Decision -->|"success or failure"| PAM
+    PAMService --> Password
+
+    classDef implemented fill:#d5f5e3,stroke:#1e8449,color:#111
+    classDef planned fill:#eaecee,stroke:#626567,color:#111
+
+    class GUI,PAMService,PAM,IPC,Peer,Camera,Frame,YuNet,Decision implemented
+    class SFace,Matcher,Crypto planned
+```
+
+Solid connections are implemented infrastructure. Dashed connections are the
+recognition and profile path currently being moved from Python into C++.
 
 The PAM module never opens the camera or loads a model. Heavy work stays in the
 unprivileged daemon. The socket uses mode 0600 and SO_PEERCRED checks.
@@ -157,7 +246,40 @@ The auth request must fail because the real matcher is not connected yet.
 
 ## Guided enrollment prototype
 
-Run the current non-persistent enrollment prototype:
+```mermaid
+flowchart LR
+    Consent["Explicit consent"] --> Frames["Live camera frames"]
+    Frames --> Detect["YuNet face detection"]
+    Detect --> Embed["SFace align and embed"]
+    Embed --> Filter["Quality and duplicate filters"]
+    Filter --> Pose{"Pose coverage"}
+    Pose --> Center["Center"]
+    Pose --> Left["Left"]
+    Pose --> Right["Right"]
+    Pose --> Up["Up"]
+    Pose --> Down["Down"]
+
+    Center --> Profile["Normalized pose centroids"]
+    Left --> Profile
+    Right --> Profile
+    Up --> Profile
+    Down --> Profile
+
+    Profile -.-> Validate["Held-out validation<br/>planned"]
+    Validate -.-> Encrypt["Encrypt and atomically commit<br/>planned"]
+    Encrypt -.-> Ready["Ready for optional auth<br/>planned"]
+
+    classDef prototype fill:#d5f5e3,stroke:#1e8449,color:#111
+    classDef planned fill:#eaecee,stroke:#626567,color:#111
+
+    class Consent,Frames,Detect,Embed,Filter,Pose,Center,Left,Right,Up,Down,Profile prototype
+    class Validate,Encrypt,Ready planned
+```
+
+The green pipeline works today as a non-persistent Python prototype. The dashed
+steps are required before enrollment can create a usable encrypted profile.
+
+Run it with:
 
     python3 python/prototype_enroll_cpu.py --i-understand-biometric-risk
 
@@ -180,6 +302,48 @@ Run it:
 The GUI currently provides consent and privacy information, daemon status,
 template status, pose and quality scaffolds, and placeholder-data deletion. It
 does not yet perform real enrollment or enable authentication.
+
+## Fail-closed authentication flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Service as PAM service
+    participant Module as pam_face_unlock.so
+    participant Daemon as face-unlockd
+    participant Camera
+    participant Pipeline as YuNet + SFace + checks
+    participant Profile as Encrypted profile
+    participant Password as Password or PIN fallback
+
+    User->>Service: Authentication request
+    Service->>Module: pam_sm_authenticate
+    Module->>Daemon: Local auth request with timeout
+    Daemon->>Daemon: Verify peer credentials and retry limits
+
+    alt Current development state
+        Daemon-->>Module: Fail - matcher_not_implemented
+        Module-->>Service: PAM_AUTH_ERR
+        Service->>Password: Continue to fallback
+    else Future validated recognition path
+        Daemon->>Camera: Read a fresh frame
+        Camera-->>Daemon: Frame or camera error
+        Daemon->>Pipeline: Detect, align, embed, quality, liveness
+        Daemon->>Profile: Decrypt and compare
+        alt Every required check passes
+            Daemon-->>Module: Explicit success
+            Module-->>Service: PAM_SUCCESS
+        else Any check fails or times out
+            Daemon-->>Module: Explicit failure
+            Module-->>Service: PAM_AUTH_ERR
+            Service->>Password: Continue to fallback
+        end
+    end
+```
+
+No detector result by itself can authenticate a user. Camera, model, profile,
+quality, threshold, liveness, peer-policy, and timeout checks must all succeed.
+Any missing or invalid state falls back to password or PIN.
 
 ## Safety model
 
