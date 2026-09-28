@@ -17,6 +17,9 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
   camera-free benchmark self-test.
 - Versioned C++ five-pose face profiles, strict bounded parsing, score-only
   matching, and libsodium encrypted round-trip tests.
+- Deterministic lock-screen attempt policy with a one-second deadline, three
+  qualified candidates, low-light illumination handshake, immediate password
+  cancellation, and explicit fallback metadata.
 
 ### Changed
 

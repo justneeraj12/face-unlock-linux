@@ -86,6 +86,7 @@ mindmap
 | Templates | libsodium placeholder encryption and development key tooling |
 | GUI | Qt6 consent, status, pose, quality, and privacy scaffold |
 | Authentication | fail-closed; real matcher not connected |
+| Lock screen | bounded policy controller; GNOME/camera integration pending |
 | Liveness | not implemented |
 | Packaging | development Debian/CPack skeleton |
 
@@ -424,6 +425,7 @@ Most useful references:
 - [Configuration](docs/configuration.md)
 - [Testing](docs/testing.md)
 - [Threat model](docs/threat-model.md)
+- [Lock-screen authentication policy](docs/lock-screen-auth.md)
 - [PAM safety](docs/pam-safety.md)
 - [Key management](docs/key-management.md)
 - [Packaging](docs/packaging.md)

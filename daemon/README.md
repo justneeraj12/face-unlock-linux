@@ -61,6 +61,7 @@ Operations:
 - camera_status
 - detector_status
 - template_status
+- lockscreen_policy
 - auth
 
 Query from another terminal:
@@ -69,6 +70,9 @@ Query from another terminal:
 
 detector_status returns backend, status, face count, latency, and detections.
 YuNet detections include a box, confidence, and five landmarks.
+
+lockscreen_policy returns the bounded attempt defaults and explicitly reports
+that desktop integration is pending. It is a read-only capability query.
 
 ## Authentication state
 
@@ -90,6 +94,7 @@ Neither flag is suitable for production.
 
 The build also creates:
 
+- face-unlock-lockscreen-auth-selftest
 - face-unlock-detector-selftest
 - face-unlock-recognizer-selftest
 - face-unlock-profile-selftest

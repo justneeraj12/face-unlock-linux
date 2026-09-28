@@ -24,6 +24,7 @@
 #include <opencv2/videoio.hpp>
 
 #include "detector.h"
+#include "lockscreen_auth.h"
 #include "template_crypto.h"
 
 #include <sodium.h>
@@ -886,6 +887,10 @@ std::string extract_operation(const std::string& request) {
     return "camera_status";
   }
 
+  if (compact.find("\"op\":\"lockscreen_policy\"") != std::string::npos) {
+    return "lockscreen_policy";
+  }
+
   if (compact.find("\"op\":\"auth\"") != std::string::npos) {
     return "auth";
   }
@@ -1034,6 +1039,23 @@ std::string build_response_for_request(
   if (op == "camera_status") {
     return "{\"status\":\"ok\",\"op\":\"camera_status\""
       + camera_fields + template_fields + enrollment_fields + key_fields + "}\n";
+  }
+
+  if (op == "lockscreen_policy") {
+    const face_unlock::LockScreenPolicy policy;
+    return "{\"status\":\"ok\",\"op\":\"lockscreen_policy\""
+      ",\"protocol_version\":1"
+      ",\"maximum_candidates\":" + std::to_string(policy.maximum_candidates)
+      + ",\"deadline_ms\":" + std::to_string(policy.deadline_ms)
+      + ",\"illumination_settle_ms\":"
+      + std::to_string(policy.illumination_settle_ms)
+      + ",\"low_light_luma_threshold\":"
+      + std::to_string(policy.low_light_luma_threshold)
+      + ",\"low_quality_counts_as_candidate\":false"
+      + ",\"illumination_owner\":\"lock_screen\""
+      + ",\"password_fallback\":true"
+      + ",\"implementation_status\":\"policy_ready_integration_pending\""
+      + "}\n";
   }
 
   if (op == "auth") {

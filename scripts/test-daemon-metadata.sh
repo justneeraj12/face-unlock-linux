@@ -137,6 +137,25 @@ if [[ "$detector_response" != *'"detections":[]'* ]]; then
 fi
 
 echo
+echo "[test-daemon-metadata] Query lockscreen_policy metadata"
+lockscreen_response="$("$client" lockscreen_policy)"
+echo "lockscreen_response: $lockscreen_response"
+
+for expected in \
+  '"op":"lockscreen_policy"' \
+  '"maximum_candidates":3' \
+  '"deadline_ms":1000' \
+  '"illumination_settle_ms":200' \
+  '"low_quality_counts_as_candidate":false' \
+  '"illumination_owner":"lock_screen"' \
+  '"password_fallback":true'; do
+  if [[ "$lockscreen_response" != *"$expected"* ]]; then
+    echo "ERROR: lockscreen_policy response missing: $expected"
+    exit 1
+  fi
+done
+
+echo
 echo "[test-daemon-metadata] Stop daemon"
 kill "$daemon_pid"
 wait "$daemon_pid" 2>/dev/null || true

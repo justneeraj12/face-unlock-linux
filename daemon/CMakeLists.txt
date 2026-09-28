@@ -61,6 +61,34 @@ target_link_libraries(face_unlock_crypto PUBLIC
   ${SODIUM_LIBRARY}
 )
 
+add_library(face_unlock_lockscreen_auth STATIC
+  src/lockscreen_auth.cpp
+)
+
+target_compile_options(face_unlock_lockscreen_auth PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+)
+
+target_include_directories(face_unlock_lockscreen_auth PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+add_executable(face-unlock-lockscreen-auth-selftest
+  src/lockscreen_auth_selftest.cpp
+)
+
+target_compile_options(face-unlock-lockscreen-auth-selftest PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+)
+
+target_link_libraries(face-unlock-lockscreen-auth-selftest PRIVATE
+  face_unlock_lockscreen_auth
+)
+
 add_library(face_unlock_detector STATIC
   src/detector.cpp
 )
@@ -174,6 +202,7 @@ target_link_libraries(face-unlockd PRIVATE
   ${OPENCV_VIDEOIO_LIBRARY}
   face_unlock_crypto
   face_unlock_detector
+  face_unlock_lockscreen_auth
 )
 
 if(WITH_TORCH)
@@ -254,6 +283,11 @@ if(BUILD_TESTING)
   add_test(
     NAME detector_selftest
     COMMAND face-unlock-detector-selftest
+  )
+
+  add_test(
+    NAME lockscreen_auth_policy
+    COMMAND face-unlock-lockscreen-auth-selftest
   )
 
 
@@ -337,7 +371,14 @@ if(BUILD_TESTING)
   )
 endif()
 
-install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-tool face-unlock-key-tool face-unlock-detector-selftest
+install(
+  TARGETS
+    face-unlockd
+    face-unlock-crypto-selftest
+    face-unlock-template-tool
+    face-unlock-key-tool
+    face-unlock-detector-selftest
+    face-unlock-lockscreen-auth-selftest
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 if(TARGET face-unlock-recognizer-selftest)

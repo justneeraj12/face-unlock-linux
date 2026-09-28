@@ -6,9 +6,18 @@ This document describes the current test setup.
 
 The project uses CTest.
 
-Current tests:
+Current CTest cases:
 
 - crypto_selftest
+- detector_selftest
+- lockscreen_auth_policy
+- key_template_flow
+- daemon_metadata
+- auth_reasons
+- detector_backends
+- cpu_recognizer
+- face_profile_cpp
+- cpu_face_profile
 
 The crypto self-test verifies:
 
@@ -103,20 +112,20 @@ It verifies daemon socket responses include:
 
 The test uses daemon --serve mode and does not require a camera.
 
-## template_status operation test
+## Lock-screen policy test
 
-The daemon_metadata CTest verifies the template_status socket operation.
+CTest includes:
 
-It checks:
+    lockscreen_auth_policy
 
-- template present
-- enrollment placeholder
-- key present
-- decryptability possible_with_dev_key
-- key_storage local_development_key_file
-- template_decrypt ok
+The native state-machine test verifies the three-candidate bound, one-second
+deadline, low-light illumination handshake and settle interval, rejection of
+low-quality frames without consuming candidates, immediate password
+cancellation, monotonic timing, and invalid-policy rejection.
 
-No plaintext is returned.
+The daemon_metadata test also verifies the read-only `lockscreen_policy`
+response. Neither test accesses a camera or modifies GNOME, GDM, PAM, screen
+brightness, or system files.
 
 ## template_status operation test
 

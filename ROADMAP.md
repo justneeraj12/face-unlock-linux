@@ -19,6 +19,7 @@ This roadmap describes direction rather than a release promise.
 - multi-pose profile builders in Python and C++
 - pinned model downloader with checksum verification
 - synthetic CPU benchmark harness
+- bounded lock-screen attempt policy with password cancellation and fallback
 - CI, CTest, Debian package skeleton, and release workflows
 
 ## Current phase: CPU recognition and enrollment
@@ -87,8 +88,10 @@ differ:
 - display manager or greeter
 - encrypted-home and pre-login environments
 
-Each integration requires its own threat review, fallback path, and rollback
-test before it can be enabled.
+The lock-screen policy state machine is implemented, but GNOME Shell rendering,
+on-demand camera leasing, biometric decisions, and actual unlock integration
+remain pending. Each integration requires its own threat review, fallback path,
+and rollback test before it can be enabled.
 
 ## v1.0 readiness gates
 

@@ -29,6 +29,7 @@ atomic encrypted profile persistence.
 - same-user policy
 - explicit development-only root auth peer policy
 - bounded failed-attempt state
+- deterministic lock-screen attempt policy and read-only capability metadata
 - clean signal handling
 
 ### CPU face pipeline
@@ -73,7 +74,8 @@ atomic encrypted profile persistence.
 - liveness or presentation-attack defense
 - production key management
 - production sudo authentication
-- lock-screen or display-manager integration
+- GNOME lock-screen rendering, camera leasing, or unlock integration
+- display-manager integration
 - one-command end-user installation
 - automatic, production-safe PAM configuration
 
