@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 
@@ -12,9 +12,10 @@ class Detection:
     h: int
     score: float
     backend: str
+    landmarks: list[tuple[float, float]] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        return {
+        result = {
             "x": self.x,
             "y": self.y,
             "w": self.w,
@@ -22,6 +23,13 @@ class Detection:
             "score": self.score,
             "backend": self.backend,
         }
+
+        if self.landmarks:
+            result["landmarks"] = [
+                {"x": float(x), "y": float(y)} for x, y in self.landmarks
+            ]
+
+        return result
 
 
 class FaceDetector(Protocol):

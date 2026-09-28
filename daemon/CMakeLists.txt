@@ -236,6 +236,16 @@ if(BUILD_TESTING)
   set_tests_properties(detector_backends PROPERTIES
     TIMEOUT 30
   )
+
+  add_test(
+    NAME cpu_face_profile
+    COMMAND bash
+      ${CMAKE_SOURCE_DIR}/scripts/test-cpu-face-profile.sh
+  )
+
+  set_tests_properties(cpu_face_profile PROPERTIES
+    TIMEOUT 30
+  )
 endif()
 
 install(TARGETS face-unlockd face-unlock-crypto-selftest face-unlock-template-tool face-unlock-key-tool face-unlock-detector-selftest

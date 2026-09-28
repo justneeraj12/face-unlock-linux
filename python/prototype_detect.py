@@ -42,6 +42,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--camera", type=int, default=0)
     parser.add_argument("--backend", choices=["auto", "haar", "noop", "yunet"], default="auto")
     parser.add_argument("--cascade", type=Path, default=None)
+    parser.add_argument(
+        "--model",
+        type=Path,
+        default=None,
+        help="YuNet ONNX model path",
+    )
     parser.add_argument("--duration-seconds", type=float, default=10.0)
     parser.add_argument("--preview", action="store_true")
 
@@ -121,7 +127,10 @@ def run_synthetic(args: argparse.Namespace) -> int:
         print("ERROR: --preview cannot be used with --synthetic-frame")
         return 1
 
-    detector = create_detector(args.backend, cascade=args.cascade)
+    import numpy as np
+
+    detector = create_detector(args.backend, cascade=args.cascade, model=args.model)
+    frame = np.zeros((height, width, 3), dtype=np.uint8)
 
     print("detector_status: started")
     print(f"backend: {args.backend}")
@@ -131,7 +140,7 @@ def run_synthetic(args: argparse.Namespace) -> int:
     print(f"write_metadata: {str(args.write_metadata).lower()}")
 
     before = time.perf_counter()
-    detections = detector.detect(object())
+    detections = detector.detect(frame)
     detect_ms = (time.perf_counter() - before) * 1000.0
 
     reports = [
@@ -179,7 +188,7 @@ def run_synthetic(args: argparse.Namespace) -> int:
 def run_camera(args: argparse.Namespace) -> int:
     import cv2
 
-    detector = create_detector(args.backend, cascade=args.cascade)
+    detector = create_detector(args.backend, cascade=args.cascade, model=args.model)
 
     cap = cv2.VideoCapture(args.camera, cv2.CAP_V4L2)
 

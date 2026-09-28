@@ -87,3 +87,11 @@ GUI build helper:
 Additional detector backend tests:
 
 - scripts/test-detector-backends.sh
+
+CPU face-profile tools:
+
+- scripts/download-cpu-models.sh
+- scripts/test-cpu-face-profile.sh
+
+The model downloader pins upstream revisions and verifies SHA-256 checksums.
+Downloaded ONNX files are local build inputs and remain ignored by Git.

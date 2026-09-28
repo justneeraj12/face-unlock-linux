@@ -28,6 +28,8 @@ required_scripts=(
   scripts/test-python-detectors.sh
   scripts/test-detector-output-generation.sh
   scripts/test-detector-backends.sh
+  scripts/test-cpu-face-profile.sh
+  scripts/download-cpu-models.sh
   scripts/validate-enrollment-manifest.py
   scripts/validate-model-eval-metrics.py
   scripts/validate-detector-output.py

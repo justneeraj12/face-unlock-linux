@@ -66,6 +66,7 @@ This directory contains project documentation for face-unlock-linux.
 | python-embedding-prototype.md | Python embedding prototype |
 | model-export.md | TorchScript export stub |
 | libtorch-loader.md | Optional LibTorch daemon loader |
+| cpu-face-profile.md | CPU-only YuNet/SFace enrollment profile prototype |
 
 ## Testing and CI
 

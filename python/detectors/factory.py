@@ -6,8 +6,20 @@ from detectors.base import FaceDetector
 from detectors.noop import NoopFaceDetector
 
 
-def create_detector(backend: str, cascade: Path | None = None) -> FaceDetector:
+def create_detector(
+    backend: str,
+    cascade: Path | None = None,
+    model: Path | None = None,
+) -> FaceDetector:
     if backend == "auto":
+        if model is not None:
+            try:
+                from detectors.yunet import YuNetFaceDetector
+
+                return YuNetFaceDetector(model_path=model)
+            except Exception as exc:
+                print(f"detector_auto_warning: YuNet unavailable: {exc}")
+
         try:
             from detectors.haar import HaarFaceDetector
 
@@ -27,6 +39,9 @@ def create_detector(backend: str, cascade: Path | None = None) -> FaceDetector:
     if backend == "yunet":
         from detectors.yunet import YuNetFaceDetector
 
-        return YuNetFaceDetector()
+        if model is None:
+            raise ValueError("YuNet requires --model PATH")
+
+        return YuNetFaceDetector(model_path=model)
 
     raise ValueError(f"unknown detector backend: {backend}")

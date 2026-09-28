@@ -234,3 +234,21 @@ Detector integration tests verify detector_status includes:
     detector_ms
 
 This ensures future detector backends report latency metadata.
+
+## CPU face-profile test
+
+CTest includes:
+
+    cpu_face_profile
+
+This test runs:
+
+    ./scripts/test-cpu-face-profile.sh
+
+It verifies:
+
+- coarse pose classification
+- duplicate sample rejection
+- pose coverage progress
+- profile centroid construction
+- synthetic embedding matching

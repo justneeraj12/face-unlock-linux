@@ -26,8 +26,12 @@ Core mode installs:
 - ccache
 - pkg-config
 - file
+- python3-numpy
+- python3-opencv
 - libopencv-core-dev
 - libopencv-videoio-dev
+- libopencv-objdetect-dev
+- libopencv-imgproc-dev
 - libpam0g-dev
 - libsodium-dev
 
