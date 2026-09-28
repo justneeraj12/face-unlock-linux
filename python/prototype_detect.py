@@ -127,10 +127,14 @@ def run_synthetic(args: argparse.Namespace) -> int:
         print("ERROR: --preview cannot be used with --synthetic-frame")
         return 1
 
-    import numpy as np
-
     detector = create_detector(args.backend, cascade=args.cascade, model=args.model)
-    frame = np.zeros((height, width, 3), dtype=np.uint8)
+
+    if args.backend == "noop":
+        frame: Any = object()
+    else:
+        import numpy as np
+
+        frame = np.zeros((height, width, 3), dtype=np.uint8)
 
     print("detector_status: started")
     print(f"backend: {args.backend}")
