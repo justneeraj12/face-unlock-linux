@@ -241,6 +241,36 @@ if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY AND OPENCV_DNN_LIBRARY)
     face_unlock_profile
     face_unlock_crypto
   )
+
+  if(TARGET face_unlock_frame_quality)
+    add_library(face_unlock_verification_pipeline STATIC
+      src/verification_pipeline.cpp
+    )
+    target_compile_options(face_unlock_verification_pipeline PRIVATE
+      -Wall
+      -Wextra
+      -Wpedantic
+    )
+    target_include_directories(face_unlock_verification_pipeline PUBLIC
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_link_libraries(face_unlock_verification_pipeline PUBLIC
+      face_unlock_frame_quality
+      face_unlock_profile
+    )
+
+    add_executable(face-unlock-verification-pipeline-selftest
+      src/verification_pipeline_selftest.cpp
+    )
+    target_compile_options(face-unlock-verification-pipeline-selftest PRIVATE
+      -Wall
+      -Wextra
+      -Wpedantic
+    )
+    target_link_libraries(face-unlock-verification-pipeline-selftest PRIVATE
+      face_unlock_verification_pipeline
+    )
+  endif()
 endif()
 
 add_executable(face-unlockd
@@ -445,6 +475,13 @@ if(BUILD_TESTING)
       COMMAND $<TARGET_FILE:face-unlock-profile-selftest>
     )
     set_tests_properties(face_profile_cpp PROPERTIES TIMEOUT 30)
+  endif()
+
+  if(TARGET face-unlock-verification-pipeline-selftest)
+    add_test(
+      NAME verification_pipeline
+      COMMAND $<TARGET_FILE:face-unlock-verification-pipeline-selftest>
+    )
   endif()
 
   add_test(
