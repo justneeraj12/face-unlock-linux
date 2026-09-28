@@ -121,6 +121,13 @@ The detector backend integration test checks Haar only when the detector self-te
 
 If Haar is not compiled in or the cascade is unavailable, the test skips Haar gracefully.
 
+The test reports the reason as either:
+
+    haar_backend_status: skipped_not_supported
+    haar_backend_status: skipped_cascade_missing
+
+Unexpected Haar startup failures still fail the test.
+
 ## Detector latency metadata
 
 detector_status responses include detector latency:

@@ -207,7 +207,7 @@ This test runs:
 It verifies:
 
 - noop backend is supported
-- detector_status works with noop
+- detector_status works with noop and reports zero faces plus detector latency
 - unsupported detector backend fails safely
 
 ## Conditional Haar detector test
@@ -222,7 +222,10 @@ responds to detector_status with:
 
     detector haar
 
-If Haar is unavailable, the test skips Haar.
+If Haar is not compiled in, the test reports `skipped_not_supported`. If Haar is
+compiled in but its cascade XML is unavailable at runtime, the test reports
+`skipped_cascade_missing`. Both conditions are safe skips; other Haar startup
+failures still fail the test.
 
 ## Detector latency test
 

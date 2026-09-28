@@ -65,13 +65,15 @@ start_daemon() {
     if [[ -S "$socket_path" ]]; then
       return 0
     fi
+
+    if ! kill -0 "$daemon_pid" 2>/dev/null; then
+      break
+    fi
+
     sleep 0.1
   done
 
-  echo "ERROR: daemon socket was not created for backend: $backend"
-  echo "daemon log:"
-  cat "$daemon_log"
-  exit 1
+  return 1
 }
 
 stop_daemon() {
@@ -87,7 +89,12 @@ stop_daemon() {
 
 echo
 echo "[test-detector-backends] noop daemon detector_status"
-start_daemon "noop"
+if ! start_daemon "noop"; then
+  echo "ERROR: daemon socket was not created for backend: noop"
+  echo "daemon log:"
+  cat "$daemon_log"
+  exit 1
+fi
 
 response="$("$client" detector_status)"
 echo "response: $response"
@@ -102,35 +109,54 @@ if [[ "$response" != *'"detector":"noop"'* ]]; then
   exit 1
 fi
 
+if [[ "$response" != *'"faces_detected":0'* ]]; then
+  echo "ERROR: noop detector_status response missing zero faces_detected"
+  exit 1
+fi
+
+if [[ "$response" != *'"detector_ms":'* ]]; then
+  echo "ERROR: noop detector_status response missing detector_ms"
+  exit 1
+fi
+
 stop_daemon
 
 if [[ "$selftest_output" == *"supported_backend: haar"* ]]; then
   echo
   echo "[test-detector-backends] haar daemon detector_status"
 
-  start_daemon "haar"
+  if start_daemon "haar"; then
+    response="$("$client" detector_status)"
+    echo "response: $response"
 
-  response="$("$client" detector_status)"
-  echo "response: $response"
+    if [[ "$response" != *'"op":"detector_status"'* ]]; then
+      echo "ERROR: detector_status op missing for haar"
+      exit 1
+    fi
 
-  if [[ "$response" != *'"op":"detector_status"'* ]]; then
-    echo "ERROR: detector_status op missing for haar"
+    if [[ "$response" != *'"detector":"haar"'* ]]; then
+      echo "ERROR: haar detector response missing"
+      exit 1
+    fi
+
+    if [[ "$response" != *'"detector_ms":'* ]]; then
+      echo "ERROR: haar detector_status response missing detector_ms"
+      exit 1
+    fi
+
+    stop_daemon
+
+    echo "haar_backend_status: ok"
+  elif grep -q "haar cascade not found" "$daemon_log"; then
+    wait "$daemon_pid" 2>/dev/null || true
+    daemon_pid=""
+    echo "haar_backend_status: skipped_cascade_missing"
+  else
+    echo "ERROR: daemon socket was not created for backend: haar"
+    echo "daemon log:"
+    cat "$daemon_log"
     exit 1
   fi
-
-  if [[ "$response" != *'"detector":"haar"'* ]]; then
-    echo "ERROR: haar detector response missing"
-    exit 1
-  fi
-
-  if [[ "$response" != *'"detector_ms":'* ]]; then
-    echo "ERROR: haar detector_status response missing detector_ms"
-    exit 1
-  fi
-
-  stop_daemon
-
-  echo "haar_backend_status: ok"
 else
   echo
   echo "haar_backend_status: skipped_not_supported"
