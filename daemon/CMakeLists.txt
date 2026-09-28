@@ -19,12 +19,20 @@ find_library(OPENCV_OBJDETECT_LIBRARY
   NAMES opencv_objdetect
 )
 
+find_library(OPENCV_DNN_LIBRARY
+  NAMES opencv_dnn
+)
+
 if(NOT OPENCV_INCLUDE_DIR OR NOT OPENCV_CORE_LIBRARY OR NOT OPENCV_VIDEOIO_LIBRARY)
   message(FATAL_ERROR "OpenCV core/videoio development files not found. Install libopencv-core-dev and libopencv-videoio-dev.")
 endif()
 
 if(NOT OPENCV_IMGPROC_LIBRARY OR NOT OPENCV_OBJDETECT_LIBRARY)
   message(WARNING "OpenCV imgproc/objdetect not found. Haar detector backend will not be available.")
+endif()
+
+if(NOT OPENCV_DNN_LIBRARY)
+  message(WARNING "OpenCV dnn not found. YuNet detector backend will not be available.")
 endif()
 
 find_path(SODIUM_INCLUDE_DIR sodium.h)
@@ -77,6 +85,13 @@ if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY)
   target_link_libraries(face_unlock_detector PUBLIC
     ${OPENCV_IMGPROC_LIBRARY}
     ${OPENCV_OBJDETECT_LIBRARY}
+  )
+endif()
+
+if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY AND OPENCV_DNN_LIBRARY)
+  target_compile_definitions(face_unlock_detector PUBLIC FACE_UNLOCK_HAVE_OPENCV_YUNET=1)
+  target_link_libraries(face_unlock_detector PUBLIC
+    ${OPENCV_DNN_LIBRARY}
   )
 endif()
 

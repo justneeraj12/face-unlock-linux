@@ -131,6 +131,11 @@ if [[ "$detector_response" != *'"detector_ms":'* ]]; then
   exit 1
 fi
 
+if [[ "$detector_response" != *'"detections":[]'* ]]; then
+  echo "ERROR: noop detector_status response missing empty detections"
+  exit 1
+fi
+
 echo
 echo "[test-daemon-metadata] Stop daemon"
 kill "$daemon_pid"

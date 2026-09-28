@@ -94,12 +94,18 @@ Use `--json` for machine-readable output. Synthetic input measures model runtime
 cost only; it does not measure recognition accuracy or full authentication
 latency.
 
+## Current C++ progress
+
+YuNet detection now runs in the C++ daemon on OpenCV's CPU target. The model is
+loaded once at startup, and detector status includes boxes and five landmarks.
+SFace embedding and encrypted profile storage remain prototype-only.
+
 ## Next slice
 
-- benchmark real CPU inference latency
-- calibrate pose and quality thresholds
+- benchmark real-camera end-to-end latency and thermal behavior
+- port SFace alignment and embedding into the C++ daemon
+- calibrate pose, quality, and match thresholds
 - add held-out enrollment validation
-- move the proven pipeline into the C++ daemon
 - expose enrollment start/status/cancel operations
 - connect the Qt GUI progress display
 - encrypt and atomically commit real templates

@@ -4,6 +4,8 @@ set -euo pipefail
 daemon="${1:-./build/daemon/face-unlockd}"
 selftest="${2:-./build/daemon/face-unlock-detector-selftest}"
 client="${3:-./scripts/test-socket-client.sh}"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+yunet_model="${4:-$repo_root/models/face_detection_yunet_2022mar.onnx}"
 
 echo "[test-detector-backends] Starting detector backend integration test"
 
@@ -57,8 +59,14 @@ fi
 
 start_daemon() {
   local backend="$1"
+  local model_path="${2:-}"
+  local args=(--detector "$backend" --serve)
 
-  "$daemon" --detector "$backend" --serve >"$daemon_log" 2>&1 &
+  if [[ -n "$model_path" ]]; then
+    args=(--detector "$backend" --detector-model "$model_path" --serve)
+  fi
+
+  "$daemon" "${args[@]}" >"$daemon_log" 2>&1 &
   daemon_pid="$!"
 
   for _ in $(seq 1 50); do
@@ -119,6 +127,11 @@ if [[ "$response" != *'"detector_ms":'* ]]; then
   exit 1
 fi
 
+if [[ "$response" != *'"detections":[]'* ]]; then
+  echo "ERROR: noop detector_status response missing empty detections"
+  exit 1
+fi
+
 stop_daemon
 
 if [[ "$selftest_output" == *"supported_backend: haar"* ]]; then
@@ -160,6 +173,72 @@ if [[ "$selftest_output" == *"supported_backend: haar"* ]]; then
 else
   echo
   echo "haar_backend_status: skipped_not_supported"
+fi
+
+if [[ "$selftest_output" == *"supported_backend: yunet"* ]]; then
+  echo
+  echo "[test-detector-backends] YuNet CPU daemon detector_status"
+
+  set +e
+  "$daemon" --detector yunet --serve >"$daemon_log" 2>&1
+  rc="$?"
+  set -e
+
+  if [[ "$rc" -eq 0 ]] || ! grep -q "yunet model path required" "$daemon_log"; then
+    echo "ERROR: YuNet without a model path did not fail safely"
+    cat "$daemon_log"
+    exit 1
+  fi
+
+  : > "$daemon_log"
+
+  if [[ -f "$yunet_model" ]]; then
+    yunet_selftest_output="$("$selftest" --yunet-model "$yunet_model")"
+    echo "$yunet_selftest_output"
+
+    if [[ "$yunet_selftest_output" != *"yunet_status: ok"* ]]; then
+      echo "ERROR: YuNet model self-test did not succeed"
+      exit 1
+    fi
+
+    if ! start_daemon "yunet" "$yunet_model"; then
+      echo "ERROR: daemon socket was not created for backend: yunet"
+      echo "daemon log:"
+      cat "$daemon_log"
+      exit 1
+    fi
+
+    response="$("$client" detector_status)"
+    echo "response: $response"
+
+    if [[ "$response" != *'"op":"detector_status"'* ]]; then
+      echo "ERROR: detector_status op missing for YuNet"
+      exit 1
+    fi
+
+    if [[ "$response" != *'"detector":"yunet"'* ]]; then
+      echo "ERROR: YuNet detector response missing"
+      exit 1
+    fi
+
+    if [[ "$response" != *'"detector_ms":'* ]]; then
+      echo "ERROR: YuNet detector_status response missing detector_ms"
+      exit 1
+    fi
+
+    if [[ "$response" != *'"detections":[]'* ]]; then
+      echo "ERROR: camera-free YuNet response should have no detections"
+      exit 1
+    fi
+
+    stop_daemon
+    echo "yunet_backend_status: ok"
+  else
+    echo "yunet_backend_status: skipped_model_missing"
+  fi
+else
+  echo
+  echo "yunet_backend_status: skipped_not_supported"
 fi
 
 echo

@@ -1,141 +1,139 @@
-# Daemon Detector Scaffold
+# Daemon CPU Detector Backends
 
-This document describes the C++ daemon detector abstraction scaffold.
+This document describes the C++ detector pipeline used by the per-user daemon.
 
 ## Current status
 
 Implemented:
 
-- DetectionBox
-- DetectorResult
-- FaceDetector interface
-- NoopFaceDetector
-- detector self-test
-- daemon metadata fields
+- detector interface shared by all backends
+- always-available noop backend
+- optional Haar baseline
+- optional YuNet ONNX backend through OpenCV DNN
+- forced OpenCV CPU inference target
+- one-time model loading at daemon startup
+- bounding boxes, confidence, five landmarks, and latency metadata
+- camera-free self-tests and socket integration tests
 
-No real detector is implemented yet.
+YuNet is the real detector candidate. Haar remains a compatibility baseline and
+is not considered production-quality face detection.
 
-## Current daemon metadata
+Face recognition and authentication matching are not enabled by this work.
+Authentication remains fail-closed.
 
-Daemon socket responses include:
+## Build requirements
 
-    "detector":"noop"
-    "faces_detected":0
+YuNet is compiled when OpenCV core, imgproc, objdetect, and dnn development
+libraries are available. It does not require CUDA, a discrete GPU, or
+vendor-specific Intel/AMD acceleration.
 
-## Self-test
-
-Run:
+List the compiled backends:
 
     ./build/daemon/face-unlock-detector-selftest
 
-CTest includes:
+## Model setup
 
-    detector_selftest
+Download the pinned, checksum-verified development models:
 
-## Future work
+    ./scripts/download-cpu-models.sh
 
-Planned detector backends:
+The YuNet development model is written to:
 
-- OpenCV Haar baseline
-- OpenCV YuNet
-- TorchScript/ONNX detector
-- SCRFD/RetinaFace-style detector
+    models/face_detection_yunet_2022mar.onnx
 
-Future detector metadata should include:
+Model files are ignored by Git. Release packaging and redistribution require a
+separate model-license and provenance review.
 
-- backend name
-- face count
-- bounding boxes
-- confidence scores
-- detector latency
-- quality flags
+## YuNet self-test
 
-## Safety
+Run camera-free CPU inference on a synthetic blank frame:
 
-The current Noop detector does not inspect or save images.
+    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet_2022mar.onnx
 
-Real detector integration must not log raw frames or store images by default.
+A successful result includes:
 
-## detector_status operation
+    supported_backend: yunet
+    yunet_status: ok
 
-The daemon supports a dedicated socket operation:
+## Daemon configuration
 
-    detector_status
-
-Run:
-
-    ./scripts/test-socket-client.sh detector_status
-
-Current fields:
-
-    detector noop
-    faces_detected 0
-
-## Detector backend configuration
-
-Current supported backend:
-
-    noop
-
-CLI:
+Noop remains the safe default:
 
     ./build/daemon/face-unlockd --detector noop --serve
 
-Config:
+Run YuNet explicitly:
 
-    "detector_backend": "noop"
+    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --serve
 
-Unsupported detector backends fail safely at startup.
+Equivalent config fields:
 
-## Haar backend scaffold
+    "detector_backend": "yunet"
+    "detector_model_path": "/absolute/path/to/face_detection_yunet_2022mar.onnx"
 
-The daemon can optionally support a Haar detector backend when OpenCV objdetect/imgproc development libraries are available.
+A missing model, unreadable model, unsupported backend, or model-load failure
+causes startup to fail. YuNet is loaded once and reused instead of being loaded
+for each socket request.
 
-CLI:
+## detector_status operation
 
-    ./build/daemon/face-unlockd --detector haar --serve
+Query detector metadata:
 
-Current behavior:
+    ./scripts/test-socket-client.sh detector_status
 
-- noop is always supported
-- haar is supported only if OpenCV objdetect is available at build time
-- unsupported detector backends fail safely at startup
+No-camera example:
 
-Haar is a baseline detector only and is not considered production quality.
+    {
+      "status": "ok",
+      "op": "detector_status",
+      "detector": "yunet",
+      "detector_status": "ready",
+      "faces_detected": 0,
+      "detector_ms": 0,
+      "detections": []
+    }
 
-## Detector backend integration test
+With a camera frame, every detection contains:
+
+- x, y, w, h
+- score
+- landmarks, containing five x/y points
+
+Non-finite detections and boxes with non-positive dimensions are discarded.
+Inference exceptions return detector status error and do not crash the daemon.
+
+## Haar behavior
+
+Haar is compiled only when OpenCV objdetect and imgproc are present. At runtime,
+the cascade must exist in a standard OpenCV data directory.
+
+The integration test reports:
+
+    haar_backend_status: ok
+    haar_backend_status: skipped_not_supported
+    haar_backend_status: skipped_cascade_missing
+
+## Tests
 
 Run:
 
     ./scripts/test-detector-backends.sh
 
-CTest also runs this as:
+The test always verifies noop and unsupported-backend failure. It also checks
+that YuNet without a model path fails closed. When the pinned local model exists,
+it runs real CPU inference and starts the socket server with YuNet. Model-free CI
+reports:
+
+    yunet_backend_status: skipped_model_missing
+
+CTest runs the same integration script as:
 
     detector_backends
 
-## Conditional Haar backend test
+## Privacy and safety
 
-The detector backend integration test checks Haar only when the detector self-test reports:
+The detector does not save frames or crops. Detection metadata is
+biometric-adjacent and must not be persisted or logged by default.
 
-    supported_backend: haar
-
-If Haar is not compiled in or the cascade is unavailable, the test skips Haar gracefully.
-
-The test reports the reason as either:
-
-    haar_backend_status: skipped_not_supported
-    haar_backend_status: skipped_cascade_missing
-
-Unexpected Haar startup failures still fail the test.
-
-## Detector latency metadata
-
-detector_status responses include detector latency:
-
-    "detector_ms": 0.123
-
-This measures the current detector call in milliseconds.
-
-For the noop backend this should be near zero.
-
-Future real detector backends should use this field for latency tracking.
+Detector success alone must never authenticate a user. Recognition thresholds,
+liveness, held-out validation, retry limits, and encrypted profile loading must
+all succeed before an authentication result can become successful.

@@ -55,6 +55,8 @@ struct Options {
   std::string model_path = "models/embedding_stub.pt";
   std::string detector_backend = "noop";
   bool detector_backend_set = false;
+  std::string detector_model_path;
+  bool detector_model_path_set = false;
 };
 
 struct AppConfig {
@@ -63,6 +65,7 @@ struct AppConfig {
   int camera_index = 0;
   int max_auth_attempts = 3;
   std::string detector_backend = "noop";
+  std::string detector_model_path;
 };
 
 struct FrameStore {
@@ -524,6 +527,13 @@ AppConfig load_app_config() {
     config.detector_backend = detector_backend.value();
   }
 
+  const std::optional<std::string> detector_model_path =
+    extract_string_config_value(content, "detector_model_path");
+
+  if (detector_model_path.has_value()) {
+    config.detector_model_path = detector_model_path.value();
+  }
+
   return config;
 }
 
@@ -538,7 +548,8 @@ void print_usage(const char* program_name) {
   std::cout << "  --daemon             Run camera worker and socket server together\n";
   std::cout << "  --model-test         Load TorchScript model and run dummy forward pass\n";
   std::cout << "  --model PATH         TorchScript model path. Default: models/embedding_stub.pt\n";
-  std::cout << "  --detector NAME      Detector backend. Current supported: noop\n";
+  std::cout << "  --detector NAME      Detector backend: noop, haar, or yunet when compiled\n";
+  std::cout << "  --detector-model PATH  YuNet ONNX model path\n";
   std::cout << "  --help, -h           Show this help text\n";
 }
 
@@ -566,6 +577,10 @@ Options parse_options(int argc, char** argv) {
     } else if (arg == "--detector" && i + 1 < argc) {
       options.detector_backend = argv[i + 1];
       options.detector_backend_set = true;
+      ++i;
+    } else if (arg == "--detector-model" && i + 1 < argc) {
+      options.detector_model_path = argv[i + 1];
+      options.detector_model_path_set = true;
       ++i;
     } else if (arg == "--help" || arg == "-h") {
       print_usage(argv[0]);
@@ -880,21 +895,56 @@ bool dev_auth_enabled() {
   return value != nullptr && std::string(value) == "1";
 }
 
-std::string detector_json_fields(FrameStore* frame_store) {
-  std::unique_ptr<face_unlock::FaceDetector> detector;
+std::string detections_json(const face_unlock::DetectorResult& result) {
+  std::ostringstream stream;
+  stream << "[";
 
-  try {
-    detector = face_unlock::create_detector(g_detector_backend);
-  } catch (const std::exception&) {
+  for (std::size_t index = 0; index < result.boxes.size(); ++index) {
+    if (index > 0) {
+      stream << ",";
+    }
+
+    const face_unlock::DetectionBox& box = result.boxes[index];
+    stream << "{\"x\":" << box.x
+           << ",\"y\":" << box.y
+           << ",\"w\":" << box.w
+           << ",\"h\":" << box.h
+           << ",\"score\":" << box.score
+           << ",\"landmarks\":[";
+
+    for (std::size_t landmark_index = 0;
+         landmark_index < box.landmarks.size();
+         ++landmark_index) {
+      if (landmark_index > 0) {
+        stream << ",";
+      }
+
+      const cv::Point2f& point = box.landmarks[landmark_index];
+      stream << "{\"x\":" << point.x
+             << ",\"y\":" << point.y << "}";
+    }
+
+    stream << "]}";
+  }
+
+  stream << "]";
+  return stream.str();
+}
+
+std::string detector_json_fields(
+  FrameStore* frame_store,
+  face_unlock::FaceDetector* detector
+) {
+  if (detector == nullptr) {
     return std::string(",\"detector\":\"") +
       g_detector_backend +
-      "\",\"detector_status\":\"unavailable\",\"faces_detected\":0,\"detector_ms\":0";
+      "\",\"detector_status\":\"unavailable\",\"faces_detected\":0,\"detector_ms\":0,\"detections\":[]";
   }
 
   if (frame_store == nullptr) {
     return std::string(",\"detector\":\"") +
       detector->backend_name() +
-      "\",\"detector_status\":\"ready\",\"faces_detected\":0,\"detector_ms\":0";
+      "\",\"detector_status\":\"ready\",\"faces_detected\":0,\"detector_ms\":0,\"detections\":[]";
   }
 
   cv::Mat snapshot;
@@ -903,11 +953,22 @@ std::string detector_json_fields(FrameStore* frame_store) {
   if (!frame_store->snapshot(snapshot, frames_total)) {
     return std::string(",\"detector\":\"") +
       detector->backend_name() +
-      "\",\"detector_status\":\"ready\",\"faces_detected\":0,\"detector_ms\":0";
+      "\",\"detector_status\":\"ready\",\"faces_detected\":0,\"detector_ms\":0,\"detections\":[]";
   }
 
   const auto start_time = std::chrono::steady_clock::now();
-  const face_unlock::DetectorResult result = detector->detect(snapshot);
+  face_unlock::DetectorResult result;
+
+  try {
+    result = detector->detect(snapshot);
+  } catch (const std::exception& error) {
+    std::cerr << "detector_inference_error: " << error.what() << '\n';
+
+    return std::string(",\"detector\":\"") +
+      detector->backend_name() +
+      "\",\"detector_status\":\"error\",\"faces_detected\":0,\"detector_ms\":0,\"detections\":[]";
+  }
+
   const auto end_time = std::chrono::steady_clock::now();
 
   const double detector_ms =
@@ -922,14 +983,20 @@ std::string detector_json_fields(FrameStore* frame_store) {
     "\",\"detector_status\":\"ready\",\"faces_detected\":" +
     std::to_string(result.boxes.size()) +
     ",\"detector_ms\":" +
-    std::to_string(detector_ms);
+    std::to_string(detector_ms) +
+    ",\"detections\":" +
+    detections_json(result);
 }
 
-std::string build_response_for_request(const std::string& request, FrameStore* frame_store, AuthState* auth_state) {
+std::string build_response_for_request(
+  const std::string& request,
+  FrameStore* frame_store,
+  AuthState* auth_state,
+  face_unlock::FaceDetector* detector
+) {
   const std::string op = extract_operation(request);
   const CameraStatus camera_status = get_camera_status(frame_store);
   const std::string camera_fields = camera_status_json_fields(camera_status);
-  const std::string detector_fields = detector_json_fields(frame_store);
   const std::string template_fields = template_json_fields();
   const std::string enrollment_fields = enrollment_json_fields();
   const std::string key_fields = key_json_fields();
@@ -942,7 +1009,7 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
   if (op == "detector_status") {
     return "{\"status\":\"ok\",\"op\":\"detector_status\""
       + camera_fields
-      + detector_fields
+      + detector_json_fields(frame_store, detector)
       + "}\n";
   }
 
@@ -1052,7 +1119,12 @@ std::string build_response_for_request(const std::string& request, FrameStore* f
     + camera_fields + template_fields + enrollment_fields + key_fields + "}\n";
 }
 
-void handle_client(int client_fd, FrameStore* frame_store, AuthState* auth_state) {
+void handle_client(
+  int client_fd,
+  FrameStore* frame_store,
+  AuthState* auth_state,
+  face_unlock::FaceDetector* detector
+) {
   ucred credentials {};
 
   if (!get_peer_credentials(client_fd, credentials)) {
@@ -1100,12 +1172,19 @@ void handle_client(int client_fd, FrameStore* frame_store, AuthState* auth_state
 
   std::cout << "peer_status: allowed" << '\n';
 
-  write_json_response(client_fd, build_response_for_request(request, frame_store, auth_state));
+  write_json_response(
+    client_fd,
+    build_response_for_request(request, frame_store, auth_state, detector)
+  );
 
   ::close(client_fd);
 }
 
-bool run_socket_server(FrameStore* frame_store, AuthState* auth_state) {
+bool run_socket_server(
+  FrameStore* frame_store,
+  AuthState* auth_state,
+  face_unlock::FaceDetector* detector
+) {
   const std::string socket_path = get_socket_path();
 
   std::cout << "socket_path: " << socket_path << '\n';
@@ -1157,7 +1236,7 @@ bool run_socket_server(FrameStore* frame_store, AuthState* auth_state) {
       continue;
     }
 
-    handle_client(client_fd, frame_store, auth_state);
+    handle_client(client_fd, frame_store, auth_state, detector);
   }
 
   std::cout << "server_status: stopping\n";
@@ -1268,7 +1347,11 @@ bool run_model_test(const std::string& model_path) {
 #endif
 }
 
-bool run_daemon_mode(int camera_index, int max_auth_attempts) {
+bool run_daemon_mode(
+  int camera_index,
+  int max_auth_attempts,
+  face_unlock::FaceDetector* detector
+) {
   std::cout << "daemon_status: starting" << '\n';
 
   FrameStore frame_store;
@@ -1278,7 +1361,7 @@ bool run_daemon_mode(int camera_index, int max_auth_attempts) {
     camera_worker(frame_store, camera_index);
   });
 
-  const bool server_ok = run_socket_server(&frame_store, &auth_state);
+  const bool server_ok = run_socket_server(&frame_store, &auth_state, detector);
 
   g_running = false;
 
@@ -1303,9 +1386,17 @@ int main(int argc, char** argv) {
     options.camera_index_set ? options.camera_index : config.camera_index;
   const std::string detector_backend =
     options.detector_backend_set ? options.detector_backend : config.detector_backend;
+  const std::string detector_model_path = options.detector_model_path_set
+    ? options.detector_model_path
+    : config.detector_model_path;
+
+  std::unique_ptr<face_unlock::FaceDetector> detector;
 
   try {
-    (void)face_unlock::create_detector(detector_backend);
+    detector = face_unlock::create_detector(
+      detector_backend,
+      detector_model_path
+    );
   } catch (const std::exception& e) {
     std::cerr << "detector_backend_error: " << e.what() << '\n';
     std::cerr << "supported_detector_backends:";
@@ -1333,6 +1424,9 @@ int main(int argc, char** argv) {
   std::cout << "config_loaded: " << (config.loaded ? "true" : "false") << '\n';
   std::cout << "effective_camera_index: " << camera_index << '\n';
   std::cout << "detector_backend: " << detector_backend << '\n';
+  std::cout << "detector_model_path: "
+            << (detector_model_path.empty() ? "none" : detector_model_path)
+            << '\n';
   std::cout << "max_auth_attempts: " << config.max_auth_attempts << '\n';
   std::cout << "dev_auth_enabled: " << (dev_auth_enabled() ? "true" : "false") << '\n';
   std::cout << "root_auth_peer_enabled: " << (root_auth_peer_enabled() ? "true" : "false") << '\n';
@@ -1349,7 +1443,7 @@ int main(int argc, char** argv) {
     std::cout << "mode: serve" << '\n';
 
     AuthState auth_state(config.max_auth_attempts);
-    const bool ok = run_socket_server(nullptr, &auth_state);
+    const bool ok = run_socket_server(nullptr, &auth_state, detector.get());
 
     if (!ok) {
       std::cout << "status: socket_error" << '\n';
@@ -1363,7 +1457,11 @@ int main(int argc, char** argv) {
   if (options.daemon) {
     std::cout << "mode: daemon" << '\n';
 
-    const bool ok = run_daemon_mode(camera_index, config.max_auth_attempts);
+    const bool ok = run_daemon_mode(
+      camera_index,
+      config.max_auth_attempts,
+      detector.get()
+    );
 
     if (!ok) {
       std::cout << "status: daemon_error" << '\n';

@@ -14,6 +14,8 @@ Example:
 
     {
       "camera_index": 0,
+      "detector_backend": "noop",
+      "detector_model_path": "",
       "max_auth_attempts": 3
     }
 
@@ -98,9 +100,11 @@ This is a scaffold for future retry and fallback behavior.
 
 The daemon supports a detector_backend config field.
 
-Current supported value:
+Supported values depend on the OpenCV components available at build time:
 
-    noop
+- noop is always available and remains the default
+- haar is an optional baseline
+- yunet is the CPU real-detector candidate
 
 Example:
 
@@ -109,12 +113,6 @@ Example:
       "detector_backend": "noop",
       "max_auth_attempts": 3
     }
-
-Future values may include:
-
-- haar
-- yunet
-- torchscript
 
 Unsupported values cause daemon startup to fail safely.
 
@@ -127,3 +125,23 @@ If built with OpenCV objdetect support, the daemon may support:
 Haar is a baseline detector only.
 
 Unsupported detector backends fail safely at startup.
+
+## detector_model_path
+
+YuNet requires an explicit readable ONNX model path.
+
+CLI example:
+
+    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --serve
+
+Config example:
+
+    {
+      "camera_index": 0,
+      "detector_backend": "yunet",
+      "detector_model_path": "/absolute/path/to/face_detection_yunet_2022mar.onnx",
+      "max_auth_attempts": 3
+    }
+
+The daemon fails closed at startup when YuNet is selected without a model path
+or when the model cannot be read or loaded. Command-line values override config.

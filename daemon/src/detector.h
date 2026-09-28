@@ -14,6 +14,7 @@ struct DetectionBox {
   int w = 0;
   int h = 0;
   double score = 0.0;
+  std::vector<cv::Point2f> landmarks;
 };
 
 struct DetectorResult {
@@ -50,7 +51,25 @@ private:
 };
 #endif
 
-std::unique_ptr<FaceDetector> create_detector(const std::string& backend);
+#ifdef FACE_UNLOCK_HAVE_OPENCV_YUNET
+class YuNetFaceDetector final : public FaceDetector {
+public:
+  explicit YuNetFaceDetector(const std::string& model_path);
+
+  std::string backend_name() const override;
+  DetectorResult detect(const cv::Mat& frame) override;
+
+private:
+  std::string model_path_;
+  class Impl;
+  std::shared_ptr<Impl> impl_;
+};
+#endif
+
+std::unique_ptr<FaceDetector> create_detector(
+  const std::string& backend,
+  const std::string& model_path = ""
+);
 
 std::vector<std::string> supported_detector_backends();
 

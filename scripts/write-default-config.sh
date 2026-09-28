@@ -29,6 +29,7 @@ cat > "$config_path" <<'JSON_EOF'
 {
   "camera_index": 0,
   "detector_backend": "noop",
+  "detector_model_path": "",
   "max_auth_attempts": 3
 }
 JSON_EOF

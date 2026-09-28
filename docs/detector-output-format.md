@@ -17,7 +17,7 @@ Schema scaffold:
 The detector output format provides a stable metadata structure for:
 
 - Haar baseline detector
-- future YuNet backend
+- YuNet backend
 - future RetinaFace/SCRFD backends
 - detector evaluation
 - GUI overlay prototyping
@@ -55,8 +55,10 @@ Each detection should include:
 - h
 - score
 - backend
+- optional five-point landmarks for landmark-capable detectors
 
-Bounding boxes are in pixel coordinates relative to the source frame.
+Bounding boxes and landmarks are in pixel coordinates relative to the source
+frame.
 
 ## Current backend
 
@@ -68,9 +70,8 @@ Fallback backend:
 
     noop
 
-Planned backend:
-
-    yunet
+The C++ daemon also implements the YuNet CPU backend. Its socket response uses
+a compact live detections array rather than this persisted evaluation envelope.
 
 ## Future use
 

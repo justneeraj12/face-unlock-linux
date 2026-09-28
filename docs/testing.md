@@ -181,7 +181,12 @@ CTest includes:
 
     detector_selftest
 
-It verifies the C++ NoopFaceDetector returns zero detections.
+It verifies the C++ NoopFaceDetector returns zero detections and lists all
+detector backends compiled into the current build.
+
+With the pinned local model, run a real camera-free YuNet CPU inference test:
+
+    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet_2022mar.onnx
 
 ## detector_status integration
 
@@ -207,8 +212,10 @@ This test runs:
 It verifies:
 
 - noop backend is supported
-- detector_status works with noop and reports zero faces plus detector latency
-- unsupported detector backend fails safely
+- detector_status works with noop and reports zero faces, latency, and detections
+- YuNet without a model path fails safely when YuNet is compiled
+- a local pinned YuNet model loads and runs CPU inference when present
+- unsupported detector backends fail safely
 
 ## Conditional Haar detector test
 
@@ -233,7 +240,8 @@ Detector integration tests verify detector_status includes:
 
     detector_ms
 
-This ensures future detector backends report latency metadata.
+This ensures detector backends report latency metadata. Responses also include
+a detections array; noop and camera-free server mode return an empty array.
 
 ## CPU face-profile test
 

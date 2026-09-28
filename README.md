@@ -525,9 +525,11 @@ This validates generated detector output without requiring a camera.
 
 The C++ daemon now includes a detector abstraction scaffold.
 
-Current backend:
+Current backends:
 
     noop
+    haar (optional baseline)
+    yunet (optional CPU backend)
 
 Documentation:
 
@@ -539,21 +541,22 @@ Query detector metadata:
 
     ./scripts/test-socket-client.sh detector_status
 
-Current backend is noop.
+Noop is the safe default. YuNet can be selected with an explicit verified
+ONNX model path.
 
 ## Detector backend config
 
-Current C++ daemon detector backend:
+Current C++ daemon detector backends include noop, optional Haar, and optional
+CPU YuNet.
 
-    noop
+YuNet CLI:
 
-CLI:
-
-    ./build/daemon/face-unlockd --detector noop --serve
+    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --serve
 
 Config:
 
-    "detector_backend": "noop"
+    "detector_backend": "yunet"
+    "detector_model_path": "/absolute/path/to/face_detection_yunet_2022mar.onnx"
 
 ## GUI daemon detector status query
 
@@ -630,4 +633,6 @@ If unavailable, Haar is skipped gracefully.
 
 ## Detector latency metadata
 
-daemon detector_status responses include detector_ms for detector call latency tracking.
+daemon detector_status responses include detector_ms plus a detections array.
+YuNet detections contain a box, confidence, and five landmarks. OpenCV DNN is
+forced to its CPU target and the model is loaded once at daemon startup.
