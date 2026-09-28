@@ -244,6 +244,34 @@ if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY AND OPENCV_DNN_LIBRARY)
     face_unlock_profile
   )
 
+  add_library(face_unlock_profile_storage STATIC
+    src/profile_storage.cpp
+  )
+  target_compile_options(face_unlock_profile_storage PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+  )
+  target_include_directories(face_unlock_profile_storage PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+  target_link_libraries(face_unlock_profile_storage PUBLIC
+    face_unlock_profile
+    face_unlock_crypto
+  )
+
+  add_executable(face-unlock-profile-storage-selftest
+    src/profile_storage_selftest.cpp
+  )
+  target_compile_options(face-unlock-profile-storage-selftest PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+  )
+  target_link_libraries(face-unlock-profile-storage-selftest PRIVATE
+    face_unlock_profile_storage
+  )
+
   add_executable(face-unlock-enrollment-session-selftest
     src/enrollment_session_selftest.cpp
   )
@@ -521,6 +549,13 @@ if(BUILD_TESTING)
     add_test(
       NAME enrollment_session
       COMMAND $<TARGET_FILE:face-unlock-enrollment-session-selftest>
+    )
+  endif()
+
+  if(TARGET face-unlock-profile-storage-selftest)
+    add_test(
+      NAME profile_storage
+      COMMAND $<TARGET_FILE:face-unlock-profile-storage-selftest>
     )
   endif()
 
