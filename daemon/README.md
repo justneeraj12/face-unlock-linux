@@ -12,7 +12,8 @@ face-unlockd owns:
 - peer credential checks
 - authentication retry state
 - encrypted template metadata
-- future face embedding and profile matching
+- CPU SFace alignment and normalized embeddings
+- future profile construction and matching
 
 It runs as the desktop user, not as root.
 
@@ -34,6 +35,10 @@ Build and run the camera-free model smoke test:
 Run camera plus socket mode:
 
     ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --daemon
+
+Run the camera-free native SFace test and benchmark:
+
+    ./scripts/test-cpu-recognizer.sh
 
 ## Socket
 
@@ -85,6 +90,7 @@ Neither flag is suitable for production.
 The build also creates:
 
 - face-unlock-detector-selftest
+- face-unlock-recognizer-selftest
 - face-unlock-crypto-selftest
 - face-unlock-key-tool
 - face-unlock-template-tool

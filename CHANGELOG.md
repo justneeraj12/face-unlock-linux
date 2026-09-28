@@ -13,6 +13,8 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 - Pinned model downloader with SHA-256 verification.
 - C++ YuNet detector with boxes, confidence, five landmarks, and latency.
 - YuNet daemon configuration and camera-free integration tests.
+- C++ CPU SFace alignment, normalized embeddings, cosine similarity, and a
+  camera-free benchmark self-test.
 
 ### Changed
 

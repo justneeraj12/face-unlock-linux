@@ -29,6 +29,7 @@ required_scripts=(
   scripts/test-detector-output-generation.sh
   scripts/test-detector-backends.sh
   scripts/test-cpu-face-profile.sh
+  scripts/test-cpu-recognizer.sh
   scripts/download-cpu-models.sh
   scripts/validate-enrollment-manifest.py
   scripts/validate-model-eval-metrics.py

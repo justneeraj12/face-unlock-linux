@@ -15,7 +15,7 @@ This roadmap describes direction rather than a release promise.
 - libsodium template encryption scaffold
 - optional Qt6 enrollment GUI scaffold
 - CPU YuNet detector in Python and C++
-- CPU SFace embedding prototype
+- CPU SFace embedding in Python and C++
 - multi-pose profile builder prototype
 - pinned model downloader with checksum verification
 - synthetic CPU benchmark harness
@@ -29,7 +29,7 @@ The immediate goal is a complete non-PAM enrollment and verification pipeline.
 - [x] Return bounding boxes, confidence, landmarks, and latency
 - [x] Prototype SFace alignment and embeddings on CPU
 - [x] Prototype guided multi-pose profile construction
-- [ ] Port SFace alignment and embedding to C++
+- [x] Port SFace alignment and embedding to C++
 - [ ] Define and validate a versioned encrypted face-profile payload
 - [ ] Add daemon enrollment start, status, cancel, and commit operations
 - [ ] Add quality gates for lighting, blur, face size, occlusion, and pose

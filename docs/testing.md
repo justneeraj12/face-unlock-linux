@@ -260,3 +260,19 @@ It verifies:
 - pose coverage progress
 - profile centroid construction
 - synthetic embedding matching
+
+## C++ CPU recognizer test
+
+CTest includes:
+
+    cpu_recognizer
+
+This test runs:
+
+    ./scripts/test-cpu-recognizer.sh
+
+It always verifies that the native SFace backend is compiled. When the pinned
+local SFace model is present, it also verifies CPU model loading, 128-value
+L2-normalized embeddings, landmark alignment, cosine self-similarity, and
+reports camera-free p50 and p95 inference latency. A missing ignored model is a
+safe skip so CI remains network-independent.

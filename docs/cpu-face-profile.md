@@ -4,11 +4,12 @@ This document describes the first real-model implementation slice.
 
 ## Status
 
-Implemented as a Python prototype:
+Implemented across the Python prototype and C++ runtime libraries:
 
 - CPU-only YuNet detector wrapper
 - five-landmark detector output
 - CPU-only SFace alignment and embedding wrapper
+- C++ CPU SFace alignment, normalized embeddings, and cosine similarity
 - pose-aware in-memory face profile builder
 - guided live enrollment prototype
 - pinned model downloader with SHA-256 verification
@@ -98,12 +99,13 @@ latency.
 
 YuNet detection now runs in the C++ daemon on OpenCV's CPU target. The model is
 loaded once at startup, and detector status includes boxes and five landmarks.
-SFace embedding and encrypted profile storage remain prototype-only.
+SFace embedding now also runs in C++ on OpenCV's CPU target. Encrypted profile
+storage and matching remain prototype-only.
 
 ## Next slice
 
 - benchmark real-camera end-to-end latency and thermal behavior
-- port SFace alignment and embedding into the C++ daemon
+- build the versioned multi-pose profile and matcher in C++
 - calibrate pose, quality, and match thresholds
 - add held-out enrollment validation
 - expose enrollment start/status/cancel operations

@@ -8,13 +8,13 @@ CPU-model prototype, not production-ready biometric authentication.
 The current phase is connecting the proven CPU pipeline to the C++ daemon:
 
 - YuNet detection is already implemented in C++
-- SFace alignment and embedding remain in Python
+- SFace alignment and embedding are implemented in C++ and Python
 - multi-pose profile construction remains in Python
 - daemon enrollment operations are not implemented
 - real authentication matching remains disabled
 
-The next bounded implementation slice is C++ SFace embedding plus a benchmarked,
-versioned face-profile representation.
+The next bounded implementation slice is a benchmarked, versioned C++
+face-profile representation.
 
 ## Implemented
 
@@ -37,7 +37,7 @@ versioned face-profile representation.
 - OpenCV CPU target with no required CUDA runtime
 - C++ YuNet detector loaded once at daemon startup
 - bounding boxes, confidence, five landmarks, and detector latency
-- Python SFace alignment and normalized embeddings
+- C++ and Python SFace alignment and normalized embeddings
 - guided center/left/right/up/down enrollment prototype
 - duplicate sample rejection and pose coverage
 - pose centroids and synthetic matching tests
@@ -64,7 +64,7 @@ versioned face-profile representation.
 
 ## Not implemented
 
-- C++ SFace recognition pipeline
+- C++ multi-pose profile construction and matching
 - real encrypted biometric profile creation
 - real template matching
 - calibrated acceptance thresholds
@@ -95,6 +95,7 @@ On the current Intel i5-12500H development laptop with synthetic inputs:
 - Python YuNet 320x320 p50 is about 3.8 ms
 - Python SFace 112x112 p50 is about 9.9 ms
 - C++ YuNet blank-frame smoke inference is about 6.6 ms
+- C++ SFace 112x112 p50 is about 10.1 ms and p95 is about 12.6 ms
 - Python benchmark peak RSS is about 277 MB
 
 These values are implementation baselines, not authentication or accuracy

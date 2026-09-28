@@ -78,7 +78,7 @@ mindmap
 | Camera | OpenCV one-shot, loop, and worker modes |
 | Detection | CPU YuNet in C++; noop and Haar fallbacks |
 | Detection output | boxes, confidence, five landmarks, latency |
-| Recognition | CPU SFace Python prototype |
+| Recognition | CPU SFace in C++ and Python; matcher not connected |
 | Enrollment | guided, multi-pose, memory-only Python prototype |
 | Profile builder | pose coverage, duplicate rejection, normalized centroids |
 | IPC | UNIX socket with mode 0600 and peer credential checks |
@@ -134,7 +134,7 @@ flowchart LR
         Camera["Camera worker"]
         Frame["Latest frame<br/>memory only"]
         YuNet["YuNet CPU detector"]
-        SFace["SFace CPU embedding<br/>planned in C++"]
+        SFace["SFace CPU embedding"]
         Matcher["Profile matcher and quality gates<br/>planned"]
         Decision["Explicit auth decision<br/>fail closed"]
         Crypto["Encrypted per-user profile<br/>placeholder scaffold"]
@@ -161,8 +161,8 @@ flowchart LR
     classDef implemented fill:#d5f5e3,stroke:#1e8449,color:#111
     classDef planned fill:#eaecee,stroke:#626567,color:#111
 
-    class GUI,PAMService,PAM,IPC,Peer,Camera,Frame,YuNet,Decision implemented
-    class SFace,Matcher,Crypto planned
+    class GUI,PAMService,PAM,IPC,Peer,Camera,Frame,YuNet,SFace,Decision implemented
+    class Matcher,Crypto planned
 ```
 
 Solid connections are implemented infrastructure. Dashed connections are the
@@ -197,6 +197,7 @@ Camera-free benchmark on an Intel i5-12500H with Ubuntu 24.04 and OpenCV 4.6:
 | Python YuNet 320x320 p50 | about 3.8 ms |
 | Python SFace 112x112 p50 | about 9.9 ms |
 | C++ YuNet blank-frame smoke inference | about 6.6 ms |
+| C++ SFace 112x112 p50 / p95 | about 10.1 / 12.6 ms |
 | Python benchmark peak RSS | about 277 MB |
 
 These synthetic measurements validate runtime cost only. They do not measure
