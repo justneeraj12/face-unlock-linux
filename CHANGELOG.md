@@ -20,6 +20,9 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 - Deterministic lock-screen attempt policy with a one-second deadline, three
   qualified candidates, low-light illumination handshake, immediate password
   cancellation, and explicit fallback metadata.
+- On-demand OpenCV/V4L2 camera leases with stale-frame clearing, separate
+  open/warm-up bounds, first-frame and cold-open timing, automatic release,
+  explicit password cancellation, fake-camera tests, and a no-save benchmark.
 
 ### Changed
 

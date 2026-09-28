@@ -89,6 +89,40 @@ target_link_libraries(face-unlock-lockscreen-auth-selftest PRIVATE
   face_unlock_lockscreen_auth
 )
 
+add_library(face_unlock_camera_lease STATIC
+  src/camera_lease.cpp
+)
+
+target_compile_options(face_unlock_camera_lease PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+)
+
+target_include_directories(face_unlock_camera_lease PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${OPENCV_INCLUDE_DIR}
+)
+
+target_link_libraries(face_unlock_camera_lease PUBLIC
+  ${OPENCV_CORE_LIBRARY}
+  ${OPENCV_VIDEOIO_LIBRARY}
+)
+
+add_executable(face-unlock-camera-lease-selftest
+  src/camera_lease_selftest.cpp
+)
+
+target_compile_options(face-unlock-camera-lease-selftest PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic
+)
+
+target_link_libraries(face-unlock-camera-lease-selftest PRIVATE
+  face_unlock_camera_lease
+)
+
 add_library(face_unlock_detector STATIC
   src/detector.cpp
 )
@@ -203,6 +237,7 @@ target_link_libraries(face-unlockd PRIVATE
   face_unlock_crypto
   face_unlock_detector
   face_unlock_lockscreen_auth
+  face_unlock_camera_lease
 )
 
 if(WITH_TORCH)
@@ -289,6 +324,20 @@ if(BUILD_TESTING)
     NAME lockscreen_auth_policy
     COMMAND face-unlock-lockscreen-auth-selftest
   )
+
+  add_test(
+    NAME camera_lease
+    COMMAND face-unlock-camera-lease-selftest
+  )
+
+  add_test(
+    NAME camera_lease_protocol
+    COMMAND bash
+      ${CMAKE_SOURCE_DIR}/scripts/test-camera-lease-protocol.sh
+      $<TARGET_FILE:face-unlockd>
+      ${CMAKE_SOURCE_DIR}/scripts/test-socket-client.sh
+  )
+  set_tests_properties(camera_lease_protocol PROPERTIES TIMEOUT 30)
 
 
   add_test(
@@ -379,6 +428,7 @@ install(
     face-unlock-key-tool
     face-unlock-detector-selftest
     face-unlock-lockscreen-auth-selftest
+    face-unlock-camera-lease-selftest
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 if(TARGET face-unlock-recognizer-selftest)

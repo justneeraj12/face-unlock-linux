@@ -8,7 +8,7 @@ This roadmap describes direction rather than a release promise.
 
 ## Completed foundation
 
-- C++ per-user daemon and OpenCV camera worker
+- C++ per-user daemon and on-demand OpenCV camera lease
 - mode-0600 UNIX socket with SO_PEERCRED policy
 - minimal C PAM IPC client and dependency audit
 - guarded fake PAM and sudo rollback tooling
@@ -19,7 +19,7 @@ This roadmap describes direction rather than a release promise.
 - multi-pose profile builders in Python and C++
 - pinned model downloader with checksum verification
 - synthetic CPU benchmark harness
-- bounded lock-screen attempt policy with password cancellation and fallback
+- bounded lock-screen policy and camera lease with password cancellation
 - CI, CTest, Debian package skeleton, and release workflows
 
 ## Current phase: CPU recognition and enrollment
@@ -88,9 +88,9 @@ differ:
 - display manager or greeter
 - encrypted-home and pre-login environments
 
-The lock-screen policy state machine is implemented, but GNOME Shell rendering,
-on-demand camera leasing, biometric decisions, and actual unlock integration
-remain pending. Each integration requires its own threat review, fallback path,
+The lock-screen policy and on-demand camera lease are implemented, but GNOME
+Shell rendering, biometric decisions, and actual unlock integration remain
+pending. Each integration requires its own threat review, fallback path,
 and rollback test before it can be enabled.
 
 ## v1.0 readiness gates

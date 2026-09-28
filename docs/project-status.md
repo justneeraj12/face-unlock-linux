@@ -21,15 +21,15 @@ atomic encrypted profile persistence.
 ### Runtime and IPC
 
 - C++17 per-user daemon
-- OpenCV camera probe, loop, and worker thread
-- latest-frame memory store
+- OpenCV camera probe, manual loop, and on-demand lease thread
+- per-generation latest-frame memory store with stale-frame clearing
 - UNIX socket under the user runtime directory
 - socket mode 0600
 - SO_PEERCRED peer checks
 - same-user policy
 - explicit development-only root auth peer policy
 - bounded failed-attempt state
-- deterministic lock-screen attempt policy and read-only capability metadata
+- deterministic lock-screen policy and on-demand camera lifecycle operations
 - clean signal handling
 
 ### CPU face pipeline
@@ -74,7 +74,7 @@ atomic encrypted profile persistence.
 - liveness or presentation-attack defense
 - production key management
 - production sudo authentication
-- GNOME lock-screen rendering, camera leasing, or unlock integration
+- GNOME lock-screen rendering or actual unlock integration
 - display-manager integration
 - one-command end-user installation
 - automatic, production-safe PAM configuration
@@ -100,6 +100,8 @@ On the current Intel i5-12500H development laptop with synthetic inputs:
 - C++ YuNet blank-frame smoke inference is about 6.6 ms
 - C++ SFace 112x112 p50 is about 10.1 ms and p95 is about 12.6 ms
 - Python benchmark peak RSS is about 277 MB
+- two local cold-camera observations reached open in about 205-207 ms and the
+  first 640x480 frame in about 842-970 ms
 
 These values are implementation baselines, not authentication or accuracy
 claims. Real-camera latency, thermal behavior, false accepts, false rejects, and

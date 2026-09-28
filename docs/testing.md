@@ -11,6 +11,8 @@ Current CTest cases:
 - crypto_selftest
 - detector_selftest
 - lockscreen_auth_policy
+- camera_lease
+- camera_lease_protocol
 - key_template_flow
 - daemon_metadata
 - auth_reasons
@@ -50,15 +52,20 @@ Run one-shot camera test:
 
     ./build/daemon/face-unlockd --camera 0
 
-Run daemon mode:
+Measure on-demand camera startup and release without saving frames:
+
+    ./scripts/benchmark-camera-lease.sh --camera 0
+
+For manual protocol inspection, run daemon mode:
 
     ./build/daemon/face-unlockd --camera 0 --daemon
 
 Then in another terminal:
 
-    ./scripts/test-socket-client.sh ping
     ./scripts/test-socket-client.sh camera_status
-    ./scripts/test-socket-client.sh auth
+    ./scripts/test-socket-client.sh lockscreen_start
+    ./scripts/test-socket-client.sh camera_status
+    ./scripts/test-socket-client.sh lockscreen_password_started
 
 ## PAM tests
 
@@ -126,6 +133,19 @@ cancellation, monotonic timing, and invalid-policy rejection.
 The daemon_metadata test also verifies the read-only `lockscreen_policy`
 response. Neither test accesses a camera or modifies GNOME, GDM, PAM, screen
 brightness, or system files.
+
+## Camera lease tests
+
+CTest includes `camera_lease` and `camera_lease_protocol`. The native test uses
+an injected fake camera to verify idempotent start, automatic deadlines,
+password cancellation, stale-frame deletion, failed opens, and late-frame
+rejection. The protocol test uses an impossible camera index to verify that
+daemon mode starts idle and camera-open failure remains fail-closed without
+stopping the daemon.
+
+Real hardware remains manual because startup and exposure behavior vary by
+camera and driver. `benchmark-camera-lease.sh` reports open and first-frame
+latency, cancels immediately after the first frame, and saves no frame data.
 
 ## template_status operation test
 

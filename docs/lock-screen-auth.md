@@ -1,9 +1,9 @@
 # Lock-screen authentication policy
 
 This document defines the bounded authentication policy intended for a future
-GNOME Shell lock-screen integration. The policy controller is implemented and
-tested. Camera leasing, biometric matching, screen illumination, and unlock
-approval are not connected yet.
+GNOME Shell lock-screen integration. The policy controller and on-demand camera
+lease are implemented and tested. Biometric matching, screen illumination, and
+unlock approval are not connected yet.
 
 ## Policy
 
@@ -74,9 +74,18 @@ lock-screen attempt and release it on every terminal path:
 - lock screen closes
 - daemon, model, profile, or camera error
 
-The existing daemon camera worker is not yet an on-demand camera lease. That
-work must be implemented and benchmarked before this policy is connected to a
-real lock screen.
+Daemon mode now starts with the camera closed. `lockscreen_start` creates a new
+lease generation, clears every stale frame, opens the OpenCV/V4L2 source, and
+reports cold-open and first-frame latency. Camera open and first-frame warm-up
+each have a 1500 ms policy limit. The 1000 ms recognition window begins only
+after the first usable frame, then the handle and in-memory frame are released.
+
+`lockscreen_cancel` and `lockscreen_password_started` request immediate release.
+The latter records `password_started` as the terminal reason. The release call
+waits up to 500 ms and reports failure honestly if a blocking driver call has
+not returned. OpenCV/V4L2 open and read calls are not themselves interruptible,
+so stronger kernel-level cancellation bounds remain a production hardening
+item.
 
 ## Protocol capability
 
@@ -90,6 +99,18 @@ The response exposes protocol version 1 and the policy constants. It reports:
 
 This operation is read-only. It cannot start authentication, illuminate the
 screen, or unlock a session.
+
+Camera-lifecycle development operations are:
+
+    ./scripts/test-socket-client.sh lockscreen_start
+    ./scripts/test-socket-client.sh camera_status
+    ./scripts/test-socket-client.sh lockscreen_password_started
+
+They require same-user socket access and manage camera lifetime only. They do
+not run matching or return an authentication decision. A privacy-safe local
+measurement is available with:
+
+    ./scripts/benchmark-camera-lease.sh --camera 0
 
 ## Security boundary
 

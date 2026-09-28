@@ -25,8 +25,8 @@ Implemented today:
 - C++17 user daemon
 - OpenCV camera one-shot mode
 - OpenCV camera loop mode
-- camera worker thread
-- latest-frame in-memory store
+- on-demand camera lease thread
+- generation-scoped latest-frame in-memory store
 - UNIX domain socket server
 - socket mode 0600
 - SO_PEERCRED peer credential logging
@@ -63,8 +63,8 @@ flowchart TD
 
     Camera[Webcam / V4L2 Camera]
     Daemon[face-unlockd user daemon]
-    Worker[Camera worker thread]
-    FrameStore[Latest frame store in memory]
+    Worker[On-demand camera lease thread]
+    FrameStore[Generation-scoped frame store in memory]
     Socket[UNIX socket server]
     Config[User config file]
     Template[Encrypted template file future/current scaffold]
@@ -112,7 +112,7 @@ The daemon currently supports multiple modes:
 | one-shot | face-unlockd --camera 0 | open camera, read one frame, exit |
 | loop | face-unlockd --camera 0 --loop | continuously read frames, print FPS |
 | serve | face-unlockd --serve | socket server only |
-| daemon | face-unlockd --camera 0 --daemon | camera worker plus socket server |
+| daemon | face-unlockd --camera 0 --daemon | on-demand camera lease plus socket server |
 | model test | face-unlockd --model-test | optional TorchScript loader smoke test |
 
 The most important mode is:
@@ -121,30 +121,36 @@ The most important mode is:
 
 In daemon mode:
 
-- the camera worker runs in a background thread
+- the camera handle stays closed while idle
+- `lockscreen_start` wakes the camera lease thread
+- stale frames are cleared at lease start and release
+- open, first-frame, and recognition timing are reported separately
+- password entry, cancellation, timeout, or shutdown releases the handle
 - frames are stored only in memory
 - the socket server listens under XDG_RUNTIME_DIR
-- socket requests can query status or request auth
-- auth fails closed by default
+- auth still fails closed because matching is not connected
 
 ## Daemon threading model
 
 ```mermaid
 flowchart LR
     Main[Main thread]
-    CameraThread[Camera worker thread]
+    LeaseThread[Camera lease thread]
     SocketLoop[Socket server loop]
-    Store[FrameStore mutex protected]
+    Store[Generation-scoped frame]
+    LeaseState[Lease state and timing]
     AuthState[AuthState mutex protected]
 
-    Main --> CameraThread
+    Main --> LeaseThread
     Main --> SocketLoop
-
-    CameraThread --> Store
+    SocketLoop -->|start or cancel| LeaseState
+    LeaseState --> LeaseThread
+    LeaseThread --> Store
     SocketLoop --> Store
     SocketLoop --> AuthState
 
     Store --> Response[JSON response]
+    LeaseState --> Response
     AuthState --> Response
 ```
 
@@ -152,12 +158,12 @@ Threaded state:
 
 | State | Protection | Purpose |
 |---|---|---|
-| FrameStore | std::mutex | latest camera frame and frame count |
+| CameraLeaseManager | std::mutex and condition variable | camera ownership, generation, frame, timing, release reason |
 | AuthState | std::mutex | failed auth attempts and remaining attempts |
 
-Current limitation:
+Current limitations:
 
-- the latest frame is copied into memory
+- OpenCV/V4L2 open and read calls may block inside the camera driver
 - detector inference runs only for detector_status requests
 - face embedding and matching are not connected
 - no images are saved by daemon
@@ -208,7 +214,7 @@ Camera status request:
 
 Camera status response:
 
-    {"status":"ok","op":"camera_status","camera":"ready","frames_total":30,"frame_width":640,"frame_height":480,"frame_channels":3}
+    {"status":"ok","op":"camera_status","camera":"ready","camera_open":true,"camera_lease_state":"active","camera_open_ms":205,"camera_first_frame_ms":842}
 
 Auth request:
 
@@ -240,14 +246,14 @@ sequenceDiagram
     participant PAMService as Fake PAM service
     participant Module as pam_face_unlock.so
     participant Daemon as face-unlockd
-    participant Camera as Camera worker
+    participant Camera as On-demand camera lease
     participant Password as pam_unix fallback
 
     User->>PAMService: authenticate
     PAMService->>Module: pam_sm_authenticate
     Module->>Daemon: UNIX socket auth request
     Daemon->>Daemon: SO_PEERCRED check
-    Daemon->>Camera: read latest frame status
+    Daemon->>Camera: read current lease frame status
     Daemon->>Daemon: check auth state
     Daemon-->>Module: JSON auth response
     alt auth ok

@@ -23,6 +23,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 
+#include "camera_lease.h"
 #include "detector.h"
 #include "lockscreen_auth.h"
 #include "template_crypto.h"
@@ -71,33 +72,6 @@ struct AppConfig {
   int max_auth_attempts = 3;
   std::string detector_backend = "noop";
   std::string detector_model_path;
-};
-
-struct FrameStore {
-  std::mutex mutex;
-  cv::Mat latest_frame;
-  unsigned long long frames_total = 0;
-  bool has_frame = false;
-
-  void update(const cv::Mat& frame) {
-    std::lock_guard<std::mutex> lock(mutex);
-    frame.copyTo(latest_frame);
-    ++frames_total;
-    has_frame = true;
-  }
-
-  bool snapshot(cv::Mat& out_frame, unsigned long long& out_frames_total) {
-    std::lock_guard<std::mutex> lock(mutex);
-
-    out_frames_total = frames_total;
-
-    if (!has_frame || latest_frame.empty()) {
-      return false;
-    }
-
-    latest_frame.copyTo(out_frame);
-    return true;
-  }
 };
 
 struct AuthState {
@@ -550,7 +524,7 @@ void print_usage(const char* program_name) {
   std::cout << "  --camera, -c INDEX   Camera index to open. Default: 0\n";
   std::cout << "  --loop               Keep reading frames until Ctrl+C\n";
   std::cout << "  --serve              Run local UNIX socket server until Ctrl+C\n";
-  std::cout << "  --daemon             Run camera worker and socket server together\n";
+  std::cout << "  --daemon             Run on-demand camera lease and socket server\n";
   std::cout << "  --model-test         Load TorchScript model and run dummy forward pass\n";
   std::cout << "  --model PATH         TorchScript model path. Default: models/embedding_stub.pt\n";
   std::cout << "  --detector NAME      Detector backend: noop, haar, or yunet when compiled\n";
@@ -814,48 +788,87 @@ bool peer_is_allowed_for_operation(
 
 struct CameraStatus {
   std::string state = "not_attached";
+  std::string lease_state = "unavailable";
+  unsigned long long lease_generation = 0;
   unsigned long long frames_total = 0;
+  unsigned long long lease_frames = 0;
+  bool camera_open = false;
   int frame_width = 0;
   int frame_height = 0;
   int frame_channels = 0;
+  int open_latency_ms = -1;
+  int first_frame_latency_ms = -1;
+  std::string release_reason = "not_attached";
 };
 
-CameraStatus get_camera_status(FrameStore* frame_store) {
+CameraStatus get_camera_status(
+  face_unlock::CameraLeaseManager* frame_store
+) {
   CameraStatus status;
-
   if (frame_store == nullptr) {
-    status.state = "not_attached";
     return status;
   }
 
-  cv::Mat snapshot;
-  const bool has_frame = frame_store->snapshot(snapshot, status.frames_total);
+  const face_unlock::CameraLeaseStatus lease = frame_store->status();
+  status.lease_state = face_unlock::camera_lease_state_name(lease.state);
+  status.lease_generation = lease.generation;
+  status.frames_total = lease.frames_total;
+  status.lease_frames = lease.lease_frames;
+  status.camera_open = lease.camera_open;
+  status.frame_width = lease.frame_width;
+  status.frame_height = lease.frame_height;
+  status.frame_channels = lease.frame_channels;
+  status.open_latency_ms = lease.open_latency_ms;
+  status.first_frame_latency_ms = lease.first_frame_latency_ms;
+  status.release_reason = lease.release_reason;
 
-  if (!has_frame) {
-    status.state = "not_ready";
-    return status;
+  switch (lease.state) {
+    case face_unlock::CameraLeaseState::Idle:
+      status.state = "idle";
+      break;
+    case face_unlock::CameraLeaseState::Opening:
+      status.state = "opening";
+      break;
+    case face_unlock::CameraLeaseState::Active:
+      status.state = lease.frame_available ? "ready" : "warming";
+      break;
+    case face_unlock::CameraLeaseState::Stopping:
+      status.state = "stopping";
+      break;
+    case face_unlock::CameraLeaseState::Failed:
+      status.state = "error";
+      break;
   }
-
-  status.state = "ready";
-  status.frame_width = snapshot.cols;
-  status.frame_height = snapshot.rows;
-  status.frame_channels = snapshot.channels();
-
   return status;
 }
 
 std::string camera_status_json_fields(const CameraStatus& camera_status) {
   std::string fields =
     ",\"camera\":\"" + camera_status.state + "\""
-    + ",\"frames_total\":" + std::to_string(camera_status.frames_total);
+    + ",\"camera_open\":" +
+      std::string(camera_status.camera_open ? "true" : "false")
+    + ",\"camera_lease_state\":\"" + camera_status.lease_state + "\""
+    + ",\"camera_lease_generation\":" +
+      std::to_string(camera_status.lease_generation)
+    + ",\"frames_total\":" + std::to_string(camera_status.frames_total)
+    + ",\"lease_frames\":" + std::to_string(camera_status.lease_frames)
+    + ",\"camera_release_reason\":\"" +
+      camera_status.release_reason + "\"";
 
+  if (camera_status.open_latency_ms >= 0) {
+    fields += ",\"camera_open_ms\":" +
+      std::to_string(camera_status.open_latency_ms);
+  }
+  if (camera_status.first_frame_latency_ms >= 0) {
+    fields += ",\"camera_first_frame_ms\":" +
+      std::to_string(camera_status.first_frame_latency_ms);
+  }
   if (camera_status.state == "ready") {
     fields +=
       ",\"frame_width\":" + std::to_string(camera_status.frame_width)
       + ",\"frame_height\":" + std::to_string(camera_status.frame_height)
       + ",\"frame_channels\":" + std::to_string(camera_status.frame_channels);
   }
-
   return fields;
 }
 
@@ -889,6 +902,18 @@ std::string extract_operation(const std::string& request) {
 
   if (compact.find("\"op\":\"lockscreen_policy\"") != std::string::npos) {
     return "lockscreen_policy";
+  }
+
+  if (compact.find("\"op\":\"lockscreen_password_started\"") != std::string::npos) {
+    return "lockscreen_password_started";
+  }
+
+  if (compact.find("\"op\":\"lockscreen_cancel\"") != std::string::npos) {
+    return "lockscreen_cancel";
+  }
+
+  if (compact.find("\"op\":\"lockscreen_start\"") != std::string::npos) {
+    return "lockscreen_start";
   }
 
   if (compact.find("\"op\":\"auth\"") != std::string::npos) {
@@ -945,7 +970,7 @@ std::string detections_json(const face_unlock::DetectorResult& result) {
 }
 
 std::string detector_json_fields(
-  FrameStore* frame_store,
+  face_unlock::CameraLeaseManager* frame_store,
   face_unlock::FaceDetector* detector
 ) {
   if (detector == nullptr) {
@@ -1003,7 +1028,7 @@ std::string detector_json_fields(
 
 std::string build_response_for_request(
   const std::string& request,
-  FrameStore* frame_store,
+  face_unlock::CameraLeaseManager* frame_store,
   AuthState* auth_state,
   face_unlock::FaceDetector* detector
 ) {
@@ -1056,6 +1081,50 @@ std::string build_response_for_request(
       + ",\"password_fallback\":true"
       + ",\"implementation_status\":\"policy_ready_integration_pending\""
       + "}\n";
+  }
+
+  if (op == "lockscreen_start") {
+    if (frame_store == nullptr) {
+      return "{\"status\":\"fail\",\"op\":\"lockscreen_start\""
+        ",\"reason\":\"camera_manager_unavailable\"}\n";
+    }
+    const face_unlock::CameraLeaseStartResult result = frame_store->start();
+    const std::string fresh_camera_fields =
+      camera_status_json_fields(get_camera_status(frame_store));
+    return "{\"status\":\"" +
+      std::string(result.accepted ? "ok" : "fail") +
+      "\",\"op\":\"lockscreen_start\""
+      + ",\"reason\":\"" + result.reason + "\""
+      + ",\"implementation_status\":\"camera_lease_only\""
+      + ",\"camera_open_timeout_ms\":" +
+        std::to_string(frame_store->policy().open_timeout_ms)
+      + ",\"camera_first_frame_timeout_ms\":" +
+        std::to_string(frame_store->policy().first_frame_timeout_ms)
+      + ",\"recognition_window_ms\":" +
+        std::to_string(frame_store->policy().active_duration_ms)
+      + fresh_camera_fields + "}\n";
+  }
+
+  if (op == "lockscreen_cancel" ||
+      op == "lockscreen_password_started") {
+    if (frame_store == nullptr) {
+      return "{\"status\":\"fail\",\"op\":\"" + op +
+        "\",\"reason\":\"camera_manager_unavailable\"}\n";
+    }
+    const std::string release_reason =
+      op == "lockscreen_password_started" ?
+        "password_started" : "lockscreen_cancelled";
+    const face_unlock::CameraLeaseStopResult result =
+      frame_store->stop(release_reason);
+    const std::string fresh_camera_fields =
+      camera_status_json_fields(get_camera_status(frame_store));
+    return "{\"status\":\"" +
+      std::string(result.released ? "ok" : "fail") +
+      "\",\"op\":\"" + op + "\""
+      + ",\"reason\":\"" + result.reason + "\""
+      + ",\"released\":" +
+        std::string(result.released ? "true" : "false")
+      + fresh_camera_fields + "}\n";
   }
 
   if (op == "auth") {
@@ -1151,7 +1220,7 @@ std::string build_response_for_request(
 
 void handle_client(
   int client_fd,
-  FrameStore* frame_store,
+  face_unlock::CameraLeaseManager* frame_store,
   AuthState* auth_state,
   face_unlock::FaceDetector* detector
 ) {
@@ -1211,7 +1280,7 @@ void handle_client(
 }
 
 bool run_socket_server(
-  FrameStore* frame_store,
+  face_unlock::CameraLeaseManager* frame_store,
   AuthState* auth_state,
   face_unlock::FaceDetector* detector
 ) {
@@ -1277,62 +1346,6 @@ bool run_socket_server(
   return true;
 }
 
-void camera_worker(FrameStore& frame_store, int camera_index) {
-  cv::VideoCapture camera;
-
-  if (!open_camera(camera, camera_index)) {
-    g_running = false;
-    return;
-  }
-
-  std::cout << "camera_worker_status: started" << '\n';
-
-  using clock = std::chrono::steady_clock;
-  auto last_report = clock::now();
-  unsigned long long frames_since_report = 0;
-
-  while (g_running) {
-    cv::Mat frame;
-
-    if (!camera.read(frame) || frame.empty()) {
-      std::cout << "camera_worker_warning: empty_frame" << '\n';
-      std::this_thread::sleep_for(std::chrono::milliseconds(20));
-      continue;
-    }
-
-    frame_store.update(frame);
-    ++frames_since_report;
-
-    const auto now = clock::now();
-    const auto elapsed_ms =
-      std::chrono::duration_cast<std::chrono::milliseconds>(now - last_report)
-        .count();
-
-    if (elapsed_ms >= 1000) {
-      unsigned long long frames_total = 0;
-      cv::Mat snapshot;
-      frame_store.snapshot(snapshot, frames_total);
-
-      const double fps = 1000.0 * static_cast<double>(frames_since_report) /
-                         static_cast<double>(elapsed_ms);
-
-      std::cout << "camera_worker_report:"
-                << " frames_total=" << frames_total
-                << " fps=" << fps
-                << " width=" << frame.cols
-                << " height=" << frame.rows
-                << " channels=" << frame.channels()
-                << '\n';
-
-      frames_since_report = 0;
-      last_report = now;
-    }
-  }
-
-  camera.release();
-  std::cout << "camera_worker_status: stopped" << '\n';
-}
-
 bool run_model_test(const std::string& model_path) {
 #ifndef FACE_UNLOCK_WITH_TORCH
   (void)model_path;
@@ -1384,20 +1397,12 @@ bool run_daemon_mode(
 ) {
   std::cout << "daemon_status: starting" << '\n';
 
-  FrameStore frame_store;
+  face_unlock::CameraLeaseManager frame_store(camera_index);
   AuthState auth_state(max_auth_attempts);
-
-  std::thread camera_thread([&frame_store, camera_index]() {
-    camera_worker(frame_store, camera_index);
-  });
+  std::cout << "camera_mode: on_demand" << '\n';
 
   const bool server_ok = run_socket_server(&frame_store, &auth_state, detector);
-
-  g_running = false;
-
-  if (camera_thread.joinable()) {
-    camera_thread.join();
-  }
+  (void)frame_store.stop("daemon_shutdown");
 
   std::cout << "daemon_status: stopped" << '\n';
 

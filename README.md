@@ -75,7 +75,7 @@ mindmap
 |---|---|
 | Platform | Ubuntu 24.04 LTS, x86_64 |
 | Daemon | C++17 per-user process |
-| Camera | OpenCV one-shot, loop, and worker modes |
+| Camera | on-demand OpenCV/V4L2 lease; one-shot and manual loop diagnostics |
 | Detection | CPU YuNet in C++; noop and Haar fallbacks |
 | Detection output | boxes, confidence, five landmarks, latency |
 | Recognition | CPU SFace in C++ and Python; matcher not connected |
@@ -86,7 +86,7 @@ mindmap
 | Templates | libsodium placeholder encryption and development key tooling |
 | GUI | Qt6 consent, status, pose, quality, and privacy scaffold |
 | Authentication | fail-closed; real matcher not connected |
-| Lock screen | bounded policy controller; GNOME/camera integration pending |
+| Lock screen | bounded policy and camera lease; GNOME/unlock integration pending |
 | Liveness | not implemented |
 | Packaging | development Debian/CPack skeleton |
 
@@ -132,7 +132,7 @@ flowchart LR
     subgraph Daemon["face-unlockd - normal user process"]
         IPC["UNIX socket<br/>mode 0600"]
         Peer["SO_PEERCRED policy"]
-        Camera["Camera worker"]
+        Camera["On-demand camera lease"]
         Frame["Latest frame<br/>memory only"]
         YuNet["YuNet CPU detector"]
         SFace["SFace CPU embedding"]
@@ -201,12 +201,20 @@ Camera-free benchmark on an Intel i5-12500H with Ubuntu 24.04 and OpenCV 4.6:
 | C++ SFace 112x112 p50 / p95 | about 10.1 / 12.6 ms |
 | Python benchmark peak RSS | about 277 MB |
 
-These synthetic measurements validate runtime cost only. They do not measure
-recognition accuracy, liveness, camera latency, or end-to-end authentication.
+A first on-device camera lease measurement opened the MSI laptop camera in
+about 205-207 ms and delivered its first 640x480 frame in about 842-970 ms.
+That range is a two-run development observation, not a compatibility claim.
+
+These measurements validate runtime cost only. They do not measure recognition
+accuracy, liveness, thermal behavior, or end-to-end authentication.
 
 Run the benchmark locally:
 
     python3 python/benchmark_cpu_models.py --iterations 100
+
+Measure cold camera access without saving frames:
+
+    ./scripts/benchmark-camera-lease.sh --camera 0
 
 ## Developer quickstart
 

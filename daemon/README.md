@@ -6,7 +6,7 @@ daemon/ contains the C++17 per-user runtime and supporting command-line tools.
 
 face-unlockd owns:
 
-- camera access and the latest in-memory frame
+- on-demand camera leasing and the latest in-memory frame
 - CPU detector model loading and inference
 - local UNIX socket IPC
 - peer credential checks
@@ -62,6 +62,9 @@ Operations:
 - detector_status
 - template_status
 - lockscreen_policy
+- lockscreen_start
+- lockscreen_cancel
+- lockscreen_password_started
 - auth
 
 Query from another terminal:
@@ -73,6 +76,12 @@ YuNet detections include a box, confidence, and five landmarks.
 
 lockscreen_policy returns the bounded attempt defaults and explicitly reports
 that desktop integration is pending. It is a read-only capability query.
+
+In daemon mode, the camera remains closed until `lockscreen_start`. The lease
+clears stale frames, reports cold-open and first-frame latency, begins the
+one-second recognition window at the first usable frame, and releases on its
+deadline or either cancellation operation. These operations manage camera
+lifetime only; they cannot approve authentication or unlock a session.
 
 ## Authentication state
 
@@ -95,6 +104,7 @@ Neither flag is suitable for production.
 The build also creates:
 
 - face-unlock-lockscreen-auth-selftest
+- face-unlock-camera-lease-selftest
 - face-unlock-detector-selftest
 - face-unlock-recognizer-selftest
 - face-unlock-profile-selftest
