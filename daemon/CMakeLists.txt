@@ -229,6 +229,33 @@ if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY AND OPENCV_DNN_LIBRARY)
     face_unlock_recognizer
   )
 
+  add_library(face_unlock_enrollment_session STATIC
+    src/enrollment_session.cpp
+  )
+  target_compile_options(face_unlock_enrollment_session PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+  )
+  target_include_directories(face_unlock_enrollment_session PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+  target_link_libraries(face_unlock_enrollment_session PUBLIC
+    face_unlock_profile
+  )
+
+  add_executable(face-unlock-enrollment-session-selftest
+    src/enrollment_session_selftest.cpp
+  )
+  target_compile_options(face-unlock-enrollment-session-selftest PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+  )
+  target_link_libraries(face-unlock-enrollment-session-selftest PRIVATE
+    face_unlock_enrollment_session
+  )
+
   add_executable(face-unlock-profile-selftest
     src/face_profile_selftest.cpp
   )
@@ -488,6 +515,13 @@ if(BUILD_TESTING)
       COMMAND $<TARGET_FILE:face-unlock-profile-selftest>
     )
     set_tests_properties(face_profile_cpp PROPERTIES TIMEOUT 30)
+  endif()
+
+  if(TARGET face-unlock-enrollment-session-selftest)
+    add_test(
+      NAME enrollment_session
+      COMMAND $<TARGET_FILE:face-unlock-enrollment-session-selftest>
+    )
   endif()
 
   if(TARGET face-unlock-verification-pipeline-selftest)
