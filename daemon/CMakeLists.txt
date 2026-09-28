@@ -272,6 +272,38 @@ if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY AND OPENCV_DNN_LIBRARY)
     face_unlock_profile_storage
   )
 
+  if(TARGET face_unlock_frame_quality)
+    add_library(face_unlock_enrollment_controller STATIC
+      src/enrollment_controller.cpp
+    )
+    target_compile_options(face_unlock_enrollment_controller PRIVATE
+      -Wall
+      -Wextra
+      -Wpedantic
+    )
+    target_include_directories(face_unlock_enrollment_controller PUBLIC
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_link_libraries(face_unlock_enrollment_controller PUBLIC
+      face_unlock_camera_lease
+      face_unlock_enrollment_session
+      face_unlock_frame_quality
+      face_unlock_profile_storage
+    )
+
+    add_executable(face-unlock-enrollment-controller-selftest
+      src/enrollment_controller_selftest.cpp
+    )
+    target_compile_options(face-unlock-enrollment-controller-selftest PRIVATE
+      -Wall
+      -Wextra
+      -Wpedantic
+    )
+    target_link_libraries(face-unlock-enrollment-controller-selftest PRIVATE
+      face_unlock_enrollment_controller
+    )
+  endif()
+
   add_executable(face-unlock-enrollment-session-selftest
     src/enrollment_session_selftest.cpp
   )
@@ -368,6 +400,15 @@ target_link_libraries(face-unlockd PRIVATE
   face_unlock_lockscreen_auth
   face_unlock_camera_lease
 )
+
+if(TARGET face_unlock_enrollment_controller)
+  target_compile_definitions(face-unlockd PRIVATE
+    FACE_UNLOCK_HAVE_NATIVE_ENROLLMENT=1
+  )
+  target_link_libraries(face-unlockd PRIVATE
+    face_unlock_enrollment_controller
+  )
+endif()
 
 if(WITH_TORCH)
   find_package(Torch REQUIRED)
@@ -475,6 +516,15 @@ if(BUILD_TESTING)
   )
   set_tests_properties(camera_lease_protocol PROPERTIES TIMEOUT 30)
 
+  add_test(
+    NAME enrollment_protocol
+    COMMAND bash
+      ${CMAKE_SOURCE_DIR}/scripts/test-enrollment-protocol.sh
+      $<TARGET_FILE:face-unlockd>
+      ${CMAKE_SOURCE_DIR}/scripts/test-socket-client.sh
+  )
+  set_tests_properties(enrollment_protocol PROPERTIES TIMEOUT 30)
+
 
   add_test(
     NAME key_template_flow
@@ -556,6 +606,13 @@ if(BUILD_TESTING)
     add_test(
       NAME profile_storage
       COMMAND $<TARGET_FILE:face-unlock-profile-storage-selftest>
+    )
+  endif()
+
+  if(TARGET face-unlock-enrollment-controller-selftest)
+    add_test(
+      NAME enrollment_controller
+      COMMAND $<TARGET_FILE:face-unlock-enrollment-controller-selftest>
     )
   endif()
 

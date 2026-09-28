@@ -109,9 +109,17 @@ CameraLeaseManager::~CameraLeaseManager() {
   }
 }
 
-CameraLeaseStartResult CameraLeaseManager::start() {
+CameraLeaseStartResult CameraLeaseManager::start(int active_duration_ms) {
   std::lock_guard<std::mutex> lock(mutex_);
   CameraLeaseStartResult result;
+  const int requested_duration = active_duration_ms == 0 ?
+    policy_.active_duration_ms : active_duration_ms;
+  if (requested_duration < 100 || requested_duration > 60000) {
+    result.state = state_;
+    result.generation = generation_;
+    result.reason = "invalid_active_duration";
+    return result;
+  }
 
   if (requested_ &&
       (state_ == CameraLeaseState::Opening ||
@@ -134,6 +142,7 @@ CameraLeaseStartResult CameraLeaseManager::start() {
 
   ++generation_;
   requested_ = true;
+  lease_active_duration_ms_ = requested_duration;
   state_ = CameraLeaseState::Opening;
   lease_frames_ = 0;
   open_latency_ms_ = -1;
@@ -264,6 +273,7 @@ void CameraLeaseManager::worker_main() {
     }
 
     const unsigned long long generation = generation_;
+    const int active_duration_ms = lease_active_duration_ms_;
     open_in_progress_ = true;
     const auto request_started = SteadyClock::now();
     lock.unlock();
@@ -327,7 +337,7 @@ void CameraLeaseManager::worker_main() {
         state_ = CameraLeaseState::Stopping;
       } else if (!should_stop && recognition_started_set &&
                  elapsed_ms(recognition_started, now) >=
-                   policy_.active_duration_ms) {
+                   active_duration_ms) {
         requested_ = false;
         release_reason_ = "lease_deadline";
         state_ = CameraLeaseState::Stopping;
@@ -360,7 +370,7 @@ void CameraLeaseManager::worker_main() {
         const bool recognition_expired =
           recognition_started_set &&
           elapsed_ms(recognition_started, frame_time) >=
-            policy_.active_duration_ms;
+            active_duration_ms;
 
         if (first_frame_expired || recognition_expired) {
           requested_ = false;

@@ -13,6 +13,7 @@ Current CTest cases:
 - lockscreen_auth_policy
 - camera_lease
 - camera_lease_protocol
+- enrollment_protocol
 - frame_quality
 - verification_pipeline
 - key_template_flow
@@ -21,6 +22,9 @@ Current CTest cases:
 - detector_backends
 - cpu_recognizer
 - face_profile_cpp
+- enrollment_session
+- profile_storage
+- enrollment_controller
 - cpu_face_profile
 
 The crypto self-test verifies:
@@ -148,6 +152,19 @@ stopping the daemon.
 Real hardware remains manual because startup and exposure behavior vary by
 camera and driver. `benchmark-camera-lease.sh` reports open and first-frame
 latency, cancels immediately after the first frame, and saves no frame data.
+
+## Native enrollment tests
+
+`enrollment_session` covers pose progress, ready/commit transitions,
+incomplete finalization rejection, and cancellation erasure. `profile_storage`
+covers 0600 writes, encrypted reload, key reuse, manifest flags, and ciphertext
+tamper rejection.
+
+`enrollment_controller` uses injected camera, detector, and embedder fakes to
+exercise the complete in-memory quality-to-pose pipeline, camera release,
+encrypted commit, cancellation, and camera-failure erasure. The
+`enrollment_protocol` socket test verifies unsupported enrollment fails closed
+and creates no template, key, or manifest.
 
 ## Native verification tests
 

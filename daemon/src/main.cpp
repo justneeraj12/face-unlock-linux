@@ -28,6 +28,11 @@
 #include "lockscreen_auth.h"
 #include "template_crypto.h"
 
+#ifdef FACE_UNLOCK_HAVE_NATIVE_ENROLLMENT
+#include "enrollment_controller.h"
+#include "recognizer.h"
+#endif
+
 #include <sodium.h>
 
 #ifdef FACE_UNLOCK_WITH_TORCH
@@ -46,6 +51,14 @@ std::string read_text_file(const std::string& path);
 std::atomic<bool> g_running{true};
 std::string g_detector_backend = "noop";
 
+#ifdef FACE_UNLOCK_HAVE_NATIVE_ENROLLMENT
+using EnrollmentControllerHandle = face_unlock::EnrollmentController;
+using FaceEmbedderHandle = face_unlock::FaceEmbedder;
+#else
+struct EnrollmentControllerHandle {};
+struct FaceEmbedderHandle {};
+#endif
+
 void handle_signal(int signal_number) {
   (void)signal_number;
   g_running = false;
@@ -63,6 +76,8 @@ struct Options {
   bool detector_backend_set = false;
   std::string detector_model_path;
   bool detector_model_path_set = false;
+  std::string recognizer_model_path;
+  bool recognizer_model_path_set = false;
 };
 
 struct AppConfig {
@@ -72,6 +87,7 @@ struct AppConfig {
   int max_auth_attempts = 3;
   std::string detector_backend = "noop";
   std::string detector_model_path;
+  std::string recognizer_model_path;
 };
 
 struct AuthState {
@@ -513,6 +529,13 @@ AppConfig load_app_config() {
     config.detector_model_path = detector_model_path.value();
   }
 
+  const std::optional<std::string> recognizer_model_path =
+    extract_string_config_value(content, "recognizer_model_path");
+
+  if (recognizer_model_path.has_value()) {
+    config.recognizer_model_path = recognizer_model_path.value();
+  }
+
   return config;
 }
 
@@ -529,6 +552,7 @@ void print_usage(const char* program_name) {
   std::cout << "  --model PATH         TorchScript model path. Default: models/embedding_stub.pt\n";
   std::cout << "  --detector NAME      Detector backend: noop, haar, or yunet when compiled\n";
   std::cout << "  --detector-model PATH  YuNet ONNX model path\n";
+  std::cout << "  --recognizer-model PATH  SFace ONNX model path for enrollment\n";
   std::cout << "  --version            Show the program version\n";
   std::cout << "  --help, -h           Show this help text\n";
 }
@@ -561,6 +585,10 @@ Options parse_options(int argc, char** argv) {
     } else if (arg == "--detector-model" && i + 1 < argc) {
       options.detector_model_path = argv[i + 1];
       options.detector_model_path_set = true;
+      ++i;
+    } else if (arg == "--recognizer-model" && i + 1 < argc) {
+      options.recognizer_model_path = argv[i + 1];
+      options.recognizer_model_path_set = true;
       ++i;
     } else if (arg == "--version") {
       std::cout << FACE_UNLOCK_VERSION << '\n';
@@ -888,6 +916,26 @@ std::string compact_jsonish(const std::string& request) {
 std::string extract_operation(const std::string& request) {
   const std::string compact = compact_jsonish(request);
 
+  if (compact.find("\"op\":\"enrollment_status\"") != std::string::npos) {
+    return "enrollment_status";
+  }
+
+  if (compact.find("\"op\":\"enrollment_capture\"") != std::string::npos) {
+    return "enrollment_capture";
+  }
+
+  if (compact.find("\"op\":\"enrollment_cancel\"") != std::string::npos) {
+    return "enrollment_cancel";
+  }
+
+  if (compact.find("\"op\":\"enrollment_commit\"") != std::string::npos) {
+    return "enrollment_commit";
+  }
+
+  if (compact.find("\"op\":\"enrollment_start\"") != std::string::npos) {
+    return "enrollment_start";
+  }
+
   if (compact.find("\"op\":\"detector_status\"") != std::string::npos) {
     return "detector_status";
   }
@@ -1026,11 +1074,79 @@ std::string detector_json_fields(
     detections_json(result);
 }
 
+std::string enrollment_response(
+  const std::string& operation,
+  EnrollmentControllerHandle* controller
+) {
+#ifndef FACE_UNLOCK_HAVE_NATIVE_ENROLLMENT
+  (void)controller;
+  return "{\"status\":\"fail\",\"op\":\"" + operation +
+    "\",\"reason\":\"native_enrollment_unavailable\"}\n";
+#else
+  if (controller == nullptr) {
+    return "{\"status\":\"fail\",\"op\":\"" + operation +
+      "\",\"reason\":\"enrollment_controller_unavailable\"}\n";
+  }
+
+  face_unlock::EnrollmentOperationResult result;
+  if (operation == "enrollment_start") {
+    result = controller->start();
+  } else if (operation == "enrollment_capture") {
+    result = controller->capture();
+  } else if (operation == "enrollment_cancel") {
+    result = controller->cancel();
+  } else if (operation == "enrollment_commit") {
+    result = controller->commit();
+  } else {
+    result = controller->status();
+  }
+
+  std::ostringstream missing;
+  missing << "[";
+  for (std::size_t index = 0;
+       index < result.enrollment.missing_poses.size();
+       ++index) {
+    if (index > 0) missing << ",";
+    missing << "\"" << face_unlock::pose_slot_name(
+      result.enrollment.missing_poses[index]
+    ) << "\"";
+  }
+  missing << "]";
+
+  std::ostringstream response;
+  response << "{\"status\":\"" << (result.ok ? "ok" : "fail")
+           << "\",\"op\":\"" << operation
+           << "\",\"reason\":\"" << result.reason
+           << "\",\"enrollment_state\":\""
+           << face_unlock::enrollment_state_name(result.enrollment.state)
+           << "\",\"progress_percent\":"
+           << result.enrollment.progress_percent
+           << ",\"accepted_samples\":"
+           << result.enrollment.accepted_samples
+           << ",\"missing_poses\":" << missing.str()
+           << ",\"sample_accepted\":"
+           << (result.sample_accepted ? "true" : "false")
+           << ",\"pose\":\"" << face_unlock::pose_slot_name(result.pose)
+           << "\",\"faces_detected\":" << result.faces_detected
+           << ",\"detector_ms\":" << result.detector_ms
+           << ",\"embedding_ms\":" << result.embedding_ms
+           << ",\"quality_reason\":\"" << result.quality.reason
+           << "\",\"mean_luma\":" << result.quality.mean_luma
+           << ",\"sharpness\":" << result.quality.laplacian_variance
+           << ",\"face_area_ratio\":" << result.quality.face_area_ratio
+           << ",\"key_created\":"
+           << (result.key_created ? "true" : "false")
+           << "}\n";
+  return response.str();
+#endif
+}
+
 std::string build_response_for_request(
   const std::string& request,
   face_unlock::CameraLeaseManager* frame_store,
   AuthState* auth_state,
-  face_unlock::FaceDetector* detector
+  face_unlock::FaceDetector* detector,
+  EnrollmentControllerHandle* enrollment_controller
 ) {
   const std::string op = extract_operation(request);
   const CameraStatus camera_status = get_camera_status(frame_store);
@@ -1038,6 +1154,14 @@ std::string build_response_for_request(
   const std::string template_fields = template_json_fields();
   const std::string enrollment_fields = enrollment_json_fields();
   const std::string key_fields = key_json_fields();
+
+  if (op == "enrollment_start" ||
+      op == "enrollment_capture" ||
+      op == "enrollment_status" ||
+      op == "enrollment_cancel" ||
+      op == "enrollment_commit") {
+    return enrollment_response(op, enrollment_controller);
+  }
 
   if (op == "ping") {
     return "{\"status\":\"ok\",\"op\":\"ping\",\"reason\":\"daemon_alive\""
@@ -1222,7 +1346,8 @@ void handle_client(
   int client_fd,
   face_unlock::CameraLeaseManager* frame_store,
   AuthState* auth_state,
-  face_unlock::FaceDetector* detector
+  face_unlock::FaceDetector* detector,
+  EnrollmentControllerHandle* enrollment_controller
 ) {
   ucred credentials {};
 
@@ -1273,7 +1398,13 @@ void handle_client(
 
   write_json_response(
     client_fd,
-    build_response_for_request(request, frame_store, auth_state, detector)
+    build_response_for_request(
+      request,
+      frame_store,
+      auth_state,
+      detector,
+      enrollment_controller
+    )
   );
 
   ::close(client_fd);
@@ -1282,7 +1413,8 @@ void handle_client(
 bool run_socket_server(
   face_unlock::CameraLeaseManager* frame_store,
   AuthState* auth_state,
-  face_unlock::FaceDetector* detector
+  face_unlock::FaceDetector* detector,
+  EnrollmentControllerHandle* enrollment_controller
 ) {
   const std::string socket_path = get_socket_path();
 
@@ -1335,7 +1467,13 @@ bool run_socket_server(
       continue;
     }
 
-    handle_client(client_fd, frame_store, auth_state, detector);
+    handle_client(
+      client_fd,
+      frame_store,
+      auth_state,
+      detector,
+      enrollment_controller
+    );
   }
 
   std::cout << "server_status: stopping\n";
@@ -1393,7 +1531,8 @@ bool run_model_test(const std::string& model_path) {
 bool run_daemon_mode(
   int camera_index,
   int max_auth_attempts,
-  face_unlock::FaceDetector* detector
+  face_unlock::FaceDetector* detector,
+  FaceEmbedderHandle* embedder
 ) {
   std::cout << "daemon_status: starting" << '\n';
 
@@ -1401,11 +1540,33 @@ bool run_daemon_mode(
   AuthState auth_state(max_auth_attempts);
   std::cout << "camera_mode: on_demand" << '\n';
 
-  const bool server_ok = run_socket_server(&frame_store, &auth_state, detector);
+  EnrollmentControllerHandle* enrollment_controller = nullptr;
+#ifdef FACE_UNLOCK_HAVE_NATIVE_ENROLLMENT
+  const face_unlock::ProfileStoragePaths storage_paths{
+    get_default_template_path(),
+    get_default_key_path(),
+    get_default_enrollment_manifest_path(),
+  };
+  face_unlock::EnrollmentController native_enrollment(
+    &frame_store,
+    detector,
+    embedder,
+    storage_paths
+  );
+  enrollment_controller = &native_enrollment;
+#else
+  (void)embedder;
+#endif
+
+  const bool server_ok = run_socket_server(
+    &frame_store,
+    &auth_state,
+    detector,
+    enrollment_controller
+  );
   (void)frame_store.stop("daemon_shutdown");
 
   std::cout << "daemon_status: stopped" << '\n';
-
   return server_ok;
 }
 
@@ -1424,6 +1585,9 @@ int main(int argc, char** argv) {
   const std::string detector_model_path = options.detector_model_path_set
     ? options.detector_model_path
     : config.detector_model_path;
+  const std::string recognizer_model_path = options.recognizer_model_path_set
+    ? options.recognizer_model_path
+    : config.recognizer_model_path;
 
   std::unique_ptr<face_unlock::FaceDetector> detector;
 
@@ -1446,6 +1610,26 @@ int main(int argc, char** argv) {
 
   g_detector_backend = detector_backend;
 
+#ifdef FACE_UNLOCK_HAVE_NATIVE_ENROLLMENT
+  std::unique_ptr<face_unlock::SFaceEmbedder> embedder;
+  if (!recognizer_model_path.empty()) {
+    try {
+      embedder = std::make_unique<face_unlock::SFaceEmbedder>(
+        recognizer_model_path
+      );
+    } catch (const std::exception& error) {
+      std::cerr << "recognizer_model_error: " << error.what() << '\n';
+      return 7;
+    }
+  }
+#else
+  if (!recognizer_model_path.empty()) {
+    std::cerr << "recognizer_model_error: native enrollment unavailable\n";
+    return 7;
+  }
+  std::unique_ptr<FaceEmbedderHandle> embedder;
+#endif
+
   const uid_t uid = getuid();
   const std::string runtime_dir = get_runtime_dir();
   const std::string socket_path = get_socket_path();
@@ -1461,6 +1645,16 @@ int main(int argc, char** argv) {
   std::cout << "detector_backend: " << detector_backend << '\n';
   std::cout << "detector_model_path: "
             << (detector_model_path.empty() ? "none" : detector_model_path)
+            << '\n';
+  std::cout << "recognizer_model_path: "
+            << (recognizer_model_path.empty() ? "none" : recognizer_model_path)
+            << '\n';
+  std::cout << "native_enrollment_available: "
+#ifdef FACE_UNLOCK_HAVE_NATIVE_ENROLLMENT
+            << "true"
+#else
+            << "false"
+#endif
             << '\n';
   std::cout << "max_auth_attempts: " << config.max_auth_attempts << '\n';
   std::cout << "dev_auth_enabled: " << (dev_auth_enabled() ? "true" : "false") << '\n';
@@ -1478,7 +1672,12 @@ int main(int argc, char** argv) {
     std::cout << "mode: serve" << '\n';
 
     AuthState auth_state(config.max_auth_attempts);
-    const bool ok = run_socket_server(nullptr, &auth_state, detector.get());
+    const bool ok = run_socket_server(
+      nullptr,
+      &auth_state,
+      detector.get(),
+      nullptr
+    );
 
     if (!ok) {
       std::cout << "status: socket_error" << '\n';
@@ -1495,7 +1694,8 @@ int main(int argc, char** argv) {
     const bool ok = run_daemon_mode(
       camera_index,
       config.max_auth_attempts,
-      detector.get()
+      detector.get(),
+      embedder.get()
     );
 
     if (!ok) {

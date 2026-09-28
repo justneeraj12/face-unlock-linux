@@ -15,7 +15,17 @@ struct FaceEmbedding {
   std::vector<float> values;
 };
 
-class SFaceEmbedder final {
+class FaceEmbedder {
+public:
+  virtual ~FaceEmbedder() = default;
+  virtual std::string model_id() const = 0;
+  virtual FaceEmbedding align_and_embed(
+    const cv::Mat& frame_bgr,
+    const DetectionBox& detection
+  ) = 0;
+};
+
+class SFaceEmbedder final : public FaceEmbedder {
 public:
   explicit SFaceEmbedder(const std::string& model_path);
   ~SFaceEmbedder();
@@ -24,10 +34,11 @@ public:
   SFaceEmbedder& operator=(const SFaceEmbedder&) = delete;
 
   FaceEmbedding embed_aligned(const cv::Mat& aligned_face_bgr);
+  std::string model_id() const override;
   FaceEmbedding align_and_embed(
     const cv::Mat& frame_bgr,
     const DetectionBox& detection
-  );
+  ) override;
   static double cosine_similarity(
     const FaceEmbedding& left,
     const FaceEmbedding& right

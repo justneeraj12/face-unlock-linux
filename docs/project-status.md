@@ -10,11 +10,12 @@ The current phase is connecting the proven CPU pipeline to the C++ daemon:
 - YuNet detection is already implemented in C++
 - SFace alignment and embedding are implemented in C++ and Python
 - multi-pose profile construction and score-only matching exist in C++ and Python
-- daemon enrollment operations are not implemented
+- daemon enrollment sessions and encrypted profile commit are implemented
+- the Qt GUI is not connected to those operations yet
 - real authentication matching remains disabled
 
-The next bounded implementation slice is daemon-owned enrollment sessions and
-atomic encrypted profile persistence.
+The next bounded implementation slice is Qt enrollment protocol integration,
+followed by held-out profile validation.
 
 ## Implemented
 
@@ -46,6 +47,9 @@ atomic encrypted profile persistence.
 - fail-closed detection-to-profile diagnostic scoring pipeline
 - strict versioned profile payload with bounded parsing
 - libsodium encrypted profile round-trip test
+- daemon-owned enrollment start, capture, status, cancel, and commit operations
+- bounded enrollment camera lease with release on ready, cancel, failure, or commit
+- atomic 0600 encrypted profile, development key, and manifest writes
 - camera-free latency benchmark
 
 ### PAM and safety
@@ -69,7 +73,6 @@ atomic encrypted profile persistence.
 
 ## Not implemented
 
-- daemon-owned encrypted biometric profile creation
 - calibrated thresholded authentication decisions
 - calibrated acceptance thresholds
 - held-out enrollment validation
@@ -128,7 +131,7 @@ Safe today:
 
 - building and testing locally
 - running camera and detector diagnostics
-- running the non-persistent enrollment prototype
+- running the daemon enrollment flow with development key storage
 - querying daemon metadata
 - testing the PAM module with the fake PAM service
 - building and inspecting packages

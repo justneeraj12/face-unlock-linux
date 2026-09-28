@@ -25,6 +25,7 @@ developers to the detailed design and safety documents.
 | Model candidates and licenses | [Model candidates](model-candidates.md) |
 | Evaluation plan | [Model evaluation plan](model-evaluation-plan.md) |
 | Threshold calibration | [Threshold calibration](threshold-calibration.md) |
+| Native enrollment protocol | [Native enrollment](native-enrollment.md) |
 | Enrollment metadata | [Enrollment format](enrollment-format.md) |
 | Detector metadata | [Detector output format](detector-output-format.md) |
 

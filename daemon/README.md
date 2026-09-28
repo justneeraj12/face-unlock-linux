@@ -15,7 +15,8 @@ face-unlockd owns:
 - CPU SFace alignment and normalized embeddings
 - native five-pose profile construction and score-only matching
 - native frame-quality gates and fail-closed diagnostic verification
-- future daemon enrollment and thresholded authentication
+- daemon-owned five-pose enrollment and encrypted profile commit
+- future thresholded authentication
 
 It runs as the desktop user, not as root.
 
@@ -66,6 +67,11 @@ Operations:
 - lockscreen_start
 - lockscreen_cancel
 - lockscreen_password_started
+- enrollment_start
+- enrollment_capture
+- enrollment_status
+- enrollment_cancel
+- enrollment_commit
 - auth
 
 Query from another terminal:
@@ -83,6 +89,16 @@ clears stale frames, reports cold-open and first-frame latency, begins the
 one-second recognition window at the first usable frame, and releases on its
 deadline or either cancellation operation. These operations manage camera
 lifetime only; they cannot approve authentication or unlock a session.
+
+Enrollment requires daemon mode, the YuNet detector, and a configured SFace
+model:
+
+    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
+
+The enrollment operations collect one qualified sample per capture request,
+report five-pose progress, close the camera when ready, and commit an encrypted
+profile only after all pose slots are complete. The Qt GUI still needs to be
+connected. See [native enrollment](../docs/native-enrollment.md).
 
 ## Authentication state
 
@@ -112,6 +128,9 @@ The build also creates:
 - face-unlock-detector-selftest
 - face-unlock-recognizer-selftest
 - face-unlock-profile-selftest
+- face-unlock-enrollment-session-selftest
+- face-unlock-profile-storage-selftest
+- face-unlock-enrollment-controller-selftest
 - face-unlock-crypto-selftest
 - face-unlock-key-tool
 - face-unlock-template-tool

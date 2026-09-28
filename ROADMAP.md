@@ -32,7 +32,7 @@ The immediate goal is a complete non-PAM enrollment and verification pipeline.
 - [x] Prototype guided multi-pose profile construction
 - [x] Port SFace alignment and embedding to C++
 - [x] Define and validate a versioned encrypted face-profile payload
-- [ ] Add daemon enrollment start, status, cancel, and commit operations
+- [x] Add daemon enrollment start, capture, status, cancel, and commit operations
 - [x] Add native gates for face count, landmarks, lighting, blur, face size, and confidence
 - [ ] Add dedicated occlusion and pose-quality calibration
 - [ ] Add held-out enrollment validation before committing a profile

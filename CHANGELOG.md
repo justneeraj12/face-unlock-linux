@@ -28,6 +28,10 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
   authentication decisions.
 - Privacy-safe live YuNet/SFace/profile plumbing benchmark that closes the
   camera before inference and persists no biometric data.
+- Daemon-owned five-pose enrollment sessions with same-user start, capture,
+  status, cancel, and commit operations.
+- Bounded enrollment camera leases, native quality and pose gates, encrypted
+  profile persistence, camera-failure erasure, and fail-closed protocol tests.
 
 ### Changed
 

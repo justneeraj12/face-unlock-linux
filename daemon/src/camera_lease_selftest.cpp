@@ -110,6 +110,11 @@ int main() {
             snapshot.cols == 64 && snapshot.rows == 48,
             "active camera snapshot failed");
 
+    const auto invalid_duration = manager.start(60001);
+    require(!invalid_duration.accepted &&
+            invalid_duration.reason == "invalid_active_duration",
+            "unsafe camera lease duration was accepted");
+
     const auto stopped = manager.stop("password_started");
     require(stopped.released, "camera was not released after cancellation");
     const auto stopped_status = manager.status();
@@ -120,12 +125,15 @@ int main() {
             "cancelled camera lease retained state or frame data");
     require(stats->closes == 1, "camera close count after cancellation is wrong");
 
-    const auto second = manager.start();
+    const auto second = manager.start(300);
     require(second.accepted && second.generation == 2,
             "second camera lease generation is wrong");
     require(wait_until([&manager]() {
       return manager.status().state == CameraLeaseState::Active;
     }), "second camera lease did not become active");
+    std::this_thread::sleep_for(std::chrono::milliseconds(180));
+    require(manager.status().state == CameraLeaseState::Active,
+            "bounded duration override was ignored");
     require(wait_until([&manager]() {
       const auto status = manager.status();
       return status.state == CameraLeaseState::Idle &&
@@ -176,6 +184,7 @@ int main() {
 
     std::cout << "camera_lease_cancel_status: ok\n";
     std::cout << "camera_lease_deadline_status: ok\n";
+    std::cout << "camera_lease_duration_override_status: ok\n";
     std::cout << "camera_lease_stale_frame_status: ok\n";
     std::cout << "camera_lease_open_failure_status: ok\n";
     std::cout << "status: ok\n";

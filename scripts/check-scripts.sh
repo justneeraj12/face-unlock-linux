@@ -26,6 +26,7 @@ required_scripts=(
   scripts/test-daemon-metadata.sh
   scripts/test-auth-reasons.sh
   scripts/test-camera-lease-protocol.sh
+  scripts/test-enrollment-protocol.sh
   scripts/benchmark-camera-lease.sh
   scripts/benchmark-native-verification.sh
   scripts/test-python-detectors.sh

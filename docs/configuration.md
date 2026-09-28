@@ -16,6 +16,7 @@ Example:
       "camera_index": 0,
       "detector_backend": "noop",
       "detector_model_path": "",
+      "recognizer_model_path": "",
       "max_auth_attempts": 3
     }
 
@@ -41,7 +42,7 @@ Current status:
 
 - parsed by daemon
 - printed at startup
-- not enforced yet
+- enforced by the in-memory auth retry state
 
 Default:
 
@@ -51,7 +52,7 @@ Allowed range:
 
     1 through 10
 
-Enforcement will be added later when real auth state tracking is implemented.
+The counter resets when the daemon restarts.
 
 ## Write default config
 
@@ -145,3 +146,27 @@ Config example:
 
 The daemon fails closed at startup when YuNet is selected without a model path
 or when the model cannot be read or loaded. Command-line values override config.
+
+
+## recognizer_model_path
+
+Native enrollment requires an explicit readable SFace ONNX model path.
+
+CLI example:
+
+    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
+
+Config example:
+
+    {
+      "camera_index": 0,
+      "detector_backend": "yunet",
+      "detector_model_path": "/absolute/path/to/face_detection_yunet_2022mar.onnx",
+      "recognizer_model_path": "/absolute/path/to/face_recognition_sface_2021dec.onnx",
+      "max_auth_attempts": 3
+    }
+
+The recognizer uses the OpenCV DNN CPU target. If a configured model cannot be
+read or loaded, daemon startup fails closed. Without a recognizer model, daemon
+status operations remain available but `enrollment_start` returns
+`recognizer_unavailable`.

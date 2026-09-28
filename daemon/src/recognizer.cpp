@@ -127,6 +127,10 @@ FaceEmbedding SFaceEmbedder::embed_aligned(const cv::Mat& aligned_face_bgr) {
   return normalize_feature(feature);
 }
 
+std::string SFaceEmbedder::model_id() const {
+  return "opencv-sface-2021dec";
+}
+
 FaceEmbedding SFaceEmbedder::align_and_embed(
   const cv::Mat& frame_bgr,
   const DetectionBox& detection

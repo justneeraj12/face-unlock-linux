@@ -78,7 +78,7 @@ public:
   CameraLeaseManager(const CameraLeaseManager&) = delete;
   CameraLeaseManager& operator=(const CameraLeaseManager&) = delete;
 
-  CameraLeaseStartResult start();
+  CameraLeaseStartResult start(int active_duration_ms = 0);
   CameraLeaseStopResult stop(
     const std::string& reason,
     int wait_timeout_ms = 500
@@ -114,6 +114,7 @@ private:
   cv::Mat latest_frame_;
   int open_latency_ms_ = -1;
   int first_frame_latency_ms_ = -1;
+  int lease_active_duration_ms_ = 1000;
   std::string release_reason_ = "never_started";
 };
 

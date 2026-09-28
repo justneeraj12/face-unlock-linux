@@ -79,19 +79,19 @@ mindmap
 | Detection | CPU YuNet in C++; noop and Haar fallbacks |
 | Detection output | boxes, confidence, five landmarks, latency |
 | Recognition | native quality/score pipeline; acceptance threshold disabled |
-| Enrollment | guided Python prototype; native five-pose builder library |
+| Enrollment | daemon-owned five-pose sessions and encrypted commit; Qt wiring pending |
 | Profile builder | C++ and Python; versioned encrypted round-trip tested |
 | IPC | UNIX socket with mode 0600 and peer credential checks |
 | PAM | minimal C IPC client with bounded timeout |
-| Templates | libsodium placeholder encryption and development key tooling |
+| Templates | libsodium-encrypted native profiles; development key tooling only |
 | GUI | Qt6 consent, status, pose, quality, and privacy scaffold |
 | Authentication | fail-closed; real matcher not connected |
 | Lock screen | bounded policy and camera lease; GNOME/unlock integration pending |
 | Liveness | not implemented |
 | Packaging | development Debian/CPack skeleton |
 
-The current development phase is connecting the native profile builder and
-enrollment control to the daemon. See [project status](docs/project-status.md)
+The current development phase is connecting the Qt enrollment flow to the
+new daemon enrollment protocol, then validating profiles before authentication. See [project status](docs/project-status.md)
 and the [roadmap](ROADMAP.md).
 
 ## Delivery path
@@ -110,8 +110,9 @@ flowchart LR
     classDef planned fill:#eaecee,stroke:#626567,color:#111
 
     class Foundation complete
-    class Runtime active
-    class Enrollment,Hardening,Packaging,Integration,Stable planned
+    class Runtime complete
+    class Enrollment active
+    class Hardening,Packaging,Integration,Stable planned
 ```
 
 Green is implemented foundation, yellow is active work, and gray is planned.
@@ -136,16 +137,16 @@ flowchart LR
         Frame["Latest frame<br/>memory only"]
         YuNet["YuNet CPU detector"]
         SFace["SFace CPU embedding"]
-        Matcher["Profile matcher and quality gates<br/>planned"]
+        Matcher["Quality gates and profile scoring<br/>threshold disabled"]
         Decision["Explicit auth decision<br/>fail closed"]
-        Crypto["Encrypted per-user profile<br/>placeholder scaffold"]
+        Crypto["Encrypted per-user profile<br/>development key"]
     end
 
     User --> GUI
     User --> PAMService
     PAMService --> PAM
     PAM -->|"bounded local request"| IPC
-    GUI -->|"status; enrollment planned"| IPC
+    GUI -.->|"enrollment wiring pending"| IPC
     IPC --> Peer
     Peer --> Decision
 
@@ -162,12 +163,12 @@ flowchart LR
     classDef implemented fill:#d5f5e3,stroke:#1e8449,color:#111
     classDef planned fill:#eaecee,stroke:#626567,color:#111
 
-    class GUI,PAMService,PAM,IPC,Peer,Camera,Frame,YuNet,SFace,Decision implemented
-    class Matcher,Crypto planned
+    class PAMService,PAM,IPC,Peer,Camera,Frame,YuNet,SFace,Matcher,Crypto,Decision implemented
+    class GUI planned
 ```
 
-Solid connections are implemented infrastructure. Dashed connections are the
-recognition and profile path currently being moved from Python into C++.
+Solid connections are implemented infrastructure. The dashed GUI connection is
+the remaining enrollment UI integration; authentication acceptance stays disabled.
 
 The PAM module never opens the camera or loads a model. Heavy work stays in the
 unprivileged daemon. The socket uses mode 0600 and SO_PEERCRED checks.
@@ -245,18 +246,22 @@ Run the C++ YuNet smoke test:
 
     ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet_2022mar.onnx
 
-Run the daemon with camera and CPU YuNet:
+Run the daemon with camera, CPU YuNet, and CPU SFace:
 
-    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --daemon
+    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
 
 In another terminal:
 
     ./scripts/test-socket-client.sh ping
     ./scripts/test-socket-client.sh camera_status
     ./scripts/test-socket-client.sh detector_status
+    ./scripts/test-socket-client.sh enrollment_status
+    ./scripts/test-socket-client.sh enrollment_start
+    ./scripts/test-socket-client.sh enrollment_capture
     ./scripts/test-socket-client.sh auth
 
-The auth request must fail because the real matcher is not connected yet.
+Enrollment capture accepts at most one qualified sample per request. The auth
+request must still fail because thresholded authentication is not enabled.
 
 ## Guided enrollment prototype
 
