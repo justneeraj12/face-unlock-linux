@@ -123,6 +123,37 @@ target_link_libraries(face-unlock-camera-lease-selftest PRIVATE
   face_unlock_camera_lease
 )
 
+if(OPENCV_IMGPROC_LIBRARY)
+  add_library(face_unlock_frame_quality STATIC
+    src/frame_quality.cpp
+  )
+  target_compile_options(face_unlock_frame_quality PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+  )
+  target_include_directories(face_unlock_frame_quality PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${OPENCV_INCLUDE_DIR}
+  )
+  target_link_libraries(face_unlock_frame_quality PUBLIC
+    face_unlock_detector
+    ${OPENCV_IMGPROC_LIBRARY}
+  )
+
+  add_executable(face-unlock-frame-quality-selftest
+    src/frame_quality_selftest.cpp
+  )
+  target_compile_options(face-unlock-frame-quality-selftest PRIVATE
+    -Wall
+    -Wextra
+    -Wpedantic
+  )
+  target_link_libraries(face-unlock-frame-quality-selftest PRIVATE
+    face_unlock_frame_quality
+  )
+endif()
+
 add_library(face_unlock_detector STATIC
   src/detector.cpp
 )
@@ -329,6 +360,13 @@ if(BUILD_TESTING)
     NAME camera_lease
     COMMAND face-unlock-camera-lease-selftest
   )
+
+  if(TARGET face-unlock-frame-quality-selftest)
+    add_test(
+      NAME frame_quality
+      COMMAND face-unlock-frame-quality-selftest
+    )
+  endif()
 
   add_test(
     NAME camera_lease_protocol
