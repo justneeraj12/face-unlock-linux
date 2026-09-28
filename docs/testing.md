@@ -13,6 +13,8 @@ Current CTest cases:
 - lockscreen_auth_policy
 - camera_lease
 - camera_lease_protocol
+- frame_quality
+- verification_pipeline
 - key_template_flow
 - daemon_metadata
 - auth_reasons
@@ -146,6 +148,21 @@ stopping the daemon.
 Real hardware remains manual because startup and exposure behavior vary by
 camera and driver. `benchmark-camera-lease.sh` reports open and first-frame
 latency, cancels immediately after the first frame, and saves no frame data.
+
+## Native verification tests
+
+`frame_quality` covers single-face enforcement, landmarks, box size, exposure,
+sharpness, confidence policy validation, and fail-closed reasons.
+`verification_pipeline` covers score production, rejection before embedding,
+pipeline errors, and the invariant that diagnostics never permit
+authentication.
+
+The optional live benchmark is:
+
+    ./scripts/benchmark-native-verification.sh --camera 0 --iterations 20
+
+It saves nothing and reports unavailable when the captured frame does not pass
+YuNet and the quality gates.
 
 ## template_status operation test
 

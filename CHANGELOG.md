@@ -23,6 +23,11 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 - On-demand OpenCV/V4L2 camera leases with stale-frame clearing, separate
   open/warm-up bounds, first-frame and cold-open timing, automatic release,
   explicit password cancellation, fake-camera tests, and a no-save benchmark.
+- Native frame-quality gates and a detection-to-profile diagnostic pipeline
+  that reports similarity and per-stage latency while explicitly prohibiting
+  authentication decisions.
+- Privacy-safe live YuNet/SFace/profile plumbing benchmark that closes the
+  camera before inference and persists no biometric data.
 
 ### Changed
 

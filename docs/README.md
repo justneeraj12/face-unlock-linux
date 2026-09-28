@@ -19,6 +19,7 @@ developers to the detailed design and safety documents.
 | Topic | Document |
 |---|---|
 | CPU YuNet/SFace profile | [CPU face profile](cpu-face-profile.md) |
+| Native score-only verification | [Native verification diagnostics](native-verification.md) |
 | C++ detector runtime | [Daemon detector backends](daemon-detector-scaffold.md) |
 | Python detector prototype | [Detector prototype](detector-prototype.md) |
 | Model candidates and licenses | [Model candidates](model-candidates.md) |

@@ -42,6 +42,8 @@ atomic encrypted profile persistence.
 - guided center/left/right/up/down enrollment prototype
 - duplicate sample rejection and pose coverage
 - C++ and Python pose centroids and score-only matching tests
+- native one-face, landmark, exposure, sharpness, size, and confidence gates
+- fail-closed detection-to-profile diagnostic scoring pipeline
 - strict versioned profile payload with bounded parsing
 - libsodium encrypted profile round-trip test
 - camera-free latency benchmark
@@ -68,7 +70,7 @@ atomic encrypted profile persistence.
 ## Not implemented
 
 - daemon-owned encrypted biometric profile creation
-- thresholded authentication decisions
+- calibrated thresholded authentication decisions
 - calibrated acceptance thresholds
 - held-out enrollment validation
 - liveness or presentation-attack defense

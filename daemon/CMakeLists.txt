@@ -270,6 +270,19 @@ if(OPENCV_IMGPROC_LIBRARY AND OPENCV_OBJDETECT_LIBRARY AND OPENCV_DNN_LIBRARY)
     target_link_libraries(face-unlock-verification-pipeline-selftest PRIVATE
       face_unlock_verification_pipeline
     )
+
+    add_executable(face-unlock-native-verification-benchmark
+      src/native_verification_benchmark.cpp
+    )
+    target_compile_options(face-unlock-native-verification-benchmark PRIVATE
+      -Wall
+      -Wextra
+      -Wpedantic
+    )
+    target_link_libraries(face-unlock-native-verification-benchmark PRIVATE
+      face_unlock_verification_pipeline
+      face_unlock_camera_lease
+    )
   endif()
 endif()
 

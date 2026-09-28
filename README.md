@@ -78,7 +78,7 @@ mindmap
 | Camera | on-demand OpenCV/V4L2 lease; one-shot and manual loop diagnostics |
 | Detection | CPU YuNet in C++; noop and Haar fallbacks |
 | Detection output | boxes, confidence, five landmarks, latency |
-| Recognition | CPU SFace in C++ and Python; matcher not connected |
+| Recognition | native quality/score pipeline; acceptance threshold disabled |
 | Enrollment | guided Python prototype; native five-pose builder library |
 | Profile builder | C++ and Python; versioned encrypted round-trip tested |
 | IPC | UNIX socket with mode 0600 and peer credential checks |
@@ -215,6 +215,10 @@ Run the benchmark locally:
 Measure cold camera access without saving frames:
 
     ./scripts/benchmark-camera-lease.sh --camera 0
+
+Run the live score-only pipeline benchmark without saving frames:
+
+    ./scripts/benchmark-native-verification.sh --camera 0 --iterations 20
 
 ## Developer quickstart
 

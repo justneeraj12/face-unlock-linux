@@ -14,6 +14,7 @@ face-unlockd owns:
 - encrypted template metadata
 - CPU SFace alignment and normalized embeddings
 - native five-pose profile construction and score-only matching
+- native frame-quality gates and fail-closed diagnostic verification
 - future daemon enrollment and thresholded authentication
 
 It runs as the desktop user, not as root.
@@ -105,6 +106,9 @@ The build also creates:
 
 - face-unlock-lockscreen-auth-selftest
 - face-unlock-camera-lease-selftest
+- face-unlock-frame-quality-selftest
+- face-unlock-verification-pipeline-selftest
+- face-unlock-native-verification-benchmark
 - face-unlock-detector-selftest
 - face-unlock-recognizer-selftest
 - face-unlock-profile-selftest
