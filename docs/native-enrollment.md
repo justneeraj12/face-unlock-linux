@@ -1,8 +1,8 @@
 # Native enrollment protocol
 
 The per-user daemon now owns enrollment state, camera lifetime, quality checks,
-CPU embeddings, and encrypted profile commit. The Qt GUI is not connected to
-this protocol yet.
+CPU embeddings, and encrypted profile commit. The Qt GUI drives this protocol
+without receiving raw camera frames.
 
 This is an enrollment implementation, not an authentication approval path.
 The normal `auth` operation still fails closed.

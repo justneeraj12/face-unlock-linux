@@ -11,11 +11,11 @@ The current phase is connecting the proven CPU pipeline to the C++ daemon:
 - SFace alignment and embedding are implemented in C++ and Python
 - multi-pose profile construction and score-only matching exist in C++ and Python
 - daemon enrollment sessions and encrypted profile commit are implemented
-- the Qt GUI is not connected to those operations yet
+- the Qt GUI drives consent-gated enrollment and encrypted commit
 - real authentication matching remains disabled
 
-The next bounded implementation slice is Qt enrollment protocol integration,
-followed by held-out profile validation.
+The next bounded implementation slice is held-out profile validation, followed
+by threshold calibration and live-preview design.
 
 ## Implemented
 
@@ -67,7 +67,8 @@ followed by held-out profile validation.
 - libsodium encryption scaffold
 - development key and placeholder template tools
 - decryptability metadata without plaintext output
-- Qt6 consent, privacy, daemon status, pose, and quality scaffold
+- Qt6 consent-gated enrollment controls, automatic sampling, pose guidance, and quality feedback
+- separately confirmed encrypted commit and complete local profile/key Forget Me flow
 - placeholder Forget Me flow
 - CPack Debian package skeleton and systemd user service assets
 

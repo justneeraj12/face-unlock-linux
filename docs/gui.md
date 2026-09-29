@@ -1,281 +1,92 @@
-# GUI Enrollment App
+# GUI enrollment app
 
-This document describes the optional Qt6 enrollment GUI.
+The optional Qt6 app is a same-user client of the daemon enrollment protocol.
+It does not load models or open the camera itself.
 
-## Current status
+## Current flow
 
-The GUI is a scaffold only.
+```mermaid
+flowchart LR
+    Consent[Explicit consent] --> Start[Start enrollment]
+    Start --> Capture[Automatic capture requests]
+    Capture --> Feedback[Pose and quality feedback]
+    Feedback --> Ready{Five poses ready?}
+    Ready -->|no| Capture
+    Ready -->|yes| Closed[Daemon closes camera]
+    Closed --> Confirm[Confirm encrypted save]
+    Confirm --> Commit[Commit profile]
+```
 
-It shows:
+The app provides:
 
-- project title
-- safety warning
-- consent text
-- current status text
-- I understand button
-- Forget me placeholder button
+- consent gating
+- automatic capture requests every 300 ms
+- center, left, right, up, and down guidance
+- progress, accepted-sample count, quality reason, luma, sharpness, and latency
+- manual capture and progress refresh controls
+- cancellation with sample erasure
+- explicit confirmation before encrypted commit
+- profile, manifest, and local-key deletion through Forget Me
 
-It does not access the camera yet.
+The GUI does not receive or save camera frames. A live preview remains planned.
 
-It does not save biometric data.
-
-## Build
-
-Install Qt6 development packages:
-
-    sudo apt install qt6-base-dev
-
-Configure:
-
-    cmake -S . -B build-gui -DBUILD_GUI=ON
+## Requirements
 
 Build:
 
-    cmake --build build-gui
+    ./scripts/build-gui.sh
 
-Run:
+Start a CPU-only enrollment daemon:
+
+    ./build/daemon/face-unlockd \
+      --camera 0 \
+      --detector yunet \
+      --detector-model models/face_detection_yunet_2022mar.onnx \
+      --recognizer-model models/face_recognition_sface_2021dec.onnx \
+      --daemon
+
+Launch:
 
     ./build-gui/gui/face-unlock-enroll
 
-## Planned enrollment flow
+The daemon must already be running. Missing YuNet, SFace, camera, or socket
+requirements are shown as fail-closed recovery messages.
 
-Future enrollment should guide the user through:
+## Privacy and storage
 
-1. consent
-2. camera permission check
-3. lighting check
-4. center pose
-5. left pose
-6. right pose
-7. up pose
-8. down pose
-9. quality summary
-10. encrypted template save
-11. enrollment manifest save
-
-## Planned forget-me flow
-
-Future forget-me should delete:
+Committed files are:
 
     ~/.local/share/face-unlock/template.enc
     ~/.local/share/face-unlock/enrollment.json
+    ~/.local/share/face-unlock/template.key
 
-It should confirm deletion and report final status.
+Forget Me first cancels any active enrollment, then asks for confirmation before
+removing all three files. It does not modify PAM, sudo, a display manager, or
+lock-screen configuration.
 
-## Brightness boost
+The local key file is development key storage, not the final production key
+design.
 
-Future brightness boost must:
+## Authentication safety
 
-- require explicit user consent
-- save previous brightness
-- boost only temporarily
-- restore previous brightness immediately
-- fail safely if brightness control is unavailable
+Refreshing GUI status does not send an `auth` request because auth requests
+consume retry attempts. Authentication acceptance remains disabled regardless
+of enrollment state.
 
-## Privacy
+## Tests
 
-The GUI must not save raw images by default.
+Run the headless enrollment response parser regression:
 
-Any future saving of crops or embeddings must require explicit consent.
+    ./build-gui/gui/face-unlock-enroll --self-test-enrollment-json
 
-## Template status and Forget Me
+The GUI CI workflow builds the app and runs this test. Core daemon enrollment
+behavior is covered separately by `enrollment_session`, `profile_storage`,
+`enrollment_controller`, and `enrollment_protocol` CTests.
 
-The GUI scaffold now displays status for:
+## Remaining work
 
-    ~/.local/share/face-unlock/template.enc
-    ~/.local/share/face-unlock/enrollment.json
-
-The Forget Me button deletes these prototype files after confirmation.
-
-Forget Me does not modify:
-
-    /etc/pam.d/sudo
-    /etc/pam.d/common-auth
-    GDM
-    SDDM
-    LightDM
-    lock-screen configuration
-
-This is still not real enrollment.
-
-## Brightness assist placeholder
-
-The GUI includes a brightness assist placeholder button.
-
-It explains planned behavior but does not change brightness.
-
-Design document:
-
-    docs/brightness-assist.md
-
-## Pose slots scaffold
-
-The GUI includes a non-camera pose slot scaffold.
-
-Current pose slots:
-
-- Center
-- Left
-- Right
-- Up
-- Down
-
-The current UI can mark demo slots complete and reset them.
-
-This does not capture images or save enrollment data.
-
-Future versions should connect pose slots to camera preview, face quality checks, and encrypted template creation.
-
-## GUI CI
-
-The optional GUI has a separate GitHub Actions workflow:
-
-    .github/workflows/gui-build.yml
-
-It can be run manually from the GitHub Actions tab.
-
-The main CI workflow does not build the GUI by default.
-
-## Quality checklist scaffold
-
-The GUI includes a quality checklist scaffold.
-
-Current checklist items:
-
-- Lighting OK
-- Sharpness OK
-- Face centered
-- Pose coverage OK
-- Template ready
-
-The current UI can mark/reset demo quality state.
-
-No camera analysis is performed yet.
-
-Future versions should compute these from camera frames and enrollment metadata.
-
-## Camera preview placeholder
-
-The GUI includes a camera preview placeholder panel.
-
-It does not access the camera yet.
-
-Design document:
-
-    docs/gui-camera-preview.md
-
-## Daemon detector status query
-
-The GUI includes a button to query the daemon:
-
-    detector_status
-
-It connects to:
-
-    $XDG_RUNTIME_DIR/face-unlock.sock
-
-and displays the raw JSON response.
-
-This does not access the camera from the GUI.
-
-The daemon must already be running.
-
-## Daemon response panel
-
-The GUI includes a persistent daemon response panel.
-
-The detector_status button updates the panel with:
-
-- socket path
-- operation name
-- raw JSON response
-
-This is safer than only showing transient dialogs during daemon integration testing.
-
-## Parsed daemon detector summary
-
-The GUI parses detector_status enough to display:
-
-- daemon available
-- status
-- reason
-- operation
-- detector
-- faces detected
-
-The raw JSON response is still shown below the parsed summary.
-
-This uses simple string extraction and not a full JSON parser.
-
-## Tabbed layout
-
-The GUI now uses tabs to fit better on laptop screens:
-
-- Status
-- Enrollment
-- Privacy
-
-Each tab is scrollable to avoid content running off screen.
-
-## Tabbed layout
-
-The GUI uses scrollable tabs to fit better on laptop screens:
-
-- Status
-- Enrollment
-- Privacy
-
-Each tab is wrapped in a scroll area so scaffold content does not run off-screen.
-
-## JSON parsing
-
-The GUI parses daemon JSON responses with Qt JSON APIs:
-
-- QJsonDocument
-- QJsonObject
-- QJsonValue
-
-This replaced earlier string-based parsing.
-
-## template_status query
-
-The GUI can query daemon template_status and display:
-
-- template
-- enrollment
-- key
-- key_storage
-- decryptability
-- template_decrypt
-
-No plaintext or key material is displayed.
-
-## Refresh daemon panels
-
-The GUI includes a Refresh daemon panels button.
-
-It queries:
-
-- detector_status
-- template_status
-- auth diagnostic
-
-and updates all daemon summary panels.
-
-## Local GUI build helper
-
-Build the optional GUI with:
-
-    ./scripts/build-gui.sh
-
-Run manually:
-
-    ./build-gui/gui/face-unlock-enroll
-
-## GUI workflow build helper
-
-The GUI GitHub Actions workflow uses:
-
-    ./scripts/build-gui.sh
-
-This keeps local and CI GUI build behavior aligned.
+- held-out validation before commit
+- privacy-safe live preview design
+- accessibility and real-camera usability testing
+- production key management
+- calibrated verification thresholds and liveness evaluation

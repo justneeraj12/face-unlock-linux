@@ -51,6 +51,10 @@ jobs:
           test -x build-gui/gui/face-unlock-enroll
           file build-gui/gui/face-unlock-enroll
 
+      - name: Test enrollment response parser
+        run: |
+          ./build-gui/gui/face-unlock-enroll --self-test-enrollment-json
+
       - name: Upload GUI artifact
         uses: actions/upload-artifact@v4
         with:

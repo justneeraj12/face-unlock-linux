@@ -84,14 +84,14 @@ mindmap
 | IPC | UNIX socket with mode 0600 and peer credential checks |
 | PAM | minimal C IPC client with bounded timeout |
 | Templates | libsodium-encrypted native profiles; development key tooling only |
-| GUI | Qt6 consent, status, pose, quality, and privacy scaffold |
+| GUI | Qt6 daemon enrollment client with consent, guided poses, progress, quality, cancel, commit, and Forget Me |
 | Authentication | fail-closed; real matcher not connected |
 | Lock screen | bounded policy and camera lease; GNOME/unlock integration pending |
 | Liveness | not implemented |
 | Packaging | development Debian/CPack skeleton |
 
-The current development phase is connecting the Qt enrollment flow to the
-new daemon enrollment protocol, then validating profiles before authentication. See [project status](docs/project-status.md)
+The Qt enrollment flow is now connected to the daemon. The current phase is
+held-out profile validation, calibration, and live-preview design. See [project status](docs/project-status.md)
 and the [roadmap](ROADMAP.md).
 
 ## Delivery path
@@ -146,7 +146,7 @@ flowchart LR
     User --> PAMService
     PAMService --> PAM
     PAM -->|"bounded local request"| IPC
-    GUI -.->|"enrollment wiring pending"| IPC
+    GUI -->|"enrollment operations"| IPC
     IPC --> Peer
     Peer --> Decision
 
@@ -163,12 +163,11 @@ flowchart LR
     classDef implemented fill:#d5f5e3,stroke:#1e8449,color:#111
     classDef planned fill:#eaecee,stroke:#626567,color:#111
 
-    class PAMService,PAM,IPC,Peer,Camera,Frame,YuNet,SFace,Matcher,Crypto,Decision implemented
-    class GUI planned
+    class GUI,PAMService,PAM,IPC,Peer,Camera,Frame,YuNet,SFace,Matcher,Crypto,Decision implemented
 ```
 
-Solid connections are implemented infrastructure. The dashed GUI connection is
-the remaining enrollment UI integration; authentication acceptance stays disabled.
+Solid connections are implemented infrastructure. The GUI drives enrollment but
+does not receive camera frames; authentication acceptance stays disabled.
 
 The PAM module never opens the camera or loads a model. Heavy work stays in the
 unprivileged daemon. The socket uses mode 0600 and SO_PEERCRED checks.

@@ -32,6 +32,10 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
   status, cancel, and commit operations.
 - Bounded enrollment camera leases, native quality and pose gates, encrypted
   profile persistence, camera-failure erasure, and fail-closed protocol tests.
+- Qt enrollment client with explicit consent, automatic sampling, five-pose
+  guidance, quality/latency feedback, cancellation, and confirmed encrypted commit.
+- Forget Me now removes the encrypted profile, manifest, and local key; daemon
+  panel refresh no longer consumes an authentication retry.
 
 ### Changed
 

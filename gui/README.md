@@ -1,47 +1,52 @@
 # Enrollment GUI
 
-gui/ contains the optional Qt6 enrollment application.
+`gui/` contains the optional Qt6 enrollment client.
 
-## Current implementation
+## Implemented
 
-The GUI provides:
+The GUI now drives the daemon-owned native enrollment flow:
 
-- safety and consent information
-- status, enrollment, and privacy tabs
-- daemon detector, template, and auth diagnostic queries
-- parsed status summaries plus raw local responses
-- camera preview placeholder
-- center, left, right, up, and down pose scaffolds
-- lighting, sharpness, centering, pose, and template quality scaffolds
-- placeholder template and manifest deletion with confirmation
-- brightness-assist explanation
+- explicit local biometric-processing consent
+- automatic qualified-frame capture every 300 ms
+- center, left, right, up, and down guidance
+- real pose coverage and progress
+- last-frame quality and inference latency feedback
+- cancel with in-memory sample erasure
+- separate confirmation before encrypted profile commit
+- Forget Me deletion of the profile, manifest, and local key
 
-It does not yet capture enrollment frames, run models, build a face profile, or
-enable PAM authentication.
+Camera frames remain inside the daemon. The GUI receives status and metrics,
+not images. Live preview is still pending.
 
-## Build
+Authentication acceptance, liveness protection, PAM installation, and desktop
+unlock integration remain disabled.
 
+## Run
+
+Download the pinned CPU models, build the daemon and GUI, then start the daemon:
+
+    ./scripts/download-cpu-models.sh
+    ./scripts/build.sh
     ./scripts/build-gui.sh
+    ./build/daemon/face-unlockd \
+      --camera 0 \
+      --detector yunet \
+      --detector-model models/face_detection_yunet_2022mar.onnx \
+      --recognizer-model models/face_recognition_sface_2021dec.onnx \
+      --daemon
+
+In another terminal:
+
     ./build-gui/gui/face-unlock-enroll
 
-Qt6 is optional for the core daemon build.
+## Test
 
-## Next implementation
+    ./build-gui/gui/face-unlock-enroll --self-test-enrollment-json
 
-The GUI will become a client of daemon enrollment operations:
-
-- start and cancel enrollment
-- show live camera preview
-- display head-turn guidance
-- report real pose and quality coverage
-- show profile processing and validation progress
-- commit only an encrypted validated profile
-- verify Forget Me removed profile material
-
-See [GUI design](../docs/gui.md) and
-[CPU face profile](../docs/cpu-face-profile.md).
+The GUI parser test is also registered with CTest when `BUILD_GUI=ON`.
 
 ## Safety
 
-The GUI must never silently save biometric data or modify PAM configuration.
-Enrollment and deletion require explicit user action.
+The GUI never edits PAM configuration. Enrollment and deletion require explicit
+user actions. Closing the GUI during automatic capture cancels the daemon
+session and releases the camera.

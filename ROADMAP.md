@@ -33,6 +33,7 @@ The immediate goal is a complete non-PAM enrollment and verification pipeline.
 - [x] Port SFace alignment and embedding to C++
 - [x] Define and validate a versioned encrypted face-profile payload
 - [x] Add daemon enrollment start, capture, status, cancel, and commit operations
+- [x] Connect the Qt GUI to consent-gated automatic enrollment and encrypted commit
 - [x] Add native gates for face count, landmarks, lighting, blur, face size, and confidence
 - [ ] Add dedicated occlusion and pose-quality calibration
 - [ ] Add held-out enrollment validation before committing a profile
@@ -41,16 +42,14 @@ The immediate goal is a complete non-PAM enrollment and verification pipeline.
 
 Authentication remains fail-closed throughout this phase.
 
-## Next phase: seamless GUI enrollment
+## Next phase: enrollment validation and polish
 
-- live camera preview
-- guided head-turn instructions
-- real pose and quality progress
-- enrollment processing indicator
-- clear retry and recovery messages
-- encrypted profile commit only after validation
-- complete Forget Me deletion and verification
+- live camera preview without persisting frames
+- held-out profile validation before commit
+- calibrated pose and occlusion quality gates
+- clear model/service startup recovery
 - accessible laptop-sized interface
+- complete manual enrollment usability testing
 
 ## Security hardening phase
 
