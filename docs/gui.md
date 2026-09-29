@@ -10,9 +10,11 @@ flowchart LR
     Consent[Explicit consent] --> Start[Start enrollment]
     Start --> Capture[Automatic capture requests]
     Capture --> Feedback[Pose and quality feedback]
-    Feedback --> Ready{Five poses ready?}
-    Ready -->|no| Capture
-    Ready -->|yes| Closed[Daemon closes camera]
+    Feedback --> Training{Training poses ready?}
+    Training -->|no| Capture
+    Training -->|yes| Validate[Held-out pose checks]
+    Validate -->|retry| Capture
+    Validate -->|all pass| Closed[Daemon closes camera]
     Closed --> Confirm[Confirm encrypted save]
     Confirm --> Commit[Commit profile]
 ```
@@ -22,7 +24,7 @@ The app provides:
 - consent gating
 - automatic capture requests every 300 ms
 - center, left, right, up, and down guidance
-- progress, accepted-sample count, quality reason, luma, sharpness, and latency
+- training/validation progress, accepted-sample count, held-out score, quality reason, luma, sharpness, and latency
 - manual capture and progress refresh controls
 - cancellation with sample erasure
 - explicit confirmation before encrypted commit
@@ -85,7 +87,6 @@ behavior is covered separately by `enrollment_session`, `profile_storage`,
 
 ## Remaining work
 
-- held-out validation before commit
 - privacy-safe live preview design
 - accessibility and real-camera usability testing
 - production key management

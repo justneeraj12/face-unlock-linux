@@ -1123,6 +1123,16 @@ std::string enrollment_response(
            << result.enrollment.progress_percent
            << ",\"accepted_samples\":"
            << result.enrollment.accepted_samples
+           << ",\"validation_progress_percent\":"
+           << result.enrollment.validation_progress_percent
+           << ",\"validation_samples\":"
+           << result.enrollment.validation_samples
+           << ",\"last_validation_similarity\":"
+           << result.enrollment.last_validation_similarity
+           << ",\"lowest_validation_similarity\":"
+           << result.enrollment.lowest_validation_similarity
+           << ",\"minimum_validation_similarity\":"
+           << result.enrollment.minimum_validation_similarity
            << ",\"missing_poses\":" << missing.str()
            << ",\"sample_accepted\":"
            << (result.sample_accepted ? "true" : "false")

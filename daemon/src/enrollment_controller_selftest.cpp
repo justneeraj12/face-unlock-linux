@@ -26,7 +26,7 @@ public:
         frame.at<cv::Vec3b>(y, x) = cv::Vec3b(value, value, value);
       }
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     return true;
   }
   void close() override {}
@@ -149,15 +149,29 @@ int main() {
     require(competing_controller.start().reason == "camera_busy",
             "active camera lease was taken over by another enrollment");
 
-    for (int sample = 0; sample < 5; ++sample) {
+    unsigned long long observed_frames = 0;
+    for (int sample = 0; sample < 10; ++sample) {
+      require(wait_until([&camera, observed_frames]() {
+        return camera.status().frames_total > observed_frames;
+      }), "fresh enrollment frame was not available");
       const auto captured = controller.capture();
       require(captured.ok && captured.sample_accepted,
               "qualified enrollment sample was rejected");
+      observed_frames = camera.status().frames_total;
+      if (sample < 9) {
+        const auto repeated = controller.capture();
+        require(!repeated.ok && !repeated.sample_accepted &&
+                repeated.reason == "camera_frame_unchanged",
+                "same enrollment frame was processed twice");
+      }
     }
     const auto ready = controller.status();
     require(ready.enrollment.state == face_unlock::EnrollmentState::Ready &&
-            ready.enrollment.progress_percent == 100,
-            "pose-complete enrollment was not ready");
+            ready.enrollment.progress_percent == 100 &&
+            ready.enrollment.validation_progress_percent == 100 &&
+            ready.enrollment.validation_samples == 5 &&
+            ready.enrollment.lowest_validation_similarity > 0.99,
+            "held-out validated enrollment was not ready");
     require(wait_until([&camera]() {
       return !camera.status().camera_open;
     }), "camera remained open after enrollment became ready");
@@ -204,9 +218,11 @@ int main() {
             "camera failure did not erase the enrollment session");
 
     std::cout << "enrollment_pipeline_status: ok\n";
+    std::cout << "enrollment_fresh_frame_status: ok\n";
     std::cout << "enrollment_camera_release_status: ok\n";
     std::cout << "enrollment_camera_exclusivity_status: ok\n";
     std::cout << "enrollment_camera_failure_erasure_status: ok\n";
+    std::cout << "enrollment_heldout_validation_status: ok\n";
     std::cout << "enrollment_encrypted_commit_status: ok\n";
     std::cout << "enrollment_cancel_fail_closed_status: ok\n";
     std::cout << "status: ok\n";

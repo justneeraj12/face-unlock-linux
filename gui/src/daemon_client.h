@@ -19,7 +19,12 @@ struct EnrollmentSnapshot {
   QStringList missingPoses;
   int progress = 0;
   int acceptedSamples = 0;
+  int validationProgress = 0;
+  int validationSamples = 0;
   int facesDetected = 0;
+  double lastValidationSimilarity = -1.0;
+  double lowestValidationSimilarity = -1.0;
+  double minimumValidationSimilarity = 0.45;
   double detectorMs = 0.0;
   double embeddingMs = 0.0;
   double meanLuma = 0.0;

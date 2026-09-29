@@ -79,7 +79,7 @@ mindmap
 | Detection | CPU YuNet in C++; noop and Haar fallbacks |
 | Detection output | boxes, confidence, five landmarks, latency |
 | Recognition | native quality/score pipeline; acceptance threshold disabled |
-| Enrollment | daemon-owned five-pose sessions and encrypted commit; Qt wiring pending |
+| Enrollment | daemon-owned five-pose training, independent held-out validation, and encrypted commit |
 | Profile builder | C++ and Python; versioned encrypted round-trip tested |
 | IPC | UNIX socket with mode 0600 and peer credential checks |
 | PAM | minimal C IPC client with bounded timeout |
@@ -90,8 +90,9 @@ mindmap
 | Liveness | not implemented |
 | Packaging | development Debian/CPack skeleton |
 
-The Qt enrollment flow is now connected to the daemon. The current phase is
-held-out profile validation, calibration, and live-preview design. See [project status](docs/project-status.md)
+The Qt enrollment flow is connected to the daemon and profiles must pass an
+independent held-out check before commit. The current phase is calibration,
+benchmarking, and live-preview design. See [project status](docs/project-status.md)
 and the [roadmap](ROADMAP.md).
 
 ## Delivery path
@@ -283,19 +284,18 @@ flowchart LR
     Up --> Profile
     Down --> Profile
 
-    Profile -.-> Validate["Held-out validation<br/>planned"]
-    Validate -.-> Encrypt["Encrypt and atomically commit<br/>planned"]
-    Encrypt -.-> Ready["Ready for optional auth<br/>planned"]
+    Profile --> Validate["Independent held-out<br/>pose checks"]
+    Validate --> Encrypt["Encrypt and atomically commit"]
+    Encrypt --> Ready["Profile enrolled<br/>auth still disabled"]
 
-    classDef prototype fill:#d5f5e3,stroke:#1e8449,color:#111
-    classDef planned fill:#eaecee,stroke:#626567,color:#111
+    classDef implemented fill:#d5f5e3,stroke:#1e8449,color:#111
 
-    class Consent,Frames,Detect,Embed,Filter,Pose,Center,Left,Right,Up,Down,Profile prototype
-    class Validate,Encrypt,Ready planned
+    class Consent,Frames,Detect,Embed,Filter,Pose,Center,Left,Right,Up,Down,Profile,Validate,Encrypt,Ready implemented
 ```
 
-The green pipeline works today as a non-persistent Python prototype. The dashed
-steps are required before enrollment can create a usable encrypted profile.
+The native daemon and Qt client implement this enrollment pipeline. Held-out
+samples are scored and discarded rather than added to the stored centroids.
+Authentication acceptance remains deliberately disabled.
 
 Run it with:
 

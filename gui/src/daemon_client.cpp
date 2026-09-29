@@ -177,6 +177,16 @@ EnrollmentSnapshot parseEnrollmentResponse(const QString& response) {
     object.value(QStringLiteral("progress_percent")).toInt();
   snapshot.acceptedSamples =
     object.value(QStringLiteral("accepted_samples")).toInt();
+  snapshot.validationProgress =
+    object.value(QStringLiteral("validation_progress_percent")).toInt();
+  snapshot.validationSamples =
+    object.value(QStringLiteral("validation_samples")).toInt();
+  snapshot.lastValidationSimilarity =
+    object.value(QStringLiteral("last_validation_similarity")).toDouble(-1.0);
+  snapshot.lowestValidationSimilarity =
+    object.value(QStringLiteral("lowest_validation_similarity")).toDouble(-1.0);
+  snapshot.minimumValidationSimilarity =
+    object.value(QStringLiteral("minimum_validation_similarity")).toDouble(0.45);
   snapshot.facesDetected =
     object.value(QStringLiteral("faces_detected")).toInt();
   snapshot.detectorMs =
@@ -206,11 +216,27 @@ QString friendlyReason(const QString& reason) {
   if (reason == QStringLiteral("started")) {
     return QStringLiteral("Camera requested. Hold still while it warms up.");
   }
-  if (reason == QStringLiteral("sample_accepted")) {
-    return QStringLiteral("Qualified sample added.");
+  if (reason == QStringLiteral("sample_accepted") ||
+      reason == QStringLiteral("accepted")) {
+    return QStringLiteral("Qualified training sample added.");
+  }
+  if (reason == QStringLiteral("training_complete_validation_required")) {
+    return QStringLiteral("Training samples complete. Checking held-out frames.");
+  }
+  if (reason == QStringLiteral("heldout_sample_accepted")) {
+    return QStringLiteral("Independent validation sample passed.");
+  }
+  if (reason == QStringLiteral("heldout_similarity_low")) {
+    return QStringLiteral("Validation consistency is low. Adjust pose and retry.");
+  }
+  if (reason == QStringLiteral("heldout_validation_passed")) {
+    return QStringLiteral("Independent enrollment validation passed.");
   }
   if (reason == QStringLiteral("camera_not_ready")) {
     return QStringLiteral("Camera is warming up.");
+  }
+  if (reason == QStringLiteral("camera_frame_unchanged")) {
+    return QStringLiteral("Waiting for a fresh camera frame.");
   }
   if (reason == QStringLiteral("face_missing")) {
     return QStringLiteral("No face found. Face the camera.");
@@ -294,6 +320,10 @@ int enrollmentParserSelfTest() {
     "{\"status\":\"ok\",\"op\":\"enrollment_capture\","
     "\"reason\":\"sample_accepted\",\"enrollment_state\":\"collecting\","
     "\"progress_percent\":40,\"accepted_samples\":6,"
+    "\"validation_progress_percent\":0,\"validation_samples\":0,"
+    "\"last_validation_similarity\":-1,"
+    "\"lowest_validation_similarity\":-1,"
+    "\"minimum_validation_similarity\":0.45,"
     "\"missing_poses\":[\"right\",\"up\",\"down\"],"
     "\"sample_accepted\":true,\"pose\":\"left\","
     "\"faces_detected\":1,\"detector_ms\":4.5,\"embedding_ms\":9.5,"
@@ -314,7 +344,11 @@ int enrollmentParserSelfTest() {
   const QString committed = QStringLiteral(
     "{\"status\":\"ok\",\"op\":\"enrollment_commit\","
     "\"reason\":\"committed\",\"enrollment_state\":\"committed\","
-    "\"progress_percent\":100,\"accepted_samples\":15,"
+    "\"progress_percent\":100,\"accepted_samples\":20,"
+    "\"validation_progress_percent\":100,\"validation_samples\":5,"
+    "\"last_validation_similarity\":0.91,"
+    "\"lowest_validation_similarity\":0.88,"
+    "\"minimum_validation_similarity\":0.45,"
     "\"missing_poses\":[],\"sample_accepted\":false,"
     "\"pose\":\"unknown\",\"faces_detected\":0,"
     "\"detector_ms\":0,\"embedding_ms\":0,"
@@ -324,7 +358,9 @@ int enrollmentParserSelfTest() {
   const EnrollmentSnapshot second = parseEnrollmentResponse(committed);
   if (!second.parsed || !second.operationValid || !second.ok ||
       second.state != QStringLiteral("committed") ||
-      second.progress != 100 || !second.keyCreated ||
+      second.progress != 100 || second.validationProgress != 100 ||
+      second.validationSamples != 5 ||
+      second.lowestValidationSimilarity < 0.88 || !second.keyCreated ||
       !second.missingPoses.isEmpty()) {
     std::cerr << "enrollment_gui_parser_status: failed\n";
     return 1;

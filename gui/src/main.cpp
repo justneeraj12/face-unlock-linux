@@ -133,6 +133,7 @@ bool poseComplete(
 ) {
   const bool sessionHasCoverage =
     snapshot.state == QStringLiteral("collecting") ||
+    snapshot.state == QStringLiteral("validating") ||
     snapshot.state == QStringLiteral("ready") ||
     snapshot.state == QStringLiteral("committed");
   return sessionHasCoverage && !snapshot.missingPoses.contains(pose);
@@ -157,9 +158,13 @@ void applyEnrollmentSnapshot(
   );
 
   QString guidance = friendlyReason(snapshot.reason);
-  if (snapshot.state == QStringLiteral("collecting") &&
+  if ((snapshot.state == QStringLiteral("collecting") ||
+       snapshot.state == QStringLiteral("validating")) &&
       !snapshot.missingPoses.isEmpty()) {
-    guidance = poseInstruction(snapshot.missingPoses.front()) +
+    const QString phase = snapshot.state == QStringLiteral("validating")
+      ? QStringLiteral("Independent validation: ")
+      : QString();
+    guidance = phase + poseInstruction(snapshot.missingPoses.front()) +
       QStringLiteral("\n") + guidance;
   } else if (snapshot.state == QStringLiteral("ready")) {
     guidance = QStringLiteral(
@@ -203,10 +208,14 @@ void applyEnrollmentSnapshot(
     snapshot.state == QStringLiteral("committed")
   );
 
+  const QString lowestValidation = snapshot.validationSamples > 0
+    ? QString::number(snapshot.lowestValidationSimilarity, 'f', 3)
+    : QStringLiteral("pending");
   ui.metrics->setText(
     QStringLiteral(
       "Last frame: faces %1 - pose %2 - quality %3 - "
-      "luma %4 - sharpness %5 - detector %6 ms - embedding %7 ms"
+      "luma %4 - sharpness %5 - detector %6 ms - embedding %7 ms\n"
+      "Held-out validation: %8% - lowest similarity %9 - required %10"
     ).arg(
       QString::number(snapshot.facesDetected),
       snapshot.pose,
@@ -214,20 +223,24 @@ void applyEnrollmentSnapshot(
       QString::number(snapshot.meanLuma, 'f', 1),
       QString::number(snapshot.sharpness, 'f', 1),
       QString::number(snapshot.detectorMs, 'f', 1),
-      QString::number(snapshot.embeddingMs, 'f', 1)
+      QString::number(snapshot.embeddingMs, 'f', 1),
+      QString::number(snapshot.validationProgress),
+      lowestValidation,
+      QString::number(snapshot.minimumValidationSimilarity, 'f', 3)
     )
   );
 
-  const bool collecting = snapshot.state == QStringLiteral("collecting");
+  const bool active = snapshot.state == QStringLiteral("collecting") ||
+    snapshot.state == QStringLiteral("validating");
   const bool ready = snapshot.state == QStringLiteral("ready");
   ui.start->setEnabled(
-    ui.consent->isChecked() && !collecting && !ready
+    ui.consent->isChecked() && !active && !ready
   );
-  ui.capture->setEnabled(collecting);
-  ui.cancel->setEnabled(collecting || ready);
+  ui.capture->setEnabled(active);
+  ui.cancel->setEnabled(active || ready);
   ui.commit->setEnabled(ready);
 
-  if (collecting) {
+  if (active) {
     ui.previewText->setText(QStringLiteral(
       "The daemon camera is active.\n"
       "Follow the pose guidance below.\n"
@@ -621,7 +634,8 @@ int main(int argc, char* argv[]) {
     applyEnrollmentSnapshot(snapshot, enrollmentUi);
 
     const bool keepCapturing = snapshot.operationValid &&
-      snapshot.state == QStringLiteral("collecting") &&
+      (snapshot.state == QStringLiteral("collecting") ||
+       snapshot.state == QStringLiteral("validating")) &&
       snapshot.reason != QStringLiteral("enrollment_camera_failed") &&
       snapshot.reason != QStringLiteral("enrollment_camera_lease_ended");
     if (!keepCapturing) captureTimer->stop();
@@ -679,7 +693,9 @@ int main(int argc, char* argv[]) {
       queryDaemonOperation(QStringLiteral("enrollment_status"));
     const EnrollmentSnapshot snapshot = parseEnrollmentResponse(response);
     processEnrollment(response);
-    if (snapshot.ok && snapshot.state == QStringLiteral("collecting")) {
+    if (snapshot.ok &&
+        (snapshot.state == QStringLiteral("collecting") ||
+         snapshot.state == QStringLiteral("validating"))) {
       captureTimer->start();
     }
   });

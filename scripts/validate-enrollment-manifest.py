@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -27,9 +28,25 @@ def require_bool(obj: dict[str, Any], key: str, context: str) -> bool:
 
 def require_int(obj: dict[str, Any], key: str, context: str) -> int:
     value = require_key(obj, key, context)
-    if not isinstance(value, int):
+    if isinstance(value, bool) or not isinstance(value, int):
         fail(f"{context}.{key} must be integer")
     return value
+
+
+def require_optional_number(
+    obj: dict[str, Any], key: str, context: str
+) -> float | None:
+    value = require_key(obj, key, context)
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        fail(f"{context}.{key} must be a number or null")
+    number = float(value)
+    if not math.isfinite(number):
+        fail(f"{context}.{key} must be finite")
+    if number < -1.0 or number > 1.0:
+        fail(f"{context}.{key} must be between -1 and 1")
+    return number
 
 
 def require_str(obj: dict[str, Any], key: str, context: str) -> str:
@@ -74,6 +91,34 @@ def validate_manifest(path: Path) -> None:
     if embedding_dim < 0:
         fail("model.embedding_dim must be >= 0")
 
+    quality = require_key(data, "quality", "root")
+    if not isinstance(quality, dict):
+        fail("root.quality must be object")
+    training_samples = require_int(
+        quality, "training_samples_total", "quality"
+    )
+    heldout_samples = require_int(
+        quality, "heldout_samples_total", "quality"
+    )
+    if training_samples < 0 or heldout_samples < 0:
+        fail("quality sample counts must be >= 0")
+    heldout_passed = require_bool(
+        quality, "heldout_validation_passed", "quality"
+    )
+    lowest_heldout = require_optional_number(
+        quality, "lowest_heldout_similarity", "quality"
+    )
+    required_heldout = require_optional_number(
+        quality, "required_heldout_similarity", "quality"
+    )
+    pose_slots = require_key(quality, "pose_slots", "quality")
+    if not isinstance(pose_slots, dict):
+        fail("quality.pose_slots must be object")
+    pose_coverage = [
+        require_bool(pose_slots, pose, "quality.pose_slots")
+        for pose in ("center", "left", "right", "up", "down")
+    ]
+
     template = require_key(data, "template", "root")
     if not isinstance(template, dict):
         fail("root.template must be object")
@@ -107,11 +152,30 @@ def validate_manifest(path: Path) -> None:
     real_biometric_template = require_bool(status, "real_biometric_template", "status")
     placeholder_only = require_bool(status, "placeholder_only", "status")
 
+    if enrollment_complete != real_biometric_template:
+        fail("real biometric and enrollment completion flags must agree")
+
     if placeholder_only:
         if enrollment_complete:
             fail("placeholder_only manifest cannot have enrollment_complete true")
         if real_biometric_template:
             fail("placeholder_only manifest cannot have real_biometric_template true")
+
+    if enrollment_complete or real_biometric_template:
+        if placeholder_only:
+            fail("real enrollment cannot be placeholder_only")
+        if training_samples < 5:
+            fail("real enrollment requires at least five training samples")
+        if heldout_samples < 5 or not heldout_passed:
+            fail("real enrollment requires held-out validation")
+        if lowest_heldout is None or required_heldout is None:
+            fail("real enrollment requires held-out similarity evidence")
+        if lowest_heldout < required_heldout:
+            fail("real enrollment held-out similarity is below requirement")
+        if not all(pose_coverage):
+            fail("real enrollment requires all pose slots")
+    elif heldout_passed:
+        fail("incomplete enrollment cannot claim held-out validation")
 
     print(f"manifest_path: {path}")
     print("manifest_validation_status: ok")

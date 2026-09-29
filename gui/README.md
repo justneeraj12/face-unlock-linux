@@ -9,7 +9,7 @@ The GUI now drives the daemon-owned native enrollment flow:
 - explicit local biometric-processing consent
 - automatic qualified-frame capture every 300 ms
 - center, left, right, up, and down guidance
-- real pose coverage and progress
+- real training and held-out validation progress
 - last-frame quality and inference latency feedback
 - cancel with in-memory sample erasure
 - separate confirmation before encrypted profile commit

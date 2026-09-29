@@ -36,6 +36,8 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
   guidance, quality/latency feedback, cancellation, and confirmed encrypted commit.
 - Forget Me now removes the encrypted profile, manifest, and local key; daemon
   panel refresh no longer consumes an authentication retry.
+- Independent held-out enrollment validation for every pose, with score-only
+  evidence, GUI progress, storage-layer commit enforcement, and manifest checks.
 
 ### Changed
 

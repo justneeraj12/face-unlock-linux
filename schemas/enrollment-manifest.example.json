@@ -11,7 +11,10 @@
     "embedding_model_id": "embedding-stub-v1",
     "detector_model_id": "none",
     "embedding_dim": 128,
-    "input_size": [112, 112],
+    "input_size": [
+      112,
+      112
+    ],
     "preprocessing": {
       "color_order": "RGB",
       "normalization": "0_to_1",
@@ -26,18 +29,18 @@
     "key_storage": "not_implemented"
   },
   "quality": {
-    "samples_total": 0,
+    "training_samples_total": 0,
+    "heldout_samples_total": 0,
+    "heldout_validation_passed": false,
+    "lowest_heldout_similarity": null,
+    "required_heldout_similarity": null,
     "pose_slots": {
       "center": false,
       "left": false,
       "right": false,
       "up": false,
       "down": false
-    },
-    "min_luma": null,
-    "max_luma": null,
-    "mean_luma": null,
-    "sharpness_score": null
+    }
   },
   "privacy": {
     "raw_images_saved": false,

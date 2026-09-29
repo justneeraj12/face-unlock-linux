@@ -155,14 +155,17 @@ latency, cancels immediately after the first frame, and saves no frame data.
 
 ## Native enrollment tests
 
-`enrollment_session` covers pose progress, ready/commit transitions,
-incomplete finalization rejection, and cancellation erasure. `profile_storage`
-covers 0600 writes, encrypted reload, key reuse, manifest flags, and ciphertext
-tamper rejection.
+`enrollment_session` covers training-to-validation transitions, per-pose
+held-out scoring, inconsistent-sample rejection, no held-out leakage into the
+stored profile, ready/commit transitions, and cancellation erasure.
+`profile_storage` refuses unvalidated profiles before creating files and covers
+0600 writes, encrypted reload, key reuse, schema-aligned manifest evidence, and
+ciphertext tamper rejection.
 
 `enrollment_controller` uses injected camera, detector, and embedder fakes to
-exercise the complete in-memory quality-to-pose pipeline, camera release,
-encrypted commit, cancellation, and camera-failure erasure. The
+exercise the complete in-memory quality-to-pose pipeline, fresh-frame
+enforcement, held-out validation, camera release, encrypted commit,
+cancellation, and camera-failure erasure. The
 `enrollment_protocol` socket test verifies unsupported enrollment fails closed
 and creates no template, key, or manifest.
 

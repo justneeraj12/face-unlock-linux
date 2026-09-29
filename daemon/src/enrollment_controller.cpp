@@ -51,6 +51,7 @@ EnrollmentOperationResult EnrollmentController::result(
 EnrollmentOperationResult EnrollmentController::start() {
   const EnrollmentStatus current = session_.status();
   if (current.state == EnrollmentState::Collecting ||
+      current.state == EnrollmentState::Validating ||
       current.state == EnrollmentState::Ready) {
     return result(false, "enrollment_already_active");
   }
@@ -72,6 +73,7 @@ EnrollmentOperationResult EnrollmentController::start() {
 
   try {
     session_.start(embedder_->model_id());
+    last_processed_frames_total_ = 0;
   } catch (const std::exception&) {
     return result(false, "enrollment_session_start_failed");
   }
@@ -86,7 +88,9 @@ EnrollmentOperationResult EnrollmentController::start() {
 }
 
 EnrollmentOperationResult EnrollmentController::capture() {
-  if (session_.status().state != EnrollmentState::Collecting) {
+  const EnrollmentState session_state = session_.status().state;
+  if (session_state != EnrollmentState::Collecting &&
+      session_state != EnrollmentState::Validating) {
     return result(false, "enrollment_not_collecting");
   }
   if (camera_ == nullptr || detector_ == nullptr || embedder_ == nullptr) {
@@ -100,6 +104,10 @@ EnrollmentOperationResult EnrollmentController::capture() {
     if (!current.ok) return current;
     return result(false, "camera_not_ready");
   }
+  if (frames_total <= last_processed_frames_total_) {
+    return result(false, "camera_frame_unchanged");
+  }
+  last_processed_frames_total_ = frames_total;
 
   DetectorResult detections;
   const auto detector_started = std::chrono::steady_clock::now();
@@ -164,7 +172,9 @@ EnrollmentOperationResult EnrollmentController::capture() {
 }
 
 EnrollmentOperationResult EnrollmentController::status() {
-  if (session_.status().state == EnrollmentState::Collecting &&
+  const EnrollmentState session_state = session_.status().state;
+  if ((session_state == EnrollmentState::Collecting ||
+       session_state == EnrollmentState::Validating) &&
       camera_ != nullptr) {
     const CameraLeaseStatus camera_status = camera_->status();
     if (camera_status.state == CameraLeaseState::Failed) {
@@ -203,9 +213,17 @@ EnrollmentOperationResult EnrollmentController::commit() {
     return result(false, "profile_finalize_failed");
   }
 
+  const EnrollmentStatus validation = session_.status();
+  const ProfileStorageMetadata metadata{
+    validation.validation_progress_percent == 100,
+    validation.validation_samples,
+    validation.lowest_validation_similarity,
+    validation.minimum_validation_similarity,
+  };
   const ProfileStorageResult stored = commit_encrypted_face_profile(
     profile,
-    storage_paths_
+    storage_paths_,
+    metadata
   );
   if (!stored.ok) {
     return result(false, stored.reason);

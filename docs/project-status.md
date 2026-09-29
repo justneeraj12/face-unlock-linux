@@ -5,17 +5,19 @@ CPU-model prototype, not production-ready biometric authentication.
 
 ## Current focus
 
-The current phase is connecting the proven CPU pipeline to the C++ daemon:
+The current phase is calibrating and benchmarking the native CPU enrollment
+pipeline:
 
 - YuNet detection is already implemented in C++
 - SFace alignment and embedding are implemented in C++ and Python
 - multi-pose profile construction and score-only matching exist in C++ and Python
 - daemon enrollment sessions and encrypted profile commit are implemented
 - the Qt GUI drives consent-gated enrollment and encrypted commit
+- independent held-out samples gate storage for every pose
 - real authentication matching remains disabled
 
-The next bounded implementation slice is held-out profile validation, followed
-by threshold calibration and live-preview design.
+The next bounded implementation slice is repeatable end-to-end benchmarking
+and threshold calibration, followed by privacy-safe live-preview design.
 
 ## Implemented
 
@@ -50,6 +52,7 @@ by threshold calibration and live-preview design.
 - daemon-owned enrollment start, capture, status, cancel, and commit operations
 - bounded enrollment camera lease with release on ready, cancel, failure, or commit
 - atomic 0600 encrypted profile, development key, and manifest writes
+- held-out pose validation with storage-layer enforcement and manifest evidence
 - camera-free latency benchmark
 
 ### PAM and safety
@@ -76,7 +79,6 @@ by threshold calibration and live-preview design.
 
 - calibrated thresholded authentication decisions
 - calibrated acceptance thresholds
-- held-out enrollment validation
 - liveness or presentation-attack defense
 - production key management
 - production sudo authentication

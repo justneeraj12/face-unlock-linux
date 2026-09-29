@@ -36,7 +36,7 @@ The immediate goal is a complete non-PAM enrollment and verification pipeline.
 - [x] Connect the Qt GUI to consent-gated automatic enrollment and encrypted commit
 - [x] Add native gates for face count, landmarks, lighting, blur, face size, and confidence
 - [ ] Add dedicated occlusion and pose-quality calibration
-- [ ] Add held-out enrollment validation before committing a profile
+- [x] Add held-out enrollment validation before committing a profile
 - [ ] Benchmark end-to-end latency, memory, and thermal behavior
 - [ ] Evaluate false accept and false reject behavior on consented local data
 
@@ -45,7 +45,7 @@ Authentication remains fail-closed throughout this phase.
 ## Next phase: enrollment validation and polish
 
 - live camera preview without persisting frames
-- held-out profile validation before commit
+- calibrate the provisional held-out consistency floor on consented data
 - calibrated pose and occlusion quality gates
 - clear model/service startup recovery
 - accessible laptop-sized interface

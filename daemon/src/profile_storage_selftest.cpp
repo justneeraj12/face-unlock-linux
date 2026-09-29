@@ -63,8 +63,20 @@ int main() {
       (root / "template.key").string(),
       (root / "enrollment.json").string(),
     };
+    const face_unlock::ProfileStorageMetadata validation{
+      true,
+      5,
+      0.91,
+      0.45,
+    };
+    const auto unvalidated = face_unlock::commit_encrypted_face_profile(
+      profile(), paths, face_unlock::ProfileStorageMetadata{}
+    );
+    require(!unvalidated.ok && !fs::exists(paths.template_path) &&
+            !fs::exists(paths.key_path) && !fs::exists(paths.manifest_path),
+            "unvalidated profile was persisted");
     const auto first = face_unlock::commit_encrypted_face_profile(
-      profile(), paths
+      profile(), paths, validation
     );
     require(first.ok && first.key_created, "initial commit failed");
     require(mode(paths.template_path) == 0600 &&
@@ -78,6 +90,18 @@ int main() {
               std::string::npos &&
             manifest.find("\"placeholder_only\": false") !=
               std::string::npos &&
+            manifest.find("\"heldout_validation_passed\": true") !=
+              std::string::npos &&
+            manifest.find("\"heldout_samples_total\": 5") !=
+              std::string::npos &&
+            manifest.find("\"created_at\": \"") !=
+              std::string::npos &&
+            manifest.find("\"user\": {") != std::string::npos &&
+            manifest.find("\"input_size\": [112, 112]") !=
+              std::string::npos &&
+            manifest.find("\"encrypted_template_path\": \"") !=
+              std::string::npos &&
+            manifest.find("\"center\": true") != std::string::npos &&
             manifest.find("\\\"") == std::string::npos,
             "enrollment manifest is malformed");
 
@@ -87,7 +111,7 @@ int main() {
             "stored profile did not load");
 
     const auto second = face_unlock::commit_encrypted_face_profile(
-      profile(), paths
+      profile(), paths, validation
     );
     require(second.ok && !second.key_created,
             "existing profile key was not reused");
@@ -108,6 +132,7 @@ int main() {
     }
     require(tamper_rejected, "tampered encrypted profile loaded");
 
+    std::cout << "profile_validation_gate_status: ok\n";
     std::cout << "profile_atomic_commit_status: ok\n";
     std::cout << "profile_file_mode_status: 0600\n";
     std::cout << "profile_manifest_status: ok\n";

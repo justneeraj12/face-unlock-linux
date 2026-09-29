@@ -18,9 +18,11 @@ flowchart LR
     YuNet --> Quality[Face count and quality gates]
     Quality --> SFace[SFace CPU embedding]
     SFace --> Poses[Center left right up down]
-    Poses --> Ready{All pose slots ready?}
-    Ready -->|no| Frame
-    Ready -->|yes| Close[Close camera]
+    Poses --> Training{Training poses ready?}
+    Training -->|no| Frame
+    Training -->|yes| Validate[Held-out sample per pose]
+    Validate -->|retry| Frame
+    Validate -->|all pass| Close[Close camera]
     Close --> Commit[enrollment_commit]
     Commit --> Crypto[Encrypted profile plus manifest]
 ```
@@ -54,7 +56,7 @@ when the pose profile becomes ready, on cancel, on commit, or on camera failure.
 
 - `enrollment_start` resets and starts a new bounded session
 - `enrollment_capture` evaluates the current frame and accepts at most one sample
-- `enrollment_status` reports state, progress, accepted count, and missing poses
+- `enrollment_status` reports training/validation state, progress, scores, accepted count, and missing poses
 - `enrollment_cancel` erases the in-memory builder and releases the camera
 - `enrollment_commit` writes only when every pose slot is ready
 
@@ -82,15 +84,22 @@ Each file is written with mode 0600 using an atomic replacement. Ciphertext
 tampering is rejected by libsodium authentication. A storage failure leaves the
 session uncommitted, and authentication remains disabled.
 
+The default session collects three training samples per pose, then one
+independent held-out sample per pose. A held-out sample must match its pose
+centroid before commit and is never added to that centroid. The current 0.45
+similarity floor is provisional enrollment consistency policy, not an
+authentication threshold.
+
 The current key is a per-user local development key file. Production key
-management, held-out profile validation, liveness, threshold calibration, and
-GUI integration remain release blockers.
+management, liveness, threshold calibration, and desktop integration remain
+release blockers.
 
 ## Tests
 
 CTest covers:
 
-- pose-complete session transitions
+- pose-complete training and validation transitions
+- held-out inconsistency rejection without profile leakage
 - duplicate and incomplete sample rejection
 - encrypted profile write, reload, permissions, key reuse, and tamper rejection
 - camera release after readiness

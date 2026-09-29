@@ -53,6 +53,7 @@ private:
   FaceEmbedder* embedder_ = nullptr;
   ProfileStoragePaths storage_paths_;
   EnrollmentSession session_;
+  unsigned long long last_processed_frames_total_ = 0;
   int camera_lease_ms_ = 45000;
 };
 
