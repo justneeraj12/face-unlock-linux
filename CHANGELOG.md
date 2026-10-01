@@ -8,6 +8,10 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 
 ### Added
 
+- Ubuntu 24.04/26.04 build, GUI, package, and release matrices.
+- OpenCV-version-aware YuNet selection with pinned 2022mar and 2023mar models.
+- Guarded Hyprlock PAM plan, apply, rollback, and no-write regression tooling.
+- Debian multiarch PAM installation and binary-derived package dependencies.
 - CPU-only YuNet and SFace Python prototypes.
 - Guided multi-pose face-profile builder and synthetic benchmark.
 - Pinned model downloader with SHA-256 verification.

@@ -3,7 +3,7 @@
 [![Build](https://github.com/justneeraj12/face-unlock-linux/actions/workflows/build.yml/badge.svg)](https://github.com/justneeraj12/face-unlock-linux/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/justneeraj12/face-unlock-linux?include_prereleases)](https://github.com/justneeraj12/face-unlock-linux/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04-orange.svg)](docs/development-setup.md)
+[![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04%20%7C%2026.04-orange.svg)](docs/development-setup.md)
 [![Status](https://img.shields.io/badge/status-v0.2%20development-yellow.svg)](docs/project-status.md)
 
 CPU-first, local-only face recognition infrastructure for Linux.
@@ -73,7 +73,7 @@ mindmap
 
 | Area | Current implementation |
 |---|---|
-| Platform | Ubuntu 24.04 LTS, x86_64 |
+| Platform | Ubuntu 24.04 and 26.04 LTS, x86_64 |
 | Daemon | C++17 per-user process |
 | Camera | on-demand OpenCV/V4L2 lease; one-shot and manual loop diagnostics |
 | Detection | CPU YuNet in C++; noop and Haar fallbacks |
@@ -86,7 +86,7 @@ mindmap
 | Templates | libsodium-encrypted native profiles; development key tooling only |
 | GUI | Qt6 daemon enrollment client with consent, guided poses, progress, quality, cancel, commit, and Forget Me |
 | Authentication | fail-closed; real matcher not connected |
-| Lock screen | bounded policy and camera lease; GNOME/unlock integration pending |
+| Lock screen | bounded policy and camera lease; guarded Hyprlock PAM planning; automatic unlock pending |
 | Liveness | not implemented |
 | Packaging | development Debian/CPack skeleton |
 
@@ -176,11 +176,13 @@ unprivileged daemon. The socket uses mode 0600 and SO_PEERCRED checks.
 Read the [architecture](docs/architecture.md) and
 [threat model](docs/threat-model.md) before changing authentication behavior.
 
+For the Ubuntu 26/Hyprlock boundary, see [Hyprland integration](docs/hyprland.md).
+
 ## CPU model baseline
 
 The development baseline is:
 
-- YuNet 2022mar for face detection
+- version-selected YuNet: 2022mar on OpenCV 4.6, 2023mar on newer OpenCV 4.x
 - SFace 2021dec for alignment and embeddings
 - OpenCV DNN backend
 - OpenCV CPU target
@@ -244,11 +246,11 @@ Build and test:
 
 Run the C++ YuNet smoke test:
 
-    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet_2022mar.onnx
+    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet.onnx
 
 Run the daemon with camera, CPU YuNet, and CPU SFace:
 
-    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
+    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
 
 In another terminal:
 

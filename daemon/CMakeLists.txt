@@ -624,6 +624,19 @@ if(BUILD_TESTING)
   endif()
 
   add_test(
+    NAME hyprlock_dry_run
+    COMMAND bash
+      ${CMAKE_SOURCE_DIR}/scripts/test-hyprlock-dry-run.sh
+  )
+
+  add_test(
+    NAME model_selection
+    COMMAND bash
+      ${CMAKE_SOURCE_DIR}/scripts/test-model-selection.sh
+      ${CMAKE_SOURCE_DIR}/scripts/download-cpu-models.sh
+  )
+
+  add_test(
     NAME cpu_face_profile
     COMMAND bash
       ${CMAKE_SOURCE_DIR}/scripts/test-cpu-face-profile.sh

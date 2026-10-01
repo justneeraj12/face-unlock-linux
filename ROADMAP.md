@@ -88,10 +88,11 @@ differ:
 - display manager or greeter
 - encrypted-home and pre-login environments
 
-The lock-screen policy and on-demand camera lease are implemented, but GNOME
-Shell rendering, biometric decisions, and actual unlock integration remain
-pending. Each integration requires its own threat review, fallback path,
-and rollback test before it can be enabled.
+The lock-screen policy, on-demand camera lease, and guarded Hyprlock PAM
+planning are implemented, but biometric decisions, automatic Hyprlock
+submission, status rendering, and actual unlock integration remain pending.
+Each integration requires its own threat review, fallback path, and rollback
+test before it can be enabled.
 
 ## v1.0 readiness gates
 

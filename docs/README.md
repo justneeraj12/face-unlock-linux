@@ -36,6 +36,7 @@ developers to the detailed design and safety documents.
 | Security policy | [SECURITY.md](../SECURITY.md) |
 | Threat model | [Threat model](threat-model.md) |
 | Lock-screen policy | [Lock-screen authentication](lock-screen-auth.md) |
+| Hyprland and Hyprlock | [Desktop integration boundary](hyprland.md) |
 | PAM rules | [PAM safety](pam-safety.md) |
 | Fake PAM test | [Fake service test](pam-fake-service-test.md) |
 | Root peer policy | [sudo root peer policy](sudo-root-peer-policy.md) |

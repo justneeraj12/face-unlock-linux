@@ -26,6 +26,8 @@ Current CTest cases:
 - profile_storage
 - enrollment_controller
 - cpu_face_profile
+- hyprlock_dry_run
+- model_selection
 
 The crypto self-test verifies:
 
@@ -82,6 +84,12 @@ Use the fake PAM service flow only:
     docs/pam-fake-service-test.md
 
 Do not modify sudo, login, lock-screen, GDM, SDDM, LightDM, or common-auth PAM files during automated testing.
+
+`hyprlock_dry_run` exercises the planner and default apply dry-run against a
+temporary fixture. It verifies the fixture is byte-for-byte unchanged.
+
+`model_selection` verifies OpenCV 4.6 and 4.10 choices plus explicit and
+invalid selection overrides without accessing the network.
 
 ## CI
 
@@ -252,7 +260,7 @@ detector backends compiled into the current build.
 
 With the pinned local model, run a real camera-free YuNet CPU inference test:
 
-    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet_2022mar.onnx
+    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet.onnx
 
 ## detector_status integration
 

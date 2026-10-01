@@ -12,6 +12,7 @@ required_scripts=(
   scripts/test.sh
   scripts/verify-local.sh
   scripts/audit-dependencies.sh
+  scripts/pam-module-path.sh
   scripts/package-deb.sh
   scripts/test-socket-client.sh
   scripts/install-fake-pam-test.sh
@@ -21,6 +22,10 @@ required_scripts=(
   scripts/plan-sudo-pam-install.sh
   scripts/apply-sudo-pam-install.sh
   scripts/rollback-sudo-pam.sh
+  scripts/plan-hyprlock-pam-install.sh
+  scripts/apply-hyprlock-pam-install.sh
+  scripts/rollback-hyprlock-pam.sh
+  scripts/test-hyprlock-dry-run.sh
   scripts/test-sudo-dry-run.sh
   scripts/test-key-template-flow.sh
   scripts/test-daemon-metadata.sh
@@ -35,6 +40,7 @@ required_scripts=(
   scripts/test-cpu-face-profile.sh
   scripts/test-cpu-recognizer.sh
   scripts/download-cpu-models.sh
+  scripts/test-model-selection.sh
   scripts/validate-enrollment-manifest.py
   scripts/validate-model-eval-metrics.py
   scripts/validate-detector-output.py

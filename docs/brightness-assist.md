@@ -65,6 +65,11 @@ Brightness control may depend on:
 
 The GUI must handle unsupported systems gracefully.
 
+For a locked Hyprland session, an external Wayland client cannot safely draw
+over Hyprlock's session-lock surface. Lock-screen illumination therefore needs
+native Hyprlock cooperation; it must not be approximated by killing the locker,
+injecting input, or changing persistent brightness settings.
+
 ## Planned flow
 
 Future flow:

@@ -1,9 +1,10 @@
 # Lock-screen authentication policy
 
 This document defines the bounded authentication policy intended for a future
-GNOME Shell lock-screen integration. The policy controller and on-demand camera
-lease are implemented and tested. Biometric matching, screen illumination, and
-unlock approval are not connected yet.
+session-locker integration, with Hyprlock as the primary current target. The
+policy controller and on-demand camera lease are implemented and tested.
+Biometric matching, screen illumination, and unlock approval are not connected
+yet.
 
 ## Policy
 
@@ -46,8 +47,9 @@ stateDiagram-v2
 ## Low-light behavior
 
 The daemon must never change display brightness or draw over the lock screen.
-Only the GNOME Shell lock-screen component can present a temporary neutral
-illumination surface. The planned handshake is:
+Only the active session-locker component can present a temporary neutral
+illumination surface. Under Hyprland this requires native Hyprlock support. The
+planned handshake is:
 
 1. The daemon reports that the scene is below the low-light threshold.
 2. The lock-screen component displays its illumination surface.
@@ -114,12 +116,13 @@ measurement is available with:
 
 ## Security boundary
 
-The future GNOME Shell component may render status and illumination, but it
+A future Hyprlock-native component may render status and illumination, but it
 must not decide whether a face matched. The daemon owns biometric evaluation,
 uses a bounded request, and returns an explicit decision. Password input must
 cancel face processing immediately, and password or PIN fallback must remain
 available.
 
-The initial desktop target is an already-running GNOME user session in
-`unlock-dialog` mode. Display-manager login is a separate integration with a
-different trust and process model; this policy does not enable GDM login.
+The initial desktop target is an already-running Hyprland session protected by
+Hyprlock. Hyprlock 0.9 invokes PAM after input submission, so PAM configuration
+alone is not automatic face unlock. Display-manager or greetd login is a
+separate integration with a different trust and process model.

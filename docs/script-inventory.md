@@ -38,6 +38,7 @@ PAM fake test:
 
 - scripts/install-fake-pam-test.sh
 - scripts/remove-fake-pam-test.sh
+- scripts/pam-module-path.sh
 
 systemd user service:
 
@@ -50,6 +51,13 @@ sudo:
 - scripts/apply-sudo-pam-install.sh
 - scripts/rollback-sudo-pam.sh
 - scripts/test-sudo-dry-run.sh
+
+Hyprlock:
+
+- scripts/plan-hyprlock-pam-install.sh
+- scripts/apply-hyprlock-pam-install.sh
+- scripts/rollback-hyprlock-pam.sh
+- scripts/test-hyprlock-dry-run.sh
 
 Validation:
 
@@ -91,7 +99,9 @@ Additional detector backend tests:
 CPU face-profile tools:
 
 - scripts/download-cpu-models.sh
+- scripts/test-model-selection.sh
 - scripts/test-cpu-face-profile.sh
+- scripts/benchmark-native-verification.sh
 
 The model downloader pins upstream revisions and verifies SHA-256 checksums.
 Downloaded ONNX files are local build inputs and remain ignored by Git.

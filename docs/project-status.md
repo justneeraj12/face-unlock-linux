@@ -64,6 +64,7 @@ and threshold calibration, followed by privacy-safe live-preview design.
 - heavy dependency audit
 - fake PAM test flow
 - guarded sudo planning, backup, apply, and rollback scripts
+- guarded Hyprlock PAM planning, apply refusal, backup, and rollback tooling
 
 ### Storage and GUI
 
@@ -82,7 +83,7 @@ and threshold calibration, followed by privacy-safe live-preview design.
 - liveness or presentation-attack defense
 - production key management
 - production sudo authentication
-- GNOME lock-screen rendering or actual unlock integration
+- automatic Hyprlock submission, status/illumination rendering, or actual unlock integration
 - display-manager integration
 - one-command end-user installation
 - automatic, production-safe PAM configuration
@@ -119,7 +120,7 @@ spoof resistance still require measurement.
 
 Primary CI and development target:
 
-- Ubuntu 24.04 LTS
+- Ubuntu 24.04 and 26.04 LTS
 - x86_64
 - GCC or Clang with C++17
 - OpenCV 4.6-compatible APIs

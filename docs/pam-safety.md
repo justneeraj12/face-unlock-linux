@@ -41,7 +41,7 @@ Then test with:
 
     pamtester face-unlock-test "$USER" authenticate
 
-This avoids modifying sudo, GDM, SDDM, or LightDM.
+This avoids modifying sudo, Hyprlock, greetd, GDM, SDDM, or LightDM.
 
 ## Rollback principle
 
@@ -78,3 +78,9 @@ Run this test successfully before considering any sudo, lock-screen, or greeter 
 sudo/PAM development troubleshooting is documented in:
 
     docs/sudo-troubleshooting.md
+
+## Hyprlock planning
+
+The Hyprlock integration boundary and fixture-only dry-run are documented in
+[Hyprland and Hyprlock](hyprland.md). The guarded apply script refuses live
+changes until the daemon can return an explicit production biometric success.
