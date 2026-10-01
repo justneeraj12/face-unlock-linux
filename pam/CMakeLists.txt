@@ -30,6 +30,14 @@ set_target_properties(pam_face_unlock PROPERTIES
 
 include(GNUInstallDirs)
 
+if(CMAKE_LIBRARY_ARCHITECTURE)
+  set(FACE_UNLOCK_PAM_MODULE_DIR
+    "${CMAKE_INSTALL_LIBDIR}/${CMAKE_LIBRARY_ARCHITECTURE}/security"
+  )
+else()
+  set(FACE_UNLOCK_PAM_MODULE_DIR "${CMAKE_INSTALL_LIBDIR}/security")
+endif()
+
 install(TARGETS pam_face_unlock
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/security
+  LIBRARY DESTINATION ${FACE_UNLOCK_PAM_MODULE_DIR}
 )

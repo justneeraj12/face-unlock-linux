@@ -38,7 +38,7 @@ Start the daemon in camera mode with YuNet and SFace model paths:
     ./build/daemon/face-unlockd \
       --camera 0 \
       --detector yunet \
-      --detector-model models/face_detection_yunet_2022mar.onnx \
+      --detector-model models/face_detection_yunet.onnx \
       --recognizer-model models/face_recognition_sface_2021dec.onnx \
       --daemon
 

@@ -5,7 +5,7 @@ daemon="${1:-./build/daemon/face-unlockd}"
 selftest="${2:-./build/daemon/face-unlock-detector-selftest}"
 client="${3:-./scripts/test-socket-client.sh}"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-yunet_model="${4:-$repo_root/models/face_detection_yunet_2022mar.onnx}"
+yunet_model="${4:-$repo_root/models/face_detection_yunet.onnx}"
 
 echo "[test-detector-backends] Starting detector backend integration test"
 

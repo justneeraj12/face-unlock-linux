@@ -4,7 +4,7 @@ This document tracks the planned local development flow.
 
 ## Target OS
 
-Ubuntu 24.04 LTS.
+Ubuntu 24.04 and 26.04 LTS on x86_64.
 
 ## Planned dependencies
 
@@ -27,11 +27,8 @@ Python:
 - torchvision
 - numpy
 
-GPU:
-
-- NVIDIA driver
-- CUDA
-- optional LibTorch CUDA build
+Inference is CPU-first. A discrete GPU, vendor driver, CUDA, and LibTorch are
+not runtime requirements.
 
 ## Development phases
 

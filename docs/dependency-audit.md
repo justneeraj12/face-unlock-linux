@@ -126,7 +126,7 @@ Torch export/evaluation:
 
 Python scripts are not part of the trusted authentication path.
 
-## Build dependencies on Ubuntu 24.04
+## Build dependencies on Ubuntu 24.04 and 26.04
 
 Core native development packages:
 

@@ -8,7 +8,7 @@ The pinned CPU baseline is:
 
 | Purpose | Model |
 |---|---|
-| Detection | YuNet 2022mar |
+| Detection | YuNet 2022mar on OpenCV 4.6; YuNet 2023mar on newer OpenCV 4.x |
 | Alignment and embedding | SFace 2021dec |
 
 Download and verify both files:
@@ -19,14 +19,23 @@ Verify existing files without downloading:
 
     ./scripts/download-cpu-models.sh --check
 
-The downloader pins upstream revisions and SHA-256 checksums. YuNet 2022mar is
-used because it is compatible with Ubuntu 24.04's stock OpenCV 4.6.
+The downloader pins upstream revisions and SHA-256 checksums. It detects the
+installed OpenCV version and selects a compatible YuNet file. The stable
+`face_detection_yunet.onnx` symlink is the path applications should use.
+
+Inspect the choice without downloading:
+
+    ./scripts/download-cpu-models.sh --select-only
+
+`FACE_UNLOCK_YUNET_VARIANT=2022mar|2023mar` is available for controlled tests.
 
 ## Local files
 
 Expected ignored paths:
 
     models/face_detection_yunet_2022mar.onnx
+    models/face_detection_yunet_2023mar.onnx
+    models/face_detection_yunet.onnx
     models/face_recognition_sface_2021dec.onnx
     models/embedding_stub.pt
 

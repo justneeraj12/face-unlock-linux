@@ -33,11 +33,11 @@ Build and run the camera-free model smoke test:
 
     ./scripts/build.sh
     ./scripts/download-cpu-models.sh
-    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet_2022mar.onnx
+    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet.onnx
 
 Run camera plus socket mode:
 
-    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --daemon
+    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet.onnx --daemon
 
 Run the camera-free native SFace test and benchmark:
 
@@ -93,7 +93,7 @@ lifetime only; they cannot approve authentication or unlock a session.
 Enrollment requires daemon mode, the YuNet detector, and a configured SFace
 model:
 
-    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
+    ./build/daemon/face-unlockd --camera 0 --detector yunet --detector-model models/face_detection_yunet.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
 
 The enrollment operations collect one qualified sample per capture request,
 report five-pose progress, close the camera when ready, and commit an encrypted

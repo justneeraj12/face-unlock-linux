@@ -23,19 +23,8 @@ fi
 echo "[ci-install-deps] Installing CI dependencies"
 echo "mode: $mode"
 
-sudo tee /etc/apt/sources.list.d/ubuntu.sources >/dev/null <<'APT_EOF'
-Types: deb
-URIs: http://archive.ubuntu.com/ubuntu/
-Suites: noble noble-updates noble-backports
-Components: main restricted universe multiverse
-Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
-
-Types: deb
-URIs: http://security.ubuntu.com/ubuntu/
-Suites: noble-security
-Components: main restricted universe multiverse
-Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
-APT_EOF
+echo "[ci-install-deps] Runner release:"
+grep -E '^(NAME|VERSION|VERSION_CODENAME)=' /etc/os-release || true
 
 sudo apt-get -o Acquire::Retries=5 update
 

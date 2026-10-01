@@ -63,9 +63,9 @@ set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS
-  "libc6, libpam0g, libsodium23, libopencv-core406t64 | libopencv-core406, libopencv-videoio406t64 | libopencv-videoio406, libopencv-imgproc406t64 | libopencv-imgproc406, libopencv-objdetect406t64 | libopencv-objdetect406, libopencv-dnn406t64 | libopencv-dnn406"
-)
+# Resolve exact runtime ABI packages from the binaries built on each Ubuntu
+# release. Hard-coding OpenCV SONAME package names breaks cross-LTS packages.
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION
 "Experimental face unlock daemon and minimal PAM IPC bridge.

@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 module_src="$repo_root/build/pam/pam_face_unlock.so"
-module_dst="/usr/lib/x86_64-linux-gnu/security/pam_face_unlock.so"
+module_dst="$($repo_root/scripts/pam-module-path.sh)"
 service_path="/etc/pam.d/face-unlock-test"
 
 echo "[install-fake-pam-test] Safe fake PAM test installer"

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-module_dst="/usr/lib/x86_64-linux-gnu/security/pam_face_unlock.so"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+module_dst="$($script_dir/pam-module-path.sh)"
 service_path="/etc/pam.d/face-unlock-test"
 
 echo "[remove-fake-pam-test] Removing fake PAM test artifacts"

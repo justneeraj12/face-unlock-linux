@@ -142,7 +142,7 @@ Initial target hardware:
 
 - Intel i5-12500H
 - NVIDIA RTX 3050 Ti
-- Ubuntu 24.04
+- Ubuntu 24.04 and 26.04
 
 Initial targets:
 

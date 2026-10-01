@@ -17,7 +17,7 @@ if [[ $# -ne 0 || ! "$camera_index" =~ ^[0-9]+$ || \
   exit 2
 fi
 
-yunet_model="models/face_detection_yunet_2022mar.onnx"
+yunet_model="models/face_detection_yunet.onnx"
 sface_model="models/face_recognition_sface_2021dec.onnx"
 binary="./build/daemon/face-unlock-native-verification-benchmark"
 

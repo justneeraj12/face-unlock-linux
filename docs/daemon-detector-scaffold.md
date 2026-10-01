@@ -39,7 +39,7 @@ Download the pinned, checksum-verified development models:
 
 The YuNet development model is written to:
 
-    models/face_detection_yunet_2022mar.onnx
+    models/face_detection_yunet.onnx
 
 Model files are ignored by Git. Release packaging and redistribution require a
 separate model-license and provenance review.
@@ -48,7 +48,7 @@ separate model-license and provenance review.
 
 Run camera-free CPU inference on a synthetic blank frame:
 
-    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet_2022mar.onnx
+    ./build/daemon/face-unlock-detector-selftest --yunet-model models/face_detection_yunet.onnx
 
 A successful result includes:
 
@@ -63,12 +63,12 @@ Noop remains the safe default:
 
 Run YuNet explicitly:
 
-    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --serve
+    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet.onnx --serve
 
 Equivalent config fields:
 
     "detector_backend": "yunet"
-    "detector_model_path": "/absolute/path/to/face_detection_yunet_2022mar.onnx"
+    "detector_model_path": "/absolute/path/to/face_detection_yunet.onnx"
 
 A missing model, unreadable model, unsupported backend, or model-load failure
 causes startup to fail. YuNet is loaded once and reused instead of being loaded

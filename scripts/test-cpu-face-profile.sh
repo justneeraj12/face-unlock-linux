@@ -84,7 +84,7 @@ rm -f /tmp/face-unlock-cpu-benchmark-help.txt
 echo "enrollment_help_status: ok"
 echo "cpu_benchmark_help_status: ok"
 
-if [[ -f models/face_detection_yunet_2022mar.onnx && -f models/face_recognition_sface_2021dec.onnx ]]; then
+if [[ -f models/face_detection_yunet.onnx && -f models/face_recognition_sface_2021dec.onnx ]]; then
   python3 - <<'PY'
 import sys
 from pathlib import Path
@@ -96,7 +96,7 @@ sys.path.insert(0, str(Path.cwd() / "python"))
 from detectors.yunet import YuNetFaceDetector
 from recognizers.sface import SFaceRecognizer
 
-detector = YuNetFaceDetector(Path("models/face_detection_yunet_2022mar.onnx"))
+detector = YuNetFaceDetector(Path("models/face_detection_yunet.onnx"))
 assert detector.detect(np.zeros((320, 320, 3), dtype=np.uint8)) == []
 
 recognizer = SFaceRecognizer(Path("models/face_recognition_sface_2021dec.onnx"))

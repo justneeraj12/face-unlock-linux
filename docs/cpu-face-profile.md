@@ -31,13 +31,16 @@ prototype does not write them to disk.
 
 The development baseline uses:
 
-- YuNet 2022mar for compatibility with Ubuntu 24.04's OpenCV 4.6
+- YuNet 2022mar with OpenCV 4.6 on Ubuntu 24.04
+- YuNet 2023mar with newer OpenCV 4.x, including Ubuntu 26.04
 - SFace 2021dec
 - OpenCV DNN backend
 - OpenCV CPU target
 
-The newer YuNet 2023mar file currently fails inference with the stock OpenCV
-4.6 build, so the downloader deliberately pins the compatible 2022mar model.
+The downloader detects OpenCV and creates the stable local path
+`models/face_detection_yunet.onnx`. Both upstream files and their SHA-256
+checksums are pinned. This keeps the OpenCV 4.6 compatibility workaround
+without forcing the older graph onto newer OpenCV releases.
 
 Download and verify the local ignored model files:
 

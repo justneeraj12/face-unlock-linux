@@ -14,10 +14,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ubuntu-2404-package:
-    name: Ubuntu 24.04 Debian package
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
+  platform-package:
+    name: ${{ matrix.os }} Debian package
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
 
     steps:
       - name: Checkout
@@ -27,10 +31,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: package-ccache-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'daemon/src/**', 'pam/**') }}
+          key: package-ccache-${{ matrix.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'daemon/src/**', 'pam/**') }}
           restore-keys: |
-            package-ccache-${{ runner.os }}-${{ github.ref_name }}-
-            package-ccache-${{ runner.os }}-
+            package-ccache-${{ matrix.os }}-${{ github.ref_name }}-
+            package-ccache-${{ matrix.os }}-
 
       - name: Check required scripts
         run: |
@@ -65,6 +69,10 @@ jobs:
         run: |
           ./scripts/ci-install-deps.sh core
 
+      - name: Select and verify CPU models
+        run: |
+          ./scripts/download-cpu-models.sh
+
       - name: Build and test
         run: |
           ccache --zero-stats || true
@@ -78,10 +86,16 @@ jobs:
           cmake --build build --target package
           ls -lh build/*.deb
           dpkg-deb -I build/*.deb
-          dpkg-deb -c build/*.deb | head -160
+          dpkg-deb -c build/*.deb | sed -n '1,160p'
+
+      - name: Install package smoke test
+        run: |
+          sudo apt-get install -y ./build/*.deb
+          face-unlockd --help
+          test -f "$(./scripts/pam-module-path.sh)"
 
       - name: Upload Debian package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: face-unlock-linux-deb-ubuntu-24.04
+          name: face-unlock-linux-deb-${{ matrix.os }}
           path: build/*.deb

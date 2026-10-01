@@ -1,6 +1,7 @@
 # Development Setup
 
-This document explains how to set up a development environment for face-unlock-linux on Ubuntu 24.04.
+This document explains how to set up a development environment for
+face-unlock-linux on Ubuntu 24.04 or 26.04.
 
 ## Safety
 
@@ -19,7 +20,7 @@ It does not:
 
 Primary target:
 
-- Ubuntu 24.04 LTS
+- Ubuntu 24.04 or 26.04 LTS
 - x86_64
 - internal or USB webcam
 
@@ -127,9 +128,10 @@ See:
 
 ## Minimal OpenCV development packages
 
-For a minimal daemon build, these packages are sufficient:
+For the CPU detector and recognizer build, install these OpenCV components:
 
-    sudo apt install libopencv-core-dev libopencv-videoio-dev
+    sudo apt install libopencv-core-dev libopencv-dnn-dev libopencv-imgproc-dev \
+      libopencv-objdetect-dev libopencv-videoio-dev
 
 The full development setup script may install libopencv-dev for convenience on developer machines.
 

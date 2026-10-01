@@ -133,14 +133,14 @@ YuNet requires an explicit readable ONNX model path.
 
 CLI example:
 
-    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --serve
+    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet.onnx --serve
 
 Config example:
 
     {
       "camera_index": 0,
       "detector_backend": "yunet",
-      "detector_model_path": "/absolute/path/to/face_detection_yunet_2022mar.onnx",
+      "detector_model_path": "/absolute/path/to/face_detection_yunet.onnx",
       "max_auth_attempts": 3
     }
 
@@ -154,14 +154,14 @@ Native enrollment requires an explicit readable SFace ONNX model path.
 
 CLI example:
 
-    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet_2022mar.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
+    ./build/daemon/face-unlockd --detector yunet --detector-model models/face_detection_yunet.onnx --recognizer-model models/face_recognition_sface_2021dec.onnx --daemon
 
 Config example:
 
     {
       "camera_index": 0,
       "detector_backend": "yunet",
-      "detector_model_path": "/absolute/path/to/face_detection_yunet_2022mar.onnx",
+      "detector_model_path": "/absolute/path/to/face_detection_yunet.onnx",
       "recognizer_model_path": "/absolute/path/to/face_recognition_sface_2021dec.onnx",
       "max_auth_attempts": 3
     }

@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--yunet-model",
         type=Path,
-        default=Path("models/face_detection_yunet_2022mar.onnx"),
+        default=Path("models/face_detection_yunet.onnx"),
     )
     parser.add_argument(
         "--sface-model",

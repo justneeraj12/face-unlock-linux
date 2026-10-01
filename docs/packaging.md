@@ -74,6 +74,14 @@ A PAM service must explicitly reference pam_face_unlock.so before it is used.
 
 Do not edit real PAM service files manually.
 
+The package uses Debian's multiarch PAM directory, for example:
+
+    /usr/lib/x86_64-linux-gnu/security/pam_face_unlock.so
+
+Resolve the path on the current machine with:
+
+    ./scripts/pam-module-path.sh
+
 Use fake PAM service testing first:
 
     docs/pam-fake-service-test.md
@@ -90,11 +98,14 @@ Future packages may provide a safer packaged helper command.
 
 ## CI package build
 
-GitHub Actions builds the Debian package on Ubuntu 24.04.
+GitHub Actions builds separate Debian packages on Ubuntu 24.04 and 26.04.
+CPack derives exact shared-library dependencies from each built binary instead
+of hard-coding one OpenCV ABI.
 
 The CI artifact is named:
 
     face-unlock-linux-deb-ubuntu-24.04
+    face-unlock-linux-deb-ubuntu-26.04
 
 Download it from the workflow run artifacts.
 

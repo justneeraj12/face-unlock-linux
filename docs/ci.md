@@ -8,13 +8,15 @@ Current workflow:
 
     .github/workflows/build.yml
 
-## Runner
+## Runners
 
-The workflow uses:
+Core, GUI, package, and release jobs use a platform matrix:
 
     ubuntu-24.04
+    ubuntu-26.04
 
-This matches the primary target platform for development and testing.
+This catches the OpenCV 4.6/4.10 ABI and model-graph differences between the
+two supported LTS releases.
 
 ## CI checks
 
@@ -28,7 +30,7 @@ The build workflow performs:
 - daemon CLI smoke test
 - build output verification
 - PAM module dependency audit
-- artifact upload
+- version-aware CPU model selection and checksum verification
 
 ## Dependency audit
 
@@ -48,17 +50,6 @@ Allowed dependencies include:
 - libc
 - libaudit
 - libcap-ng
-
-## Artifacts
-
-The CI uploads:
-
-    face-unlockd-ubuntu-24.04
-    pam-face-unlock-ubuntu-24.04
-
-These artifacts are for development inspection only.
-
-They are not production release packages yet.
 
 ## Camera tests
 
@@ -85,34 +76,28 @@ CI also builds the CPack Debian package with:
 
     cmake --build build --target package
 
-The workflow uploads the package artifact as:
+The package workflow uploads one artifact per build platform:
 
     face-unlock-linux-deb-ubuntu-24.04
+    face-unlock-linux-deb-ubuntu-26.04
 
 The .deb artifact is for development testing and inspection.
 
 It does not automatically modify PAM files.
 
-## Minimal OpenCV dependencies
+## Focused OpenCV dependencies
 
-The daemon currently uses only OpenCV core and videoio APIs.
-
-To keep CI faster and avoid installing the full OpenCV development dependency tree, the workflow installs:
+CI installs the component development packages used by the CPU pipeline:
 
     libopencv-core-dev
+    libopencv-dnn-dev
+    libopencv-imgproc-dev
+    libopencv-objdetect-dev
     libopencv-videoio-dev
 
-instead of:
-
-    libopencv-dev
-
-The daemon CMake configuration manually locates:
-
-- opencv2/core.hpp
-- libopencv_core
-- libopencv_videoio
-
-This avoids requiring opencv4 pkg-config metadata in CI.
+This avoids the unrelated dependencies pulled in by the complete
+`libopencv-dev` meta-package while still building camera capture, YuNet, SFace,
+and the optional Haar baseline.
 
 ## Manifest validation in CI
 
@@ -129,16 +114,20 @@ The optional Qt GUI is built by a separate workflow:
 
     .github/workflows/gui-build.yml
 
-The GUI workflow runs:
-
-- manually with workflow_dispatch
-- on pull requests that modify gui files
+The GUI workflow runs manually and for relevant pushes and pull requests.
 
 It installs Qt6 development packages and builds with:
 
     -DBUILD_GUI=ON
 
 The main build workflow keeps GUI disabled by default to stay faster.
+
+## Model selection
+
+`scripts/download-cpu-models.sh` pins and verifies both supported YuNet
+variants, then selects the graph compatible with the runner's OpenCV version.
+Ubuntu 24.04 selects YuNet 2022mar; Ubuntu 26.04 selects YuNet 2023mar. Runtime
+commands use the stable `models/face_detection_yunet.onnx` symlink.
 
 ## Model metrics validation in CI
 

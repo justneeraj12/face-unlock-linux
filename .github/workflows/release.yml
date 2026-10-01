@@ -9,10 +9,14 @@ permissions:
   contents: write
 
 jobs:
-  ubuntu-2404-release:
-    name: Ubuntu 24.04 release package
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
+  build-release:
+    name: ${{ matrix.os }} release package
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
 
     steps:
       - name: Checkout
@@ -22,76 +26,74 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: release-ccache-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'daemon/src/**', 'pam/**', 'gui/src/**') }}
+          key: release-ccache-${{ matrix.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'daemon/src/**', 'pam/**', 'gui/src/**') }}
           restore-keys: |
-            release-ccache-${{ runner.os }}-${{ github.ref_name }}-
-            release-ccache-${{ runner.os }}-
+            release-ccache-${{ matrix.os }}-${{ github.ref_name }}-
+            release-ccache-${{ matrix.os }}-
 
-
-      - name: Check required scripts
+      - name: Repository checks
         run: |
           ./scripts/check-scripts.sh
-
-      - name: Check documentation
-        run: |
           ./scripts/check-docs.sh
-
-      - name: Check JSON files
-        run: |
           ./scripts/check-json.sh
-
-      - name: Validate enrollment manifest example
-        run: |
           scripts/validate-enrollment-manifest.py schemas/enrollment-manifest.example.json
-
-      - name: Validate model evaluation metrics example
-        run: |
           scripts/validate-model-eval-metrics.py schemas/model-eval-metrics.example.json
-
-      - name: Validate detector output example
-        run: |
           scripts/validate-detector-output.py schemas/detector-output.example.json
-
-      - name: Detector output generation test
-        run: |
           ./scripts/test-detector-output-generation.sh
+          ./scripts/test-model-selection.sh
 
       - name: Install build dependencies
         timeout-minutes: 35
         run: |
           ./scripts/ci-install-deps.sh core
 
-      - name: Configure and build
+      - name: Select and verify CPU models
+        run: |
+          ./scripts/download-cpu-models.sh
+
+      - name: Build, test, and audit
         run: |
           ccache --zero-stats || true
           ./scripts/build.sh
+          ./scripts/test.sh
+          ./scripts/audit-dependencies.sh
           ccache --show-stats || true
 
-      - name: Run tests
-        run: |
-          ./scripts/test.sh
-
-      - name: Audit dependencies
-        run: |
-          ./scripts/audit-dependencies.sh
-
-      - name: Build Debian package
+      - name: Build release package
         run: |
           cmake --build build --target package
           mkdir -p artifacts
-          cp build/*.deb artifacts/
-          ls -lh artifacts/
+          package_file="$(find build -maxdepth 1 -type f -name '*.deb' -print -quit)"
+          test -n "$package_file"
+          cp "$package_file" "artifacts/face-unlock-linux_${GITHUB_REF_NAME}_${{ matrix.os }}_amd64.deb"
+          dpkg-deb -I "$package_file"
+          dpkg-deb -c "$package_file" | sed -n '1,160p'
 
-      - name: Inspect Debian package
-        run: |
-          dpkg-deb -I artifacts/*.deb
-          dpkg-deb -c artifacts/*.deb | head -160
-
-      - name: Upload workflow artifact
+      - name: Upload platform package
         uses: actions/upload-artifact@v4
         with:
-          name: face-unlock-linux-release-deb
+          name: face-unlock-linux-release-${{ matrix.os }}
           path: artifacts/*.deb
+
+  publish-release:
+    name: Publish release packages
+    needs: build-release
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Download platform packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: face-unlock-linux-release-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Inspect release files
+        run: |
+          ls -lh artifacts/*.deb
+          for package_file in artifacts/*.deb; do
+            dpkg-deb -f "$package_file" Package Version Architecture Depends
+          done
 
       - name: Create or update GitHub Release
         uses: softprops/action-gh-release@v2

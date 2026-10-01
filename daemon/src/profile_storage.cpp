@@ -153,7 +153,7 @@ std::string manifest_json(
          << "  \"model\": {\n"
          << "    \"embedding_model_id\": \""
          << json_escape(profile.model_id) << "\",\n"
-         << "    \"detector_model_id\": \"opencv-yunet-2022mar\",\n"
+         << "    \"detector_model_id\": \"opencv-yunet-runtime-selected\",\n"
          << "    \"embedding_dim\": " << profile.embedding_dim << ",\n"
          << "    \"input_size\": [112, 112],\n"
          << "    \"preprocessing\": {\n"

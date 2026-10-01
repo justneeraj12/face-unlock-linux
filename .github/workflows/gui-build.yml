@@ -2,9 +2,21 @@ name: gui-build
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "gui/**"
+      - "daemon/**"
+      - "scripts/download-cpu-models.sh"
+      - "scripts/test-model-selection.sh"
+      - "CMakeLists.txt"
+      - ".github/workflows/gui-build.yml"
   pull_request:
     paths:
       - "gui/**"
+      - "daemon/**"
+      - "scripts/download-cpu-models.sh"
+      - "scripts/test-model-selection.sh"
       - "CMakeLists.txt"
       - ".github/workflows/gui-build.yml"
 
@@ -12,10 +24,14 @@ permissions:
   contents: read
 
 jobs:
-  ubuntu-2404-gui-build:
-    name: Ubuntu 24.04 Qt GUI build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
+  platform-gui-build:
+    name: ${{ matrix.os }} Qt GUI build
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
 
     steps:
       - name: Checkout
@@ -25,10 +41,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: gui-ccache-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'gui/src/**', 'daemon/src/**', 'pam/**') }}
+          key: gui-ccache-${{ matrix.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'gui/src/**', 'daemon/src/**', 'pam/**') }}
           restore-keys: |
-            gui-ccache-${{ runner.os }}-${{ github.ref_name }}-
-            gui-ccache-${{ runner.os }}-
+            gui-ccache-${{ matrix.os }}-${{ github.ref_name }}-
+            gui-ccache-${{ matrix.os }}-
 
 
       - name: Check documentation
@@ -39,6 +55,10 @@ jobs:
         timeout-minutes: 35
         run: |
           ./scripts/ci-install-deps.sh gui
+
+      - name: Select and verify CPU models
+        run: |
+          ./scripts/download-cpu-models.sh
 
       - name: Build GUI
         run: |
@@ -58,5 +78,5 @@ jobs:
       - name: Upload GUI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: face-unlock-enroll-ubuntu-24.04
+          name: face-unlock-enroll-${{ matrix.os }}
           path: build-gui/gui/face-unlock-enroll

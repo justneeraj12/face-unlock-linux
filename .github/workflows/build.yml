@@ -16,10 +16,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ubuntu-2404-build:
-    name: Ubuntu 24.04 CMake build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
+  platform-build:
+    name: ${{ matrix.os }} CMake build
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
 
     steps:
       - name: Checkout
@@ -29,10 +33,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: ccache-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'daemon/src/**', 'pam/**', 'gui/src/**') }}
+          key: ccache-${{ matrix.os }}-${{ github.ref_name }}-${{ hashFiles('**/CMakeLists.txt', 'daemon/src/**', 'pam/**', 'gui/src/**') }}
           restore-keys: |
-            ccache-${{ runner.os }}-${{ github.ref_name }}-
-            ccache-${{ runner.os }}-
+            ccache-${{ matrix.os }}-${{ github.ref_name }}-
+            ccache-${{ matrix.os }}-
 
 
       - name: Check required scripts
@@ -72,6 +76,10 @@ jobs:
         timeout-minutes: 35
         run: |
           ./scripts/ci-install-deps.sh core
+
+      - name: Select and verify CPU models
+        run: |
+          ./scripts/download-cpu-models.sh
 
       - name: Show tool versions
         run: |

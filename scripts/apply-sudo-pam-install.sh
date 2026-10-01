@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 sudo_pam="/etc/pam.d/sudo"
-module_path="/usr/lib/x86_64-linux-gnu/security/pam_face_unlock.so"
+module_path="$($script_dir/pam-module-path.sh)"
 module_line="auth sufficient pam_face_unlock.so timeout_ms=1000"
 timestamp="$(date +%Y%m%d-%H%M%S)"
 backup_path="/etc/pam.d/sudo.face-unlock-backup.${timestamp}"
