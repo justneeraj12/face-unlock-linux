@@ -103,6 +103,14 @@ section "CTest"
 
 ./scripts/test.sh
 
+section "Build GUI"
+
+./scripts/build-gui.sh
+
+section "GUI-enabled CTest"
+
+ctest --test-dir build-gui --output-on-failure
+
 section "Crypto self-test"
 
 ./build/daemon/face-unlock-crypto-selftest
@@ -132,16 +140,16 @@ fi
 
 echo "PAM dependency audit passed."
 
-section "Build Debian package"
+section "Build GUI-inclusive Debian package"
 
-cmake --build build --target package
+cmake --build build-gui --target package
 
 section "Package artifacts"
 
-mapfile -t debs < <(find build -maxdepth 1 -type f -name "*.deb" | sort)
+mapfile -t debs < <(find build-gui -maxdepth 1 -type f -name "*.deb" | sort)
 
 if [[ "${#debs[@]}" -eq 0 ]]; then
-  fail "No .deb package found in build/"
+  fail "No .deb package found in build-gui/"
 fi
 
 for deb in "${debs[@]}"; do
@@ -161,7 +169,12 @@ section "Package contents preview"
 for deb in "${debs[@]}"; do
   echo
   echo "Package: $deb"
-  dpkg-deb -c "$deb" | head -160
+  package_contents="$(dpkg-deb -c "$deb")"
+  printf '%s\n' "$package_contents" | sed -n '1,160p'
+  grep -Fq './usr/bin/face-unlock-enroll' <<<"$package_contents" ||
+    fail "GUI binary missing from package: $deb"
+  grep -Fq './usr/share/applications/face-unlock-enroll.desktop' <<<"$package_contents" ||
+    fail "desktop launcher missing from package: $deb"
 done
 
 section "Safety reminder"

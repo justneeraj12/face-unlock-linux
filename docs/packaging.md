@@ -10,7 +10,9 @@ The package installs:
 
 - face-unlockd
 - face-unlock-crypto-selftest
+- face-unlock-enroll
 - pam_face_unlock.so
+- desktop launcher and scalable application icon
 - documentation
 - helper scripts
 - systemd user service template
@@ -48,17 +50,17 @@ The script runs:
 
 Before installing, inspect package contents:
 
-    dpkg-deb -c build/*.deb
+    dpkg-deb -c build-gui/*.deb
 
 Inspect package metadata:
 
-    dpkg-deb -I build/*.deb
+    dpkg-deb -I build-gui/*.deb
 
 ## Install package manually
 
 Only after inspection:
 
-    sudo apt install ./build/<package-name>.deb
+    sudo apt install ./build-gui/<package-name>.deb
 
 ## Remove package
 

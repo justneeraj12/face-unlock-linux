@@ -385,7 +385,7 @@ target_compile_options(face-unlockd PRIVATE
 
 target_compile_definitions(face-unlockd PRIVATE
   _GNU_SOURCE
-  FACE_UNLOCK_VERSION="${PROJECT_VERSION}"
+  FACE_UNLOCK_VERSION="${FACE_UNLOCK_VERSION_LABEL}"
 )
 
 target_include_directories(face-unlockd PRIVATE

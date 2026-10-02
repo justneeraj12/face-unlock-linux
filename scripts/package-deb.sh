@@ -13,19 +13,29 @@ echo "  - change sudo/login/lock-screen authentication"
 echo
 
 ./scripts/check-docs.sh
-./scripts/build.sh
-./scripts/test.sh
+./scripts/check-json.sh
+./scripts/check-scripts.sh
 
-cmake --build build --target package
+package_build_dir="${PACKAGE_BUILD_DIR:-build-gui}"
+GUI_BUILD_DIR="$package_build_dir" ./scripts/build-gui.sh
+ctest --test-dir "$package_build_dir" --output-on-failure
+
+cmake --build "$package_build_dir" --target package
+
+AUDIT_BUILD_DIR="$package_build_dir" \
+AUDIT_GUI_BUILD_DIR="$package_build_dir" \
+AUDIT_PACKAGE_DIR="$package_build_dir" \
+  ./scripts/audit-dependencies.sh
 
 echo
 echo "[package-deb] Package artifacts:"
-find build -maxdepth 1 -type f -name "*.deb" -print -exec ls -lh {} \;
+find "$package_build_dir" -maxdepth 1 -type f -name "*.deb" \
+  -print -exec ls -lh {} \;
 echo
 echo "Inspect package contents with:"
-echo "  dpkg-deb -c build/*.deb"
+echo "  dpkg-deb -c $package_build_dir/*.deb"
 echo
 echo "Install manually only if you understand the package contents:"
-echo "  sudo apt install ./build/<package-name>.deb"
+echo "  sudo apt install ./$package_build_dir/<package-name>.deb"
 echo
 echo "Installing the package still does not modify PAM service files."

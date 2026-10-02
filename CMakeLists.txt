@@ -6,6 +6,13 @@ project(face-unlock-linux
   LANGUAGES C CXX
 )
 
+set(FACE_UNLOCK_VERSION_LABEL "0.2.0-beta.1" CACHE STRING
+  "User-visible face-unlock-linux version"
+)
+set(FACE_UNLOCK_DEBIAN_VERSION "0.2.0~beta1" CACHE STRING
+  "Debian package version; tilde keeps beta below the final release"
+)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -37,11 +44,23 @@ install(DIRECTORY
   FILES_MATCHING PATTERN "*.md"
 )
 
+install(FILES
+  packaging/desktop/face-unlock-enroll.desktop
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+)
+
+install(FILES
+  packaging/icons/face-unlock-linux.svg
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+)
+
 install(DIRECTORY
   scripts/
   DESTINATION ${CMAKE_INSTALL_DATADIR}/face-unlock-linux/scripts
   FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-  FILES_MATCHING PATTERN "*.sh"
+  FILES_MATCHING
+  PATTERN "*.sh"
+  PATTERN "__pycache__" EXCLUDE
 )
 
 install(DIRECTORY
@@ -54,7 +73,8 @@ set(CPACK_PACKAGE_NAME "face-unlock-linux")
 set(CPACK_PACKAGE_VENDOR "face-unlock-linux contributors")
 set(CPACK_PACKAGE_CONTACT "https://github.com/justneeraj12/face-unlock-linux")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Experimental face unlock daemon and PAM bridge for Ubuntu Linux")
-set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_VERSION ${FACE_UNLOCK_DEBIAN_VERSION})
+set(CPACK_DEBIAN_PACKAGE_VERSION ${FACE_UNLOCK_DEBIAN_VERSION})
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/justneeraj12/face-unlock-linux")
 
 set(CPACK_GENERATOR "DEB")
@@ -70,7 +90,7 @@ set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION
 "Experimental face unlock daemon and minimal PAM IPC bridge.
 
-This package installs binaries and documentation only.
+This package installs application files and documentation only.
 
 It does not automatically modify PAM configuration, sudo, login managers,
 lock-screen configuration, GDM, SDDM, LightDM, or common-auth."

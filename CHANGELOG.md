@@ -6,6 +6,10 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
 
 ## Unreleased
 
+No changes yet.
+
+## v0.2.0-beta.1 - 2026-10-02
+
 ### Added
 
 - Ubuntu 24.04/26.04 build, GUI, package, and release matrices.
@@ -42,12 +46,17 @@ This project follows a lightweight changelog format inspired by Keep a Changelog
   panel refresh no longer consumes an authentication retry.
 - Independent held-out enrollment validation for every pose, with score-only
   evidence, GUI progress, storage-layer commit enforcement, and manifest checks.
+- Lightweight dot-matrix face scanner with batched Qt raster drawing, adaptive
+  animation, reduced-motion support, deterministic rendering, and CI coverage.
+- GUI-inclusive Ubuntu 24.04 and 26.04 beta packages with a desktop launcher,
+  scalable icon, exact runtime dependencies, and install smoke tests.
+- Privacy-safe hardware compatibility issue form for community testing.
 
 ### Changed
 
 - YuNet now loads once at daemon startup and runs only on detector requests.
 - OpenCV DNN is explicitly built and targeted for CPU inference.
-- Project version advanced to 0.2.0 development.
+- Project version advanced to the v0.2.0 developer beta series.
 - README, roadmap, project status, documentation index, and component READMEs
   were consolidated around the CPU-first implementation plan.
 - Debian runtime metadata now includes detector and DNN libraries.

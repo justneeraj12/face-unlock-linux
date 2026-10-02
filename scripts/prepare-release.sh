@@ -3,13 +3,13 @@ set -euo pipefail
 
 usage() {
   echo "Usage:"
-  echo "  ./scripts/prepare-release.sh v0.1.1-alpha"
+  echo "  ./scripts/prepare-release.sh v0.2.0-beta.1"
   echo
   echo "The script expects release notes at:"
   echo "  docs/releases/VERSION.md"
   echo
   echo "Example:"
-  echo "  docs/releases/v0.1.1-alpha.md"
+  echo "  docs/releases/v0.2.0-beta.1.md"
 }
 
 version="${1:-}"

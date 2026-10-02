@@ -6,7 +6,7 @@ Releases are manual, reviewable, and must not modify PAM configuration.
 
 Use a semantic tag such as:
 
-    v0.2.0-alpha
+    v0.2.0-beta.1
 
 Create matching notes under docs/releases/ and move completed entries from the
 Unreleased section of CHANGELOG.md into the release section.
@@ -19,7 +19,7 @@ Run the full local verification:
 
 Then run the release preparation helper:
 
-    ./scripts/prepare-release.sh v0.2.0-alpha
+    ./scripts/prepare-release.sh v0.2.0-beta.1
 
 The helper checks the working tree, builds, tests, audits PAM dependencies, and
 builds the development package. It does not create or push a tag.
@@ -28,20 +28,20 @@ Before continuing, inspect:
 
     git status
     git diff
-    dpkg-deb -I build/*.deb
-    dpkg-deb -c build/*.deb
+    dpkg-deb -I build-gui/*.deb
+    dpkg-deb -c build-gui/*.deb
 
 ## Tag and publish
 
 After local verification and GitHub Actions pass:
 
-    git tag -a v0.2.0-alpha -m "v0.2.0-alpha"
-    git push origin v0.2.0-alpha
+    git tag -a v0.2.0-beta.1 -m "v0.2.0-beta.1"
+    git push origin v0.2.0-beta.1
 
 The tag-triggered release workflow builds the package and uploads it to the
 GitHub release. A release can also be created with:
 
-    gh release create v0.2.0-alpha --title "v0.2.0-alpha" --notes-file docs/releases/v0.2.0-alpha.md
+    gh release create v0.2.0-beta.1 --title "v0.2.0-beta.1" --notes-file docs/releases/v0.2.0-beta.1.md
 
 Use the actual reviewed tag and notes filename for each release.
 

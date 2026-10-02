@@ -47,11 +47,15 @@ check_no_disallowed_pam_deps() {
   echo "pam_dependency_status: ok"
 }
 
-pam_module="build/pam/pam_face_unlock.so"
-daemon_bin="build/daemon/face-unlockd"
-crypto_selftest="build/daemon/face-unlock-crypto-selftest"
-template_tool="build/daemon/face-unlock-template-tool"
-gui_bin="build-gui/gui/face-unlock-enroll"
+build_dir="${AUDIT_BUILD_DIR:-build}"
+gui_build_dir="${AUDIT_GUI_BUILD_DIR:-build-gui}"
+package_dir="${AUDIT_PACKAGE_DIR:-$build_dir}"
+
+pam_module="$build_dir/pam/pam_face_unlock.so"
+daemon_bin="$build_dir/daemon/face-unlockd"
+crypto_selftest="$build_dir/daemon/face-unlock-crypto-selftest"
+template_tool="$build_dir/daemon/face-unlock-template-tool"
+gui_bin="$gui_build_dir/gui/face-unlock-enroll"
 
 check_no_disallowed_pam_deps "$pam_module"
 
@@ -68,7 +72,10 @@ fi
 
 echo
 echo "Package metadata if present:"
-mapfile -t debs < <(find build -maxdepth 1 -type f -name "*.deb" | sort 2>/dev/null || true)
+mapfile -t debs < <(
+  find "$package_dir" -maxdepth 1 -type f -name "*.deb" |
+    sort 2>/dev/null || true
+)
 
 if [[ "${#debs[@]}" -eq 0 ]]; then
   echo "package_status: no_deb_found"

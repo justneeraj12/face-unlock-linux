@@ -2,9 +2,6 @@ name: package
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "v*"
 
 permissions:
   contents: read
@@ -67,7 +64,7 @@ jobs:
       - name: Install build dependencies
         timeout-minutes: 35
         run: |
-          ./scripts/ci-install-deps.sh core
+          ./scripts/ci-install-deps.sh gui
 
       - name: Select and verify CPU models
         run: |
@@ -76,26 +73,30 @@ jobs:
       - name: Build and test
         run: |
           ccache --zero-stats || true
-          ./scripts/build.sh
-          ./scripts/test.sh
-          ./scripts/audit-dependencies.sh
+          ./scripts/build-gui.sh
+          ctest --test-dir build-gui --output-on-failure
+          AUDIT_BUILD_DIR=build-gui AUDIT_GUI_BUILD_DIR=build-gui \
+            AUDIT_PACKAGE_DIR=build-gui ./scripts/audit-dependencies.sh
           ccache --show-stats || true
 
       - name: Build Debian package
         run: |
-          cmake --build build --target package
-          ls -lh build/*.deb
-          dpkg-deb -I build/*.deb
-          dpkg-deb -c build/*.deb | sed -n '1,160p'
+          cmake --build build-gui --target package
+          ls -lh build-gui/*.deb
+          dpkg-deb -I build-gui/*.deb
+          dpkg-deb -c build-gui/*.deb | sed -n '1,160p'
 
       - name: Install package smoke test
         run: |
-          sudo apt-get install -y ./build/*.deb
+          sudo apt-get install -y ./build-gui/*.deb
           face-unlockd --help
+          env -u QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM=offscreen \
+            QT_STYLE_OVERRIDE=Fusion face-unlock-enroll --self-test-scanner
           test -f "$(./scripts/pam-module-path.sh)"
+          test -f /usr/share/applications/face-unlock-enroll.desktop
 
       - name: Upload Debian package artifact
         uses: actions/upload-artifact@v4
         with:
           name: face-unlock-linux-deb-${{ matrix.os }}
-          path: build/*.deb
+          path: build-gui/*.deb

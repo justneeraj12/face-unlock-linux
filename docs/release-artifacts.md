@@ -22,9 +22,13 @@ Examples:
 
 ## What it builds
 
-The workflow builds the Debian package with CPack and collects:
+The workflow builds GUI-inclusive Debian packages with CPack on Ubuntu 24.04
+and 26.04 and collects:
 
     artifacts/*.deb
+
+The two packages intentionally target the OpenCV and Qt ABI of their named
+Ubuntu release.
 
 ## GitHub Release upload
 

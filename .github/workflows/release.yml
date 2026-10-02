@@ -45,7 +45,7 @@ jobs:
       - name: Install build dependencies
         timeout-minutes: 35
         run: |
-          ./scripts/ci-install-deps.sh core
+          ./scripts/ci-install-deps.sh gui
 
       - name: Select and verify CPU models
         run: |
@@ -54,16 +54,17 @@ jobs:
       - name: Build, test, and audit
         run: |
           ccache --zero-stats || true
-          ./scripts/build.sh
-          ./scripts/test.sh
-          ./scripts/audit-dependencies.sh
+          ./scripts/build-gui.sh
+          ctest --test-dir build-gui --output-on-failure
+          AUDIT_BUILD_DIR=build-gui AUDIT_GUI_BUILD_DIR=build-gui \
+            AUDIT_PACKAGE_DIR=build-gui ./scripts/audit-dependencies.sh
           ccache --show-stats || true
 
       - name: Build release package
         run: |
-          cmake --build build --target package
+          cmake --build build-gui --target package
           mkdir -p artifacts
-          package_file="$(find build -maxdepth 1 -type f -name '*.deb' -print -quit)"
+          package_file="$(find build-gui -maxdepth 1 -type f -name '*.deb' -print -quit)"
           test -n "$package_file"
           cp "$package_file" "artifacts/face-unlock-linux_${GITHUB_REF_NAME}_${{ matrix.os }}_amd64.deb"
           dpkg-deb -I "$package_file"
@@ -81,6 +82,9 @@ jobs:
     runs-on: ubuntu-26.04
 
     steps:
+      - name: Checkout release notes
+        uses: actions/checkout@v4
+
       - name: Download platform packages
         uses: actions/download-artifact@v4
         with:
@@ -100,4 +104,4 @@ jobs:
         with:
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
           files: artifacts/*.deb
-          generate_release_notes: true
+          body_path: docs/releases/${{ github.ref_name }}.md

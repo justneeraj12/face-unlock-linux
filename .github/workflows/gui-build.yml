@@ -71,9 +71,9 @@ jobs:
           test -x build-gui/gui/face-unlock-enroll
           file build-gui/gui/face-unlock-enroll
 
-      - name: Test enrollment response parser
+      - name: Run GUI-enabled tests
         run: |
-          ./build-gui/gui/face-unlock-enroll --self-test-enrollment-json
+          ctest --test-dir build-gui --output-on-failure
 
       - name: Upload GUI artifact
         uses: actions/upload-artifact@v4

@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/justneeraj12/face-unlock-linux?include_prereleases)](https://github.com/justneeraj12/face-unlock-linux/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04%20%7C%2026.04-orange.svg)](docs/development-setup.md)
-[![Status](https://img.shields.io/badge/status-v0.2%20development-yellow.svg)](docs/project-status.md)
+[![Status](https://img.shields.io/badge/status-v0.2.0--beta.1-yellow.svg)](docs/project-status.md)
 
 CPU-first, local-only face recognition infrastructure for Linux.
 
@@ -16,6 +16,31 @@ target.
 > This repository is still a development prototype. Real biometric matching,
 > liveness protection, and production PAM integration are not finished. It
 > must not be used as the only authentication method.
+
+![Dot-matrix enrollment scanner](docs/assets/scanner-beta.png)
+
+The scanner is a lightweight Qt raster animation: a precomputed point cloud,
+batched point draws, a 20 FPS coarse timer only while enrollment is active, and
+no required GPU API. Set `FACE_UNLOCK_REDUCE_MOTION=1` to disable motion.
+
+## Developer beta
+
+`v0.2.0-beta.1` is intended for developers and hardware testers. It provides a
+working CPU enrollment pipeline, encrypted profile commit, Qt enrollment app,
+diagnostics, and fail-closed PAM bridge. It does **not** enable face-auth
+success, automatic Hyprlock unlock, or liveness protection.
+
+Download the package matching the Ubuntu release from
+[GitHub Releases](https://github.com/justneeraj12/face-unlock-linux/releases),
+inspect it, then install it:
+
+    dpkg-deb -I ./face-unlock-linux_*_amd64.deb
+    sudo apt install ./face-unlock-linux_*_amd64.deb
+
+The package installs `face-unlockd`, `face-unlock-enroll`, the desktop launcher,
+the minimal PAM module, and development helpers. It does not download model
+weights, start a service, or modify PAM. Follow the
+[beta release notes](docs/releases/v0.2.0-beta.1.md) for the test flow.
 
 ## Product direction
 
@@ -84,11 +109,11 @@ mindmap
 | IPC | UNIX socket with mode 0600 and peer credential checks |
 | PAM | minimal C IPC client with bounded timeout |
 | Templates | libsodium-encrypted native profiles; development key tooling only |
-| GUI | Qt6 daemon enrollment client with consent, guided poses, progress, quality, cancel, commit, and Forget Me |
+| GUI | Qt6 enrollment client with a low-cost dot-matrix scanner, guided poses, quality feedback, commit, and Forget Me |
 | Authentication | fail-closed; real matcher not connected |
 | Lock screen | bounded policy and camera lease; guarded Hyprlock PAM planning; automatic unlock pending |
 | Liveness | not implemented |
-| Packaging | development Debian/CPack skeleton |
+| Packaging | GUI-inclusive Ubuntu 24.04/26.04 developer-beta packages |
 
 The Qt enrollment flow is connected to the daemon and profiles must pass an
 independent held-out check before commit. The current phase is calibration,
@@ -306,9 +331,6 @@ Run it with:
 It guides the user through center, left, right, up, and down poses. It keeps
 frames, aligned crops, and embeddings in memory and writes no biometric profile.
 
-The next implementation step is to expose daemon enrollment start, status,
-cancel, and commit operations, then connect them to the Qt GUI.
-
 ## Enrollment GUI
 
 Build the optional Qt6 GUI:
@@ -319,9 +341,20 @@ Run it:
 
     ./build-gui/gui/face-unlock-enroll
 
-The GUI currently provides consent and privacy information, daemon status,
-template status, pose and quality scaffolds, and placeholder-data deletion. It
-does not yet perform real enrollment or enable authentication.
+The GUI drives daemon-owned enrollment, automatically collects qualified
+samples, displays pose/quality/latency progress, performs held-out validation,
+commits the encrypted profile after a second confirmation, and implements
+Forget Me. The dot-matrix face grows from a plane into a depth-shaped profile
+as enrollment progresses without receiving or displaying camera frames.
+
+Render the scanner without a display server:
+
+    env -u QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM=offscreen QT_STYLE_OVERRIDE=Fusion \
+      ./build-gui/gui/face-unlock-enroll --render-scanner scanner.png
+
+The visual is ready for a future reviewed Hyprlock-native surface, but an
+ordinary Qt process cannot safely render over a Wayland session lock. Automatic
+Hyprlock unlock remains intentionally unimplemented.
 
 ## Fail-closed authentication flow
 
@@ -406,8 +439,12 @@ Full verification and package inspection:
     ./scripts/verify-local.sh
 
 CTest covers crypto, key/template handling, daemon metadata, fail-closed auth
-reasons, detector backends, and CPU profile construction. Camera-dependent
-quality and accuracy evaluation remain manual work.
+reasons, detector backends, CPU profile construction, enrollment parsing, and
+offscreen scanner rendering. Camera-dependent quality and accuracy evaluation
+remain manual work.
+
+Testing another laptop? Submit a privacy-safe
+[hardware compatibility report](https://github.com/justneeraj12/face-unlock-linux/issues/new?template=hardware_report.yml).
 
 The dependency audit ensures pam_face_unlock.so does not link OpenCV, Qt,
 Torch, CUDA, TensorRT, Python, or libsodium.

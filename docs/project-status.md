@@ -1,7 +1,7 @@
 # Project Status
 
-face-unlock-linux is in v0.2 development. It is a working infrastructure and
-CPU-model prototype, not production-ready biometric authentication.
+face-unlock-linux is at v0.2.0-beta.1 for developer and hardware testing. It is
+working enrollment infrastructure, not production-ready biometric authentication.
 
 ## Current focus
 
@@ -13,6 +13,7 @@ pipeline:
 - multi-pose profile construction and score-only matching exist in C++ and Python
 - daemon enrollment sessions and encrypted profile commit are implemented
 - the Qt GUI drives consent-gated enrollment and encrypted commit
+- the Qt GUI includes a low-cost dot-matrix scanner with an offscreen test
 - independent held-out samples gate storage for every pose
 - real authentication matching remains disabled
 
@@ -72,9 +73,9 @@ and threshold calibration, followed by privacy-safe live-preview design.
 - development key and placeholder template tools
 - decryptability metadata without plaintext output
 - Qt6 consent-gated enrollment controls, automatic sampling, pose guidance, and quality feedback
+- adaptive 20 FPS dot-matrix scanner that stops its timer while idle or hidden
 - separately confirmed encrypted commit and complete local profile/key Forget Me flow
-- placeholder Forget Me flow
-- CPack Debian package skeleton and systemd user service assets
+- GUI-inclusive CPack Debian packages, desktop launcher, and systemd user service assets
 
 ## Not implemented
 
