@@ -39,6 +39,13 @@ reviewed Hyprlock-native integration or an accepted upstream interface. Killing
 the locker, injecting input, or treating process exit as authentication are
 explicitly rejected designs.
 
+The beta enrollment GUI now contains the intended visual language for a future
+lock surface: a dot-matrix profile that grows from a plane into a depth-shaped
+face, a single scan line, and terse local/CPU/private status. It is implemented
+as a reusable low-cost Qt widget, but it is not launched over Hyprlock. Moving
+that visual into the lock surface requires a reviewed Hyprlock-native extension
+or upstream status/rendering API so the compositor remains the authority.
+
 Hyprlock protects an already-running session. Greetd, SDDM, GDM, and other
 login/greeter paths are separate integrations and are not enabled by this work.
 

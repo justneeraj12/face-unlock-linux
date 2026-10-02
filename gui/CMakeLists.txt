@@ -5,6 +5,7 @@ qt_standard_project_setup()
 add_executable(face-unlock-enroll
   src/daemon_client.cpp
   src/main.cpp
+  src/scanner_widget.cpp
 )
 
 target_compile_options(face-unlock-enroll PRIVATE
@@ -23,6 +24,15 @@ if(BUILD_TESTING)
     NAME gui_enrollment_json
     COMMAND $<TARGET_FILE:face-unlock-enroll>
       --self-test-enrollment-json
+  )
+  add_test(
+    NAME gui_scanner_widget
+    COMMAND $<TARGET_FILE:face-unlock-enroll>
+      --self-test-scanner
+  )
+  set_tests_properties(gui_scanner_widget PROPERTIES
+    ENVIRONMENT
+      "QT_QPA_PLATFORM=offscreen;QT_QPA_PLATFORMTHEME=;QT_STYLE_OVERRIDE=Fusion"
   )
 endif()
 

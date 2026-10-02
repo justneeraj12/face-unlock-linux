@@ -1,4 +1,5 @@
 #include "daemon_client.h"
+#include "scanner_widget.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -32,6 +33,7 @@ using face_unlock_gui::parseEnrollmentResponse;
 using face_unlock_gui::poseInstruction;
 using face_unlock_gui::queryDaemonOperation;
 using face_unlock_gui::runtimeSocketPath;
+using face_unlock_gui::ScannerWidget;
 using face_unlock_gui::templateStatusSummary;
 
 QString templatePath() {
@@ -109,6 +111,7 @@ struct EnrollmentUi {
   QLabel* guidance = nullptr;
   QLabel* metrics = nullptr;
   QLabel* previewText = nullptr;
+  ScannerWidget* scanner = nullptr;
   QTextEdit* response = nullptr;
   QCheckBox* center = nullptr;
   QCheckBox* left = nullptr;
@@ -148,6 +151,7 @@ void applyEnrollmentSnapshot(
       .arg(runtimeSocketPath(), snapshot.raw)
   );
   ui.progress->setValue(snapshot.progress);
+  ui.scanner->setProgress(snapshot.progress);
   ui.state->setText(
     QStringLiteral("State: %1 - Samples: %2 - %3")
       .arg(
@@ -178,6 +182,11 @@ void applyEnrollmentSnapshot(
     );
   }
   ui.guidance->setText(guidance);
+  ui.scanner->setGuidance(
+    !snapshot.missingPoses.isEmpty()
+      ? poseInstruction(snapshot.missingPoses.front())
+      : friendlyReason(snapshot.reason)
+  );
 
   ui.center->setChecked(
     poseComplete(snapshot, QStringLiteral("center"))
@@ -233,6 +242,18 @@ void applyEnrollmentSnapshot(
   const bool active = snapshot.state == QStringLiteral("collecting") ||
     snapshot.state == QStringLiteral("validating");
   const bool ready = snapshot.state == QStringLiteral("ready");
+  if (snapshot.state == QStringLiteral("collecting")) {
+    ui.scanner->setScannerState(ScannerWidget::State::Scanning);
+  } else if (snapshot.state == QStringLiteral("validating")) {
+    ui.scanner->setScannerState(ScannerWidget::State::Validating);
+  } else if (snapshot.state == QStringLiteral("ready") ||
+             snapshot.state == QStringLiteral("committed")) {
+    ui.scanner->setScannerState(ScannerWidget::State::Complete);
+  } else if (!snapshot.ok && snapshot.parsed) {
+    ui.scanner->setScannerState(ScannerWidget::State::Error);
+  } else {
+    ui.scanner->setScannerState(ScannerWidget::State::Idle);
+  }
   ui.start->setEnabled(
     ui.consent->isChecked() && !active && !ready
   );
@@ -376,6 +397,24 @@ int main(int argc, char* argv[]) {
   }
 
   QApplication app(argc, argv);
+  if (argc == 2 &&
+      std::string(argv[1]) == "--self-test-scanner") {
+    return face_unlock_gui::scannerWidgetSelfTest();
+  }
+  if (argc == 3 &&
+      std::string(argv[1]) == "--render-scanner") {
+    return face_unlock_gui::renderScannerPreview(
+      QString::fromLocal8Bit(argv[2])
+    ) ? 0 : 1;
+  }
+  if ((argc == 2 || argc == 3) &&
+      std::string(argv[1]) == "--benchmark-scanner") {
+    bool ok = true;
+    const int frames = argc == 3
+      ? QString::fromLocal8Bit(argv[2]).toInt(&ok)
+      : 300;
+    return ok ? face_unlock_gui::scannerWidgetBenchmark(frames) : 2;
+  }
   QWidget window;
   window.setWindowTitle(QStringLiteral("face-unlock-linux Enrollment"));
   auto* root = new QVBoxLayout(&window);
@@ -465,17 +504,13 @@ int main(int argc, char* argv[]) {
 
   auto* previewFrame = new QFrame();
   previewFrame->setFrameShape(QFrame::StyledPanel);
-  previewFrame->setMinimumHeight(145);
+  previewFrame->setMinimumHeight(330);
   previewFrame->setStyleSheet(QStringLiteral(
     "QFrame { background-color: #202124; border: 1px solid #555; "
     "border-radius: 6px; } QLabel { color: #eeeeee; }"
   ));
   auto* previewLayout = new QVBoxLayout(previewFrame);
-  auto* previewTitle = new QLabel(QStringLiteral("Privacy-safe camera session"));
-  QFont previewFont = previewTitle->font();
-  previewFont.setBold(true);
-  previewFont.setPointSize(13);
-  previewTitle->setFont(previewFont);
+  auto* scanner = new ScannerWidget();
   auto* previewText = new QLabel(QStringLiteral(
     "The GUI does not receive camera frames.\n"
     "The daemon opens the camera only during enrollment.\n"
@@ -483,10 +518,8 @@ int main(int argc, char* argv[]) {
   ));
   previewText->setAlignment(Qt::AlignCenter);
   previewText->setWordWrap(true);
-  previewLayout->addWidget(previewTitle);
-  previewLayout->addStretch();
+  previewLayout->addWidget(scanner, 1);
   previewLayout->addWidget(previewText);
-  previewLayout->addStretch();
 
   auto* enrollmentProgress = new QProgressBar();
   enrollmentProgress->setRange(0, 100);
@@ -603,6 +636,7 @@ int main(int argc, char* argv[]) {
     guidance,
     metrics,
     previewText,
+    scanner,
     enrollmentResponse,
     centerPose,
     leftPose,

@@ -32,6 +32,12 @@ The app provides:
 
 The GUI does not receive or save camera frames. A live preview remains planned.
 
+The enrollment surface includes a lightweight dot-matrix face scanner. It is a
+QPainter raster widget with a precomputed point cloud, batched depth groups,
+and a coarse 20 FPS timer that runs only during collection or validation. It
+does not require OpenGL, CUDA, or a discrete GPU. Set
+`FACE_UNLOCK_REDUCE_MOTION=1` to disable animation.
+
 ## Requirements
 
 Build:
@@ -81,7 +87,16 @@ Run the headless enrollment response parser regression:
 
     ./build-gui/gui/face-unlock-enroll --self-test-enrollment-json
 
-The GUI CI workflow builds the app and runs this test. Core daemon enrollment
+Run the offscreen scanner regression or render a preview:
+
+    env -u QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM=offscreen QT_STYLE_OVERRIDE=Fusion \
+      ./build-gui/gui/face-unlock-enroll --self-test-scanner
+    env -u QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM=offscreen QT_STYLE_OVERRIDE=Fusion \
+      ./build-gui/gui/face-unlock-enroll --render-scanner scanner.png
+    env -u QT_QPA_PLATFORMTHEME QT_QPA_PLATFORM=offscreen QT_STYLE_OVERRIDE=Fusion \
+      ./build-gui/gui/face-unlock-enroll --benchmark-scanner 300
+
+The GUI CI workflow builds the app and runs both tests. Core daemon enrollment
 behavior is covered separately by `enrollment_session`, `profile_storage`,
 `enrollment_controller`, and `enrollment_protocol` CTests.
 

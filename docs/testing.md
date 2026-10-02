@@ -91,6 +91,10 @@ temporary fixture. It verifies the fixture is byte-for-byte unchanged.
 `model_selection` verifies OpenCV 4.6 and 4.10 choices plus explicit and
 invalid selection overrides without accessing the network.
 
+GUI-enabled builds add `gui_enrollment_json` and `gui_scanner_widget`. The
+scanner test renders offscreen with a fixed animation phase and requires no
+camera or display server.
+
 ## CI
 
 GitHub Actions runs build and dependency checks.
